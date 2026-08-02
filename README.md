@@ -23,6 +23,8 @@ Start the Cascade server:
 
 ```powershell
 cd server
+Copy-Item config.example.env .env
+# Fill in the CASCADE_VLM_OPENAI_* values in .env
 uv sync
 .\run.ps1
 ```

@@ -4,8 +4,8 @@
 >
 > **覆盖范围**：框架原理 → 两种管线模式 → 所需模型 → 官方示例 → 参考项目 → 快速启动。
 
-> **当前项目状态（2026-08-02）**：`web-bot-official` 只运行 Cascade 模式，
-> 使用 SmallWebRTC。唯一有效配置文件是 `web-bot-official/server/.env`；
+> **当前项目状态（2026-08-02）**：根目录正式项目只运行 Cascade 模式，
+> 使用 SmallWebRTC。唯一有效配置文件是 `server/.env`；
 > 根目录 `.env` 和 `.env.example` 不会被该项目读取。Realtime 代码不在当前运行路径中。
 
 ---
@@ -292,7 +292,7 @@ llm.register_function("fetch_camera_image", fetch_camera_image)
 
 > **仓库**：<https://github.com/pipecat-ai/gemini-live-web-starter>
 >
-> **本地副本**：`web-bot-official/`（本仓库已 clone 并适配）
+> **本地副本**：当前仓库根目录（官方 starter 已在此适配）
 >
 > **边界说明**：上游官方 starter 验证的是 Gemini Live Realtime。当前仓库的
 > Cascade Pipeline 是基于其 SmallWebRTC + Voice UI Kit 底座新增的实现，不能
@@ -301,27 +301,23 @@ llm.register_function("fetch_camera_image", fetch_camera_image)
 **目录结构**：
 
 ```
-web-bot-official/
+Sherlock-v3/
 ├── server/
-│   ├── bot.py              # 后端 AI Pipeline 定义（172行）
+│   ├── bot.py              # 后端 AI Pipeline 定义
 │   ├── pyproject.toml      # Python 依赖
 │   ├── config.example.env  # 无密钥环境变量模板
-│   ├── Dockerfile          # Docker 部署
-│   ├── pcc-deploy.toml     # Pipecat Cloud 部署配置
 │   └── run.ps1             # Windows 启动脚本
-│
 ├── client/
 │   ├── app/
-│   │   ├── ClientApp.tsx       # 前端主界面（282行）
-│   │   ├── EventStreamPanel.tsx # 事件日志面板（185行）
-│   │   └── api/start/route.ts  # API 代理路由
-│   ├── package.json
-│   └── next.config.ts
-│
+│   │   ├── ClientApp.tsx
+│   │   ├── EventStreamPanel.tsx
+│   │   └── api/start/route.ts
+│   └── package.json
+├── 微信视频通话前端模板/    # 独立 UI 参考
 └── README.md
 ```
 
-**技术组合（web-bot-official 当前）**：
+**技术组合（当前正式项目）**：
 
 | 层级 | 技术选型 |
 |------|----------|
@@ -338,7 +334,7 @@ web-bot-official/
 
 ### 6.1 Realtime 模式（当前禁用）
 
-`web-bot-official/server/bot.py` 会拒绝 `AI_MODE=realtime`。当前项目不需要
+`server/bot.py` 会拒绝 `AI_MODE=realtime`。当前项目不需要
 Google Gemini Live 或 OpenAI Realtime 权限。
 
 ### 6.2 Cascade 模式（当前唯一可用）
@@ -348,7 +344,7 @@ Google Gemini Live 或 OpenAI Realtime 权限。
 - VLM：OpenAI 兼容接口，需要 `CASCADE_VLM_OPENAI_*`
 - TTS：Piper 中文音色，本地运行，不需要 API Key
 
-**唯一有效环境变量文件**：`web-bot-official/server/.env`
+**唯一有效环境变量文件**：`server/.env`
 
 ```env
 # STT
@@ -372,12 +368,14 @@ CASCADE_TTS_PIPER_VOICE=zh_CN-huayan-medium
 
 ```powershell
 # 终端 1：后端
-cd web-bot-official/server
+cd server
+Copy-Item config.example.env .env
+# 配置 .env 中的 CASCADE_VLM_OPENAI_* 值
 uv sync
 .\run.ps1
 
 # 终端 2：前端
-cd web-bot-official/client
+cd client
 npm install
 npm run dev
 ```
@@ -392,14 +390,14 @@ npm run dev
 
 | 目录 | 定位 | 使用策略 |
 |------|------|------|
-| `web-bot-official/` | **唯一可运行项目** | Cascade 后端和正式前端都在此开发 |
-| `ai-video-call-core/client/` | 微信式视频通话 UI 参考 | 只借鉴全屏摄像头和悬浮控件布局 |
+| `client/` + `server/` | **唯一可运行项目** | Cascade 后端和正式前端都在此开发 |
+| `微信视频通话前端模板/` | 微信式视频通话 UI 参考 | 只借鉴全屏摄像头和悬浮控件布局 |
 
 ### 7.1 保留 UI 的边界
 
-`ai-video-call-core` 的旧后端和 `my-video-ai` 已从当前业务分支删除。保留的
-`ai-video-call-core/client` 没有 AI 后端，不参与端口、模型或会话配置，也不能
-替代 `web-bot-official/client` 直接连接当前服务。
+旧参考项目已从当前业务分支删除。保留的
+`微信视频通话前端模板/` 没有 AI 后端，不参与端口、模型或会话配置，也不能
+替代 `client/` 直接连接当前服务。
 
 需要改造正式页面时，只参考以下视觉结构：
 
@@ -440,7 +438,7 @@ Pipecat 框架把所有 Pipeline、Transport、VAD 的技术细节都抽象好�
 
 ### 8.3 开发策略：基石迭代法
 
-以 `web-bot-official`（官方案例，已知能跑通）为基石：
+以当前根目录正式项目（官方案例底座，已知能跑通）为基石：
 1. ✅ 固定 SmallWebRTC Transport
 2. ✅ 跑通 Cascade：Whisper + OpenAI 兼容 VLM + Piper 中文 TTS
 3. ✅ 禁止入口回退到 Realtime
@@ -539,7 +537,7 @@ Pipecat 框架把所有 Pipeline、Transport、VAD 的技术细节都抽象好�
 5. Pipecat 默认空闲 5 分钟结束 Worker → 设 `idle_timeout_secs=None` 取消。
 6. 前端旧属性 `textMode` → 当前需 `textRenderMode`。
 7. 前端 `/start` 未传合法空 JSON body → 部分启动失败。
-8. `web-bot-official` 不读根目录 `.env`，仅 `server/.env` 生效。
+8. 当前正式后端仅读取 `server/.env`，根目录 `.env` 不生效。
 
 **结论印证 9.1 / 9.2**：后端核心功能早已具备，此前"点按钮没反应"确为前后端边界
 对接问题（空请求体、属性名变更、transport 匹配、模式回退），而非功能缺失。修复后

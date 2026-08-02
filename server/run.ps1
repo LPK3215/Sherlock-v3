@@ -1,4 +1,4 @@
-# web-bot-official Cascade 启动脚本
+# Sherlock Cascade 启动脚本
 
 $env:NLTK_DISABLE_IMPORT_SECURITY = "1"
 $env:PYTHONSAFEPATH = "1"
@@ -11,7 +11,7 @@ $env:PYTHONPATH = $PSScriptRoot
 
 Push-Location $PSScriptRoot
 try {
-    Write-Host "=== web-bot-official (cascade mode) ===" -ForegroundColor Cyan
+    Write-Host "=== Sherlock Cascade (cascade mode) ===" -ForegroundColor Cyan
     Write-Host "Python: $( & .venv\Scripts\python.exe --version )" -ForegroundColor Green
     & .venv\Scripts\python.exe -u bot.py --transport webrtc
 } finally {
