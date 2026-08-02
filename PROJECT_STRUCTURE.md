@@ -93,15 +93,14 @@ web-bot-official/
 │   │   ├── ClientApp.tsx         # 核心 UI 组件（282行）
 │   │   ├── EventStreamPanel.tsx  # 事件日志面板（185行）
 │   │   └── api/start/route.ts   # API 代理路由
-│   ├── package.json
-│   └── env.example
+│   └── package.json
 └── server/
     ├── bot.py                    # Cascade 唯一入口
     ├── bot_cascade.py            # STT + VLM + TTS Pipeline
     ├── pyproject.toml
     ├── Dockerfile
     ├── pcc-deploy.toml
-    └── env.example
+    └── config.example.env
 ```
 
 ---

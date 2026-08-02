@@ -11,7 +11,7 @@ Camera and screen frames can be requested by the VLM through Pipecat tools.
 Requirements: Python 3.11+ and `uv`.
 
 ```powershell
-Copy-Item env.example .env
+Copy-Item config.example.env .env
 # Configure the selected CASCADE_* providers in .env
 uv sync
 .\run.ps1

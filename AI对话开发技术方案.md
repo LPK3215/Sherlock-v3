@@ -305,7 +305,7 @@ web-bot-official/
 ├── server/
 │   ├── bot.py              # 后端 AI Pipeline 定义（172行）
 │   ├── pyproject.toml      # Python 依赖
-│   ├── env.example         # 环境变量模板
+│   ├── config.example.env  # 无密钥环境变量模板
 │   ├── Dockerfile          # Docker 部署
 │   ├── pcc-deploy.toml     # Pipecat Cloud 部署配置
 │   └── run.ps1             # Windows 启动脚本

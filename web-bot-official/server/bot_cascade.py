@@ -230,7 +230,7 @@ def _make_stt_service():
 
 
 def _make_vlm_service() -> OpenAILLMService:
-    provider = _env("CASCADE_VLM_PROVIDER", "minicpm").lower()
+    provider = _env("CASCADE_VLM_PROVIDER", "openai").lower()
     logger.info(f"Cascade VLM provider: {provider}")
 
     if provider == "minicpm":
@@ -280,7 +280,7 @@ def _make_vlm_service() -> OpenAILLMService:
 
 
 def _make_tts_service():
-    provider = _env("CASCADE_TTS_PROVIDER", "kokoro").lower()
+    provider = _env("CASCADE_TTS_PROVIDER", "piper").lower()
     logger.info(f"Cascade TTS provider: {provider}")
 
     if provider == "kokoro":

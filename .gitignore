@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.example
 **/env.example
 
 # ===== 本地模型权重及配置（体积大/环境相关，不进 git） =====
