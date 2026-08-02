@@ -1,0 +1,32 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.example
+
+# ===== 本地模型权重（体积大，不进 git） =====
+*.onnx
+*.onnx.gz
+*.bin
+*.gguf
+*.pt
+*.pth
+*.ckpt
+
+# ===== Playwright / 测试临时产物 =====
+.playwright-mcp/
+
+# ===== Node / 前端 =====
+node_modules/
+.next/
+out/
+
+# ===== 系统 / 编辑器 =====
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
