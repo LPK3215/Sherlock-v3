@@ -1,12 +1,12 @@
 # Sherlock-v3 项目结构说明
 
-## 三个项目的关系
+## 当前目录关系
 
 ```
 Sherlock-v3/
 ├── web-bot-official/     ★ 核心项目 — 唯一需要操作的目标
-├── ai-video-call-core/   ☆ 参考项目 1 — 仅在被点名时才参考
-└── my-video-ai/          ☆ 参考项目 2 — 仅在被点名时才参考
+└── ai-video-call-core/
+    └── client/           ☆ 保留的微信式视频通话 UI 参考
 ```
 
 ### ★ `web-bot-official/` — 核心项目（唯一操作目标）
@@ -21,23 +21,12 @@ Sherlock-v3/
 - **核心能力**：实时语音对话 + 摄像头 + 屏幕共享 + 可拖拽布局 + 事件日志面板
 - **API**：`POST /start`（Next.js rewrite 代理到 bot 服务）
 
-### ☆ `ai-video-call-core/` — 参考项目 1（仅被点名时参考）
+### ☆ `ai-video-call-core/client/` — UI 参考
 
-- **来源**：用户自己编写，**可能有 bug**
-- **参考价值**：多供应商模型配置、Realtime/Cascade 双管线切换、视觉工具调用（`fetch_camera_image`）、媒体诊断 Observer、Eval 测试框架
-- **传输方式**：SmallWebRTC（无需 Daily）
-- **AI 模型**：Gemini Live / OpenAI Realtime / Qwen-VL / OpenAI 兼容端点
-- **前端**：Vite 8 + React 19 + Voice UI Kit
-- **注意**：**仅在用户明确要求参考时才查看此项目，不要主动借鉴**
-
-### ☆ `my-video-ai/` — 参考项目 2（仅被点名时参考）
-
-- **来源**：Pipecat CLI 脚手架自动生成，用户在此基础上微调
-- **参考价值**：标准 Pipecat 项目结构、`run.ps1` NLTK 规避脚本
-- **传输方式**：SmallWebRTC（无需 Daily）
-- **AI 模型**：仅 Gemini Live
-- **前端**：Vite 8 + React 19 + Voice UI Kit（纯预制组件）
-- **注意**：**仅在用户明确要求参考时才查看此项目，不要主动借鉴**
+- **保留内容**：只有 Vite + React 前端
+- **参考价值**：全屏摄像头、悬浮通话控件和微信式视频通话布局
+- **边界**：不包含后端，不参与当前 Cascade 服务运行
+- **使用方式**：仅在改造 `web-bot-official/client` 视觉布局时参考
 
 ---
 
@@ -46,9 +35,9 @@ Sherlock-v3/
 ### 核心原则
 
 1. **唯一操作目标**：`web-bot-official/`，所有代码修改、功能添加都在此项目中进行
-2. **参考项目隔离**：`ai-video-call-core/` 和 `my-video-ai/` 仅供思想参考，**不要主动查看或借鉴**
-3. **点名机制**：只有当用户说"参考 ai-video-call-core 的 XXX"或类似表述时，才去查看对应的参考项目
-4. **参考不等于照搬**：参考项目可能有 bug，仅借鉴思想和工具方向，不直接复制代码
+2. **单一后端**：只有 `web-bot-official/server` 包含 AI Pipeline
+3. **UI 隔离**：`ai-video-call-core/client` 只保留布局参考，不作为第二套应用运行
+4. **冻结恢复点**：删除前的完整代码保存在 Git 标签 `v0.1-cascade-demo`
 
 ### 日常开发流程
 
@@ -58,14 +47,11 @@ Sherlock-v3/
     ├─→ 涉及 web-bot-official/ 的功能开发
     │       └─→ 直接在此项目中编码、修改
     │
-    ├─→ 用户点名参考 ai-video-call-core
-    │       └─→ 查看对应模块，借鉴思想，在 web-bot-official 中实现
+    ├─→ 需要微信式视频通话布局
+    │       └─→ 只参考 ai-video-call-core/client，在核心前端中实现
     │
-    ├─→ 用户点名参考 my-video-ai
-    │       └─→ 查看对应模块，借鉴思想，在 web-bot-official 中实现
-    │
-    └─→ 未点名参考项目
-            └─→ 不查看、不借鉴，专注于 web-bot-official
+    └─→ 其他需求
+            └─→ 直接修改 web-bot-official
 ```
 
 ### 技术栈约定（web-bot-official）

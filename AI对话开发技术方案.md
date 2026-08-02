@@ -386,37 +386,28 @@ npm run dev
 
 ---
 
-## 七、参考项目对照
+## 七、代码边界
 
-本仓库内有三个项目，关系如下：
+当前仓库只保留一套可运行的 AI 应用和一套纯 UI 参考：
 
-| 项目 | 定位 | 模式 | 使用策略 |
-|------|------|:---:|------|
-| `web-bot-official/` | **核心开发项目** | Cascade | 所有开发在此进行 |
-| `ai-video-call-core/` | 参考项目（双模式实现） | Realtime + Cascade | 仅在用户点名时参考，借鉴 Cascade 实现 |
-| `my-video-ai/` | 参考项目（CLI 脚手架生成） | Realtime | 仅在用户点名时参考 |
+| 目录 | 定位 | 使用策略 |
+|------|------|------|
+| `web-bot-official/` | **唯一可运行项目** | Cascade 后端和正式前端都在此开发 |
+| `ai-video-call-core/client/` | 微信式视频通话 UI 参考 | 只借鉴全屏摄像头和悬浮控件布局 |
 
-### 7.1 ai-video-call-core 关键参考价值
+### 7.1 保留 UI 的边界
 
-该项目的 Cascade 模式实现是后续开发的主要参考来源：
+`ai-video-call-core` 的旧后端和 `my-video-ai` 已从当前业务分支删除。保留的
+`ai-video-call-core/client` 没有 AI 后端，不参与端口、模型或会话配置，也不能
+替代 `web-bot-official/client` 直接连接当前服务。
 
-- `server/bot.py` → `build_cascade_services()` + `build_stt_service()` + `build_vlm_service()` + `build_tts_service()`
-- `server/model_config.py` → 多供应商配置系统
-- `server/profiles.py` → 管线模式切换 + Session Profile 解析
+需要改造正式页面时，只参考以下视觉结构：
 
-### 7.2 模型切换架构（参考 ai-video-call-core）
+- 全屏本地摄像头画面
+- 底部悬浮麦克风、摄像头、屏幕共享和挂断按钮
+- 通话状态与消息输入的覆盖层布局
 
-```
-请求 body {mode: "cascade", provider: "openai-compatible"}
-    ↓
-parse_session_profile()  →  {mode: "cascade", provider: "openai-compatible"}
-    ↓
-load_model_config()      →  AIModelConfig (从环境变量加载所有配置)
-    ↓
-assemble_pipeline()     →  根据 mode 返回不同 pipeline 处理器列表
-    ↓
-build_cascade_services() →  build_stt_service() + build_vlm_service() + build_tts_service()
-```
+删除前的完整历史仍可通过 Git 标签 `v0.1-cascade-demo` 查看或恢复。
 
 ---
 
