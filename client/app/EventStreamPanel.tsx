@@ -1,13 +1,10 @@
 import { RTVIEvent } from "@pipecat-ai/client-js";
 import {
-  Panel,
-  PanelContent,
-  PanelHeader,
-  PanelTitle,
   usePipecatEventStream,
   type PipecatEventGroup,
   type PipecatEventLog,
 } from "@pipecat-ai/voice-ui-kit";
+import { Activity, ChevronDown, ChevronRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const formatTimestamp = (date: Date) => {
@@ -22,14 +19,14 @@ const formatTimestamp = (date: Date) => {
 
 const getEventColor = (type: string) => {
   if (type.includes("error") || type.includes("Error"))
-    return "text-destructive";
+    return "event-tone-error";
   if (type.includes("warning") || type.includes("Warning"))
-    return "text-warning";
-  if (type.includes("bot")) return "text-primary";
-  if (type.includes("metrics")) return "text-muted-foreground";
-  if (type.includes("user")) return "text-agent";
-  if (type.includes("transport")) return "text-warning";
-  return "text-primary";
+    return "event-tone-warning";
+  if (type.includes("bot")) return "event-tone-bot";
+  if (type.includes("metrics")) return "event-tone-muted";
+  if (type.includes("user")) return "event-tone-user";
+  if (type.includes("transport")) return "event-tone-warning";
+  return "event-tone-default";
 };
 
 type EventStreamRowProps = {
@@ -50,20 +47,18 @@ function EventStreamRow({
   formatTimestamp,
 }: EventStreamRowProps) {
   return (
-    <div className="flex items-start hover:bg-primary/5 px-1">
+    <div className="event-row">
       {hasMultiple && isFirstInGroup ? (
-        <span onClick={onToggle} className="mr-2 mt-0.5">
-          ▼
-        </span>
+        <button type="button" className="event-chevron" onClick={onToggle} title="折叠事件组">
+          <ChevronDown />
+        </button>
       ) : (
-        <span className="text-border mr-2">│</span>
+        <span className="event-branch" />
       )}
-      <div className="flex-1 flex items-start gap-2 text-xs">
-        <span className="text-primary opacity-50">
-          [{formatTimestamp(event.timestamp)}]
-        </span>
-        <span className={`${eventColorClass} font-bold`}>{event.type}:</span>
-        <span className="text-primary opacity-80 break-all">
+      <div className="event-row-content">
+        <time>{formatTimestamp(event.timestamp)}</time>
+        <strong className={eventColorClass}>{event.type}</strong>
+        <span className="event-data">
           {event.data ? JSON.stringify(event.data).slice(0, 100) : "null"}
           {event.data && JSON.stringify(event.data).length > 100 ? "..." : ""}
         </span>
@@ -72,7 +67,7 @@ function EventStreamRow({
   );
 }
 
-export function EventStreamPanel() {
+export function EventStreamPanel({ onClose }: { onClose?: () => void }) {
   const { events, groups } = usePipecatEventStream({
     maxEvents: 500,
     ignoreEvents: [
@@ -86,12 +81,10 @@ export function EventStreamPanel() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const eventsEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new events arrive
   useEffect(() => {
-    eventsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    eventsEndRef.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
   }, [events]);
 
-  // Use grouped results from hook
   const eventGroups: ReadonlyArray<PipecatEventGroup> = groups;
 
   const toggleGroup = (groupId: string) => {
@@ -104,31 +97,32 @@ export function EventStreamPanel() {
   };
 
   return (
-    <Panel className="h-full">
-      <PanelHeader>
-        <PanelTitle>
-          System Event Monitor
-          <span className="terminal-text hidden terminal:static">
-            &slash;&slash; RTVI Protocol
-          </span>
-        </PanelTitle>
-        <div className="terminal-text hidden terminal:static">
-          Events: {events.length}
+    <aside className="event-monitor" aria-label="系统事件监控">
+      <header className="event-monitor-header">
+        <div className="event-monitor-title">
+          <Activity />
+          <div>
+            <strong>系统事件</strong>
+            <span>实时调用详情</span>
+          </div>
         </div>
-      </PanelHeader>
-      <PanelContent className="text-sm w-full min-h-0 flex-1">
-        <div className="overflow-y-auto min-h-0 h-full">
+        <div className="event-monitor-actions">
+          <span className="event-count"><i />{events.length}</span>
+          {onClose && (
+            <button type="button" onClick={onClose} title="收起系统事件">
+              <X />
+            </button>
+          )}
+        </div>
+      </header>
+      <div className="event-monitor-content">
           {events.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="opacity-50 text-lg mb-2 terminal:uppercase terminal:before:content-['◄'] terminal:before:mr-2 terminal:after:content-['►'] terminal:after:ml-2">
-                No Events Recorded
-              </div>
-              <div className="text-xs opacity-30">
-                System events will appear here
-              </div>
+            <div className="event-empty">
+              <Activity />
+              <span>等待通话事件</span>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="event-list">
               {eventGroups.map((group) => {
                 const isExpanded = expandedGroups.has(group.id);
                 const hasMultiple = group.events.length > 1;
@@ -147,28 +141,23 @@ export function EventStreamPanel() {
                     />
                   ));
                 } else {
-                  // Show collapsed group
                   return (
-                    <div
-                      key={group.id}
-                      className="flex items-start hover:bg-primary/5 px-1"
-                    >
+                    <div key={group.id} className="event-row event-group-row">
                       <button
+                        type="button"
                         onClick={() => toggleGroup(group.id)}
-                        className="text-primary hover:text-primary/80 mr-2 mt-0.5"
-                        style={{ fontSize: "10px" }}
+                        className="event-chevron"
+                        title="展开事件组"
                       >
-                        ▶
+                        <ChevronRight />
                       </button>
-                      <div className="flex-1 flex items-start gap-2">
-                        <span className="text-primary opacity-50">
-                          [{formatTimestamp(group.events[0].timestamp)}]
-                        </span>
-                        <span className={`${eventColor} font-bold`}>
+                      <div className="event-row-content">
+                        <time>{formatTimestamp(group.events[0].timestamp)}</time>
+                        <strong className={eventColor}>
                           {group.type}
-                        </span>
-                        <span className="text-secondary opacity-60">
-                          ({group.events.length} events)
+                        </strong>
+                        <span className="event-group-count">
+                          {group.events.length} 条
                         </span>
                       </div>
                     </div>
@@ -178,8 +167,7 @@ export function EventStreamPanel() {
               <div ref={eventsEndRef} />
             </div>
           )}
-        </div>
-      </PanelContent>
-    </Panel>
+      </div>
+    </aside>
   );
 }
