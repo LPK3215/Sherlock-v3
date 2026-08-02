@@ -1,0 +1,24 @@
+name: realtime_audio_chat
+
+user:
+  modality: audio
+  speech:
+    service: kokoro
+    voice: af_heart
+    sample_rate: 16000
+
+judge:
+  modality: audio
+  transcription:
+    service: moonshine
+    model: small-streaming
+
+turns:
+  - expect:
+      - event: response
+        eval: "the assistant briefly greets the user and offers to help"
+
+  - user: "Tell me in one sentence what you can do."
+    expect:
+      - event: response
+        eval: "the assistant answers in one concise sentence"

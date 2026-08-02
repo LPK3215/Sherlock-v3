@@ -1,0 +1,17 @@
+[     261ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:14537
+[    1001ms] [WARNING] Devices Error (Permission Denied): NotAllowedError: Permission denied @ :3
+[    1013ms] [WARNING] BotAudioOutput: setSinkId failed NotFoundError: Requested device not found @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_voice-ui-kit_dist_index_261d5ed4.js:418
+[   35200ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js:5949
+[   35202ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js:5809
+[   35274ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js:14537
+[   38966ms] [INFO] All ICE candidates have been sent. @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_client-js_dist_index_module_ff1ae584.js:1274
+[  188147ms] [INFO] All ICE candidates have been sent. @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_client-js_dist_index_module_ff1ae584.js:1274
+[  218051ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  218238ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  220180ms] [INFO] All ICE candidates have been sent. @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_client-js_dist_index_module_ff1ae584.js:1274
+[  250078ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  250280ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  252211ms] [INFO] All ICE candidates have been sent. @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_client-js_dist_index_module_ff1ae584.js:1274
+[  282096ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  282297ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/sessions/39951f7f-e794-4bee-86d4-b7764595daea/api/offer:0
+[  399893ms] [WARNING] Datachannel is not ready. Message not sent: [object Object] @ http://localhost:3000/_next/static/chunks/node_modules_%40pipecat-ai_client-js_dist_index_module_ff1ae584.js:1280

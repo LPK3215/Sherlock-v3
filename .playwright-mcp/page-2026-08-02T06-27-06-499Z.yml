@@ -1,0 +1,29 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e4]:
+    - banner [ref=f1e5]:
+      - generic [ref=f1e7]:
+        - generic [ref=f1e8]:
+          - img "Pipecat" [ref=f1e9]
+          - heading "Sherlock Cascade + Voice UI Kit" [level=1] [ref=f1e10]
+        - generic [ref=f1e11]:
+          - button "Connecting..." [disabled]
+          - button "Show logs" [ref=f1e13]
+    - main [ref=f1e14]:
+      - generic [ref=f1e20]:
+        - generic [ref=f1e21]: Conversation
+        - generic [ref=f1e24]:
+          - generic [ref=f1e25]: Connecting to agent...
+          - generic [ref=f1e30]:
+            - textbox "Connect to send" [disabled]
+            - button [disabled]
+      - generic [ref=f1e33]:
+        - generic [ref=f1e34]:
+          - button [ref=f1e50]
+          - button [ref=f1e52]
+        - generic [ref=f1e37]:
+          - button [ref=f1e53]
+          - button [ref=f1e54]
+        - generic [ref=f1e39]:
+          - button [disabled]
+  - button "Open Next.js Dev Tools" [ref=f1e45] [cursor=pointer]
+  - alert [ref=f1e49]

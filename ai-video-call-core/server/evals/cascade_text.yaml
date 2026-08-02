@@ -1,0 +1,13 @@
+name: cascade_text_chat
+
+# Text mode validates the cascade LLM/context path without STT, VAD, or TTS.
+# Start the server with a cascade runner body before running this scenario.
+turns:
+  - expect:
+      - event: response
+        eval: "the assistant briefly greets the user and offers to help"
+
+  - user: "What kinds of questions can you help me answer?"
+    expect:
+      - event: response
+        eval: "the assistant gives a concise and useful answer"
