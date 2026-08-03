@@ -1,4 +1,5 @@
 import os
+from types import SimpleNamespace
 
 import pytest
 
@@ -9,6 +10,7 @@ from yuxi.models.providers.service import (
     check_credential_status,
     _normalize_payload,
     _normalize_remote_model,
+    ensure_builtin_model_providers_in_db,
     fetch_remote_models,
 )
 
@@ -159,6 +161,16 @@ def test_builtin_provider_templates_default_to_openai_provider_type():
     assert all("ollama" not in provider["provider_id"] for provider in BUILTIN_PROVIDERS)
 
 
+def test_builtin_modelscope_provider_includes_realtime_vision_model():
+    provider = next(item for item in BUILTIN_PROVIDERS if item["provider_id"] == "modelscope")
+    models = {model["id"]: model for model in provider["enabled_models"]}
+
+    assert provider["is_enabled"] is True
+    assert provider["api_key_env"] == "MODELSCOPE_ACCESS_TOKEN"
+    assert models["Qwen/Qwen3-VL-8B-Thinking"]["type"] == "chat"
+    assert models["Qwen/Qwen3-VL-8B-Thinking"]["input_modalities"] == ["text", "image"]
+
+
 def test_builtin_siliconflow_provider_includes_default_runnable_models():
     provider = next(item for item in BUILTIN_PROVIDERS if item["provider_id"] == "siliconflow-cn")
     models = {model["id"]: model for model in provider["enabled_models"]}
@@ -171,6 +183,45 @@ def test_builtin_siliconflow_provider_includes_default_runnable_models():
     assert "base_url_override" not in models["Pro/BAAI/bge-m3"]
     assert models["Pro/BAAI/bge-reranker-v2-m3"]["type"] == "rerank"
     assert "base_url_override" not in models["Pro/BAAI/bge-reranker-v2-m3"]
+
+
+@pytest.mark.asyncio
+async def test_builtin_provider_upgrade_adds_required_realtime_model(monkeypatch):
+    provider = SimpleNamespace(
+        provider_id="modelscope",
+        enabled_models=[
+            {"id": "existing-chat", "type": "chat"},
+            {"id": "Qwen/Qwen3-VL-8B-Thinking", "type": "chat", "custom": "preserved"},
+        ],
+        capabilities=["chat"],
+        is_enabled=True,
+        updated_by="admin",
+    )
+
+    async def list_providers(_db):
+        return [provider]
+
+    async def create_provider(_db, _payload):
+        return None
+
+    class Db:
+        flushed = False
+
+        async def flush(self):
+            self.flushed = True
+
+    monkeypatch.setattr("yuxi.models.providers.service.list_model_providers", list_providers)
+    monkeypatch.setattr("yuxi.models.providers.service.create_model_provider", create_provider)
+    db = Db()
+
+    await ensure_builtin_model_providers_in_db(db)
+
+    models = {model["id"]: model for model in provider.enabled_models}
+    assert "existing-chat" in models
+    assert models["Qwen/Qwen3-VL-8B-Thinking"]["input_modalities"] == ["text", "image"]
+    assert models["Qwen/Qwen3-VL-8B-Thinking"]["custom"] == "preserved"
+    assert provider.updated_by == "system"
+    assert db.flushed is True
 
 
 def test_builtin_dashscope_provider_includes_default_embedding_and_rerank_models():

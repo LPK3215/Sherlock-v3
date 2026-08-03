@@ -1,10 +1,12 @@
 # Yuxi 全模态实时功能工程集成计划
 
-> 状态：实施中
+> 状态：后端原生集成完成，前端待迁移
 >
 > 更新时间：2026-08-03
 >
-> 当前目标：证明实时视频通话能力已经完整接入 Yuxi Agent 体系，并形成可重复验证的工程闭环。
+> 当前目标：将实时通话作为 Yuxi 原生前后端能力交付，不保留独立 Gateway 或独立前端服务。
+
+后端启动时由 Yuxi 原生初始化流程注册 `Qwen/Qwen3-VL-8B-Instruct` 的 `text/image` 能力，并幂等创建绑定该模型和实时业务提示词的 `sherlock-realtime` Agent；不再依赖一次性 SQL 或参考 Gateway 配置。
 
 ## 1. 当前到底要完成什么
 
@@ -36,21 +38,16 @@
 
 ## 3. 最终工程成品是什么样子
 
-本轮完成后的可运行成品由三部分组成：
+最终可运行成品只保留 Yuxi 前后端：
 
 ```text
-Yuxi Web / API / Worker
-  负责用户、Agent、模型、工具、知识库、记忆、会话、Run 和管理
-                         ▲
-                         │ 标准 AgentRun / SSE / Tool / Resume
+Yuxi Web
+  原有页面 + 实时通话页面
+                         │ /api/realtime + WebRTC
                          ▼
-Realtime Gateway
-  负责 WebRTC、VAD、STT、TTS、摄像头、屏幕、插话和协议转换
-                         ▲
-                         │ WebRTC + 客户端事件
-                         ▼
-当前 realtime-client
-  负责登录、选择 Agent、实时通话、文字、显式附图、审批和事件显示
+Yuxi API / Worker
+  原有 Agent 运行底座 + yuxi.realtime 媒体模块
+  统一负责身份、AgentRun、WebRTC、VAD、STT、TTS、视频帧和持久化
 ```
 
 实际用户流程：
@@ -82,24 +79,23 @@ Yuxi 继续负责：
 
 实时接入不得复制或替代这些能力。
 
-### 4.2 Gateway 只是实时媒体适配层
+### 4.2 Yuxi realtime 是原生媒体模块
 
-Gateway 负责：
+`backend/package/yuxi/realtime` 负责：
 
 - WebRTC 音频、摄像头和屏幕轨道
 - VAD、STT、TTS 和播放打断
 - 当前会话的新鲜画面抓取和压缩
-- 把实时输入转换为标准 Yuxi Run
-- 消费 Yuxi SSE 并向页面投影文本和运行事件
+- 把实时输入直接提交给标准 Yuxi AgentRun 服务
+- 直接消费 Yuxi Redis Run 事件并交给 TTS 和页面事件
 
-Gateway 不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversation，也不得在 Yuxi 失败时调用第二个业务模型伪造结果。
+该模块不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversation，也不通过独立服务或第二套业务协议连接 Yuxi。
 
-### 4.3 前端现在只承担验证入口
+### 4.3 前端迁移是下一阶段
 
-- 当前使用 `realtime-client` 完成工程闭环。
-- Yuxi `web` 继续作为管理端和原有聊天入口。
-- `user-portal` 当前当作不存在，不修改、不接入、不作为测试依赖。
-- 工程闭环确认后，实时页面放在管理端同一项目、单独项目或正式用户端，都只需要复用已经冻结的后端接口和事件协议。
+- `realtime-client` 只保留为页面实现参考，不再通过 Compose 部署。
+- 下一阶段把实时通话页面写入选定的正式前端项目并调用 Yuxi `/api/realtime`。
+- 前端迁移完成后删除 `realtime-client` 和 `realtime-gateway` 参考目录。
 
 ## 5. 当前真实状态
 

@@ -91,6 +91,16 @@ function Ensure-SandboxEnv {
     Set-EnvValue "SANDBOX_PROVISIONER_TOKEN" $SANDBOX_PROVISIONER_TOKEN
 }
 
+function Ensure-RealtimeEnv {
+    if (Test-EnvValue "YUXI_REALTIME_INTERNAL_TOKEN") {
+        return
+    }
+
+    $YUXI_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
+    Set-EnvValue "YUXI_REALTIME_INTERNAL_TOKEN" $YUXI_REALTIME_INTERNAL_TOKEN
+    Write-Host "Generated YUXI_REALTIME_INTERNAL_TOKEN and saved it to .env." -ForegroundColor Green
+}
+
 function Test-SkipExistingImage($ImageTag) {
     & docker image inspect $ImageTag *> $null
     if ($LASTEXITCODE -ne 0) {
@@ -110,6 +120,7 @@ if (Test-Path ".env") {
     Ensure-RequiredApiEnv
     Ensure-JwtEnv
     Ensure-SandboxEnv
+    Ensure-RealtimeEnv
 } else {
     Write-Host "📝 .env file not found. Let's set up your environment variables." -ForegroundColor Yellow
     Write-Host ""
@@ -154,6 +165,8 @@ if (Test-Path ".env") {
         Write-Host "Generated SANDBOX_PROVISIONER_TOKEN and saved it to .env." -ForegroundColor Green
     }
 
+    $YUXI_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
+
     # Create .env file
     $envContent = @"
 # SiliconFlow API Key (required)
@@ -172,6 +185,7 @@ SILICONFLOW_API_KEY=$apiKey
 JWT_SECRET_KEY=$JWT_SECRET_KEY
 YUXI_INSTANCE_ID=$YUXI_INSTANCE_ID
 SANDBOX_PROVISIONER_TOKEN=$SANDBOX_PROVISIONER_TOKEN
+YUXI_REALTIME_INTERNAL_TOKEN=$YUXI_REALTIME_INTERNAL_TOKEN
 "@
 
     $envContent | Out-File -FilePath ".env" -Encoding UTF8
@@ -183,6 +197,7 @@ SANDBOX_PROVISIONER_TOKEN=$SANDBOX_PROVISIONER_TOKEN
     Remove-Variable -Name "JWT_SECRET_KEY" -ErrorAction SilentlyContinue
     Remove-Variable -Name "YUXI_INSTANCE_ID" -ErrorAction SilentlyContinue
     Remove-Variable -Name "SANDBOX_PROVISIONER_TOKEN" -ErrorAction SilentlyContinue
+    Remove-Variable -Name "YUXI_REALTIME_INTERNAL_TOKEN" -ErrorAction SilentlyContinue
 }
 
 Write-Host ""

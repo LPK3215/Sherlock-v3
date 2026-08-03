@@ -32,12 +32,12 @@ x-api-worker-env: &api-worker-env
   # Agent run
   RUN_CANCEL_KEY_TTL_SECONDS: ${RUN_CANCEL_KEY_TTL_SECONDS:-1800}
   RUN_EVENTS_STREAM_TTL_SECONDS: ${RUN_EVENTS_STREAM_TTL_SECONDS:-7200}
-  REALTIME_GATEWAY_INTERNAL_URL: ${REALTIME_GATEWAY_INTERNAL_URL:-http://realtime-gateway:7860}
-  REALTIME_GATEWAY_INTERNAL_TOKEN: ${REALTIME_GATEWAY_INTERNAL_TOKEN:?Set REALTIME_GATEWAY_INTERNAL_TOKEN in .env for realtime frame capture.}
+  YUXI_API_INTERNAL_URL: ${YUXI_API_INTERNAL_URL:-http://api:5050}
+  YUXI_REALTIME_INTERNAL_TOKEN: ${YUXI_REALTIME_INTERNAL_TOKEN:?Set YUXI_REALTIME_INTERNAL_TOKEN in .env for realtime frame capture.}
   YUXI_CORS_ORIGINS: ${YUXI_CORS_ORIGINS:-}
   # 其他环境变量
-  NO_PROXY: localhost,127.0.0.1,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
-  no_proxy: localhost,127.0.0.1,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
+  NO_PROXY: localhost,127.0.0.1,api,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
+  no_proxy: localhost,127.0.0.1,api,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
 
 services:
   api:
@@ -202,55 +202,6 @@ services:
       - VITE_USE_RUNS_API=${VITE_USE_RUNS_API:-false}
       - VITE_LITE_MODE=${LITE_MODE:-}
     command: pnpm run server
-    restart: unless-stopped
-
-  realtime-gateway:
-    profiles: ["realtime"]
-    build:
-      context: ./realtime-gateway
-      dockerfile: Dockerfile
-    image: yuxi-realtime-gateway:${YUXI_VERSION:-0.7.1}
-    env_file:
-      - .env
-    environment:
-      AI_MODE: cascade
-      AGENT_RUNTIME: yuxi
-      YUXI_BASE_URL: http://api:5050
-      REALTIME_GATEWAY_INTERNAL_TOKEN: ${REALTIME_GATEWAY_INTERNAL_TOKEN}
-    ports:
-      - "7860:7860"
-    networks:
-      - app-network
-    depends_on:
-      api:
-        condition: service_healthy
-      worker:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/client/').read()"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 30s
-    restart: unless-stopped
-
-  realtime-client:
-    profiles: ["realtime"]
-    build:
-      context: ./realtime-client
-      dockerfile: Dockerfile
-    image: yuxi-realtime-client:${YUXI_VERSION:-0.7.1}
-    environment:
-      BOT_SERVER_URL: http://realtime-gateway:7860
-      BOT_START_URL: http://realtime-gateway:7860/start
-      YUXI_SERVER_URL: http://api:5050
-    ports:
-      - "3000:3000"
-    networks:
-      - app-network
-    depends_on:
-      realtime-gateway:
-        condition: service_healthy
     restart: unless-stopped
 
   # region neo4j

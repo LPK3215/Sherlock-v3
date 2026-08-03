@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from yuxi.models.providers.builtin import BUILTIN_PROVIDERS
+from yuxi.models.providers.builtin import BUILTIN_PROVIDERS, REQUIRED_BUILTIN_MODELS
 from yuxi.models.providers.repository import (
     create_model_provider,
     delete_model_provider,
@@ -248,15 +248,30 @@ async def ensure_builtin_model_providers_in_db(db: AsyncSession) -> None:
             if not existing_provider.enabled_models and provider_def.get("enabled_models"):
                 existing_provider.enabled_models = _normalize_model_list(provider_def["enabled_models"])
                 existing_provider.capabilities = provider_def.get("capabilities") or existing_provider.capabilities
+                existing_provider.is_enabled = provider_def.get("is_enabled", existing_provider.is_enabled)
                 existing_provider.updated_by = "system"
                 await db.flush()
+            else:
+                configured_models = list(existing_provider.enabled_models or [])
+                required_models = REQUIRED_BUILTIN_MODELS.get(provider_id, [])
+                required_by_id = {model["id"]: model for model in required_models}
+                merged_models = [
+                    {**model, **required_by_id[model["id"]]} if model.get("id") in required_by_id else model
+                    for model in configured_models
+                ]
+                configured_ids = {model.get("id") for model in configured_models}
+                merged_models.extend(model for model in required_models if model["id"] not in configured_ids)
+                if merged_models != configured_models:
+                    existing_provider.enabled_models = _normalize_model_list(merged_models)
+                    existing_provider.updated_by = "system"
+                    await db.flush()
             continue
 
         payload = {key: value for key, value in provider_def.items() if value is not None}
         payload["enabled_models"] = provider_def.get("enabled_models", [])
         payload["headers_json"] = payload.get("headers_json") or {}
         payload["extra_json"] = payload.get("extra_json") or {}
-        payload["is_enabled"] = provider_id == "siliconflow-cn"
+        payload["is_enabled"] = provider_def.get("is_enabled", provider_id == "siliconflow-cn")
         payload["is_builtin"] = True
         payload["created_by"] = "system"
         payload["updated_by"] = "system"

@@ -33,6 +33,7 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 - `knowledge` 是知识库和图谱领域。`KnowledgeBaseManager` 根据知识库类型分发到具体实现；`implementations` 放 Milvus、Dify 等知识库实现；`graphs` 放 Milvus 知识库图谱适配与构建服务；`chunking` 放文档分块策略。
 - `knowledge/parser` 是文档解析边界，统一封装 MinerU、PaddleX、RapidOCR、DeepSeek OCR 等解析实现。
 - `models` 封装 chat、embedding、rerank 模型适配；`config` 维护应用配置和内置模型信息；`utils` 放跨领域但足够通用的工具。
+- `realtime` 是原生实时媒体模块，使用 Pipecat cascade 管线处理 WebRTC、VAD、STT、TTS 和视频帧，并直接进入标准 AgentRun；它不启动独立 Gateway 服务。
 
 测试代码放在 `backend/test`，按 `unit`、`integration`、`e2e` 分层组织。新增或修改后端行为时，测试应落在最能覆盖风险的那一层。
 
@@ -59,6 +60,8 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 5. `worker-dev` 执行 LangGraph 智能体；中间件按上下文挂载知识库工具、Skills、MCP、附件与沙盒能力。
 6. 运行事件写入 Redis，最终状态和业务记录写入 Postgres；文件和产物落到 `saves`、MinIO 或沙盒用户数据目录。
 7. 前端通过 SSE/轮询消费运行事件，渲染消息、工具调用、引用来源、产物卡片和文件预览。
+
+实时通话由 `/api/realtime` 创建媒体会话并完成 WebRTC 协商；STT 或文字输入直接创建同一套 AgentRun，worker 仍按标准队列执行 Agent，回复事件由实时 Pipeline 读取并交给 TTS。Agent 按需查看摄像头或屏幕时，通过 Yuxi 内部实时帧接口读取 API 进程持有的媒体会话。
 
 ## 架构不变量
 

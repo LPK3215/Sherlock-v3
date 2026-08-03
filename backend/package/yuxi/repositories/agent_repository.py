@@ -18,6 +18,20 @@ SUB_AGENT_BACKEND_ID = "SubAgentBackend"
 DEFAULT_AGENT_DESCRIPTION = "基础的对话机器人，可以回答问题，可在配置中启用需要的工具。"
 DEFAULT_SHARE_CONFIG = {"access_level": "global", "department_ids": [], "user_uids": []}
 
+REALTIME_AGENT_SLUG = "sherlock-realtime"
+REALTIME_AGENT_NAME = "Sherlock 实时助手"
+REALTIME_AGENT_DESCRIPTION = "支持语音、文字、摄像头和屏幕理解的实时多模态助手。"
+REALTIME_AGENT_MODEL = "modelscope:Qwen/Qwen3-VL-8B-Thinking"
+LEGACY_REALTIME_AGENT_MODELS = {"siliconflow-cn:Qwen/Qwen3-VL-8B-Instruct"}
+REALTIME_AGENT_SYSTEM_PROMPT = """你是 Sherlock 实时多模态助手，可以在实时通话中处理语音、文字、摄像头和共享屏幕。
+
+当用户的问题需要查看现实环境时，先调用 capture_live_camera 获取最新摄像头画面。
+当问题涉及用户共享的屏幕时，先调用 capture_live_screen 获取最新屏幕画面，再依据真实画面回答。
+不要声称看到了尚未通过工具获取的内容。
+
+回答应简洁、自然，适合语音播放，并使用与用户相同的语言。"""
+BUILTIN_AGENT_SLUGS = {DEFAULT_AGENT_SLUG, REALTIME_AGENT_SLUG}
+
 GENERAL_PURPOSE_AGENT_SLUG = "general-purpose"
 GENERAL_PURPOSE_AGENT_NAME = "通用任务"
 GENERAL_PURPOSE_AGENT_DESCRIPTION = (
@@ -104,7 +118,7 @@ ADMIN_ROLES = {"admin", "superadmin"}
 
 
 def is_builtin_agent(agent: Agent) -> bool:
-    return agent.slug == DEFAULT_AGENT_SLUG
+    return agent.slug in BUILTIN_AGENT_SLUGS
 
 
 def resolve_agent_is_subagent(backend_id: str, is_subagent: bool | None = None) -> bool:
@@ -255,6 +269,21 @@ class AgentRepository:
             created_by=created_by,
         )
 
+    async def ensure_realtime_agent(self, *, created_by: str | None = None) -> Agent:
+        return await self._ensure_builtin_agent(
+            slug=REALTIME_AGENT_SLUG,
+            backend_id=DEFAULT_AGENT_BACKEND_ID,
+            name=REALTIME_AGENT_NAME,
+            description=REALTIME_AGENT_DESCRIPTION,
+            config_context={
+                "model": REALTIME_AGENT_MODEL,
+                "system_prompt": REALTIME_AGENT_SYSTEM_PROMPT,
+            },
+            is_subagent=False,
+            created_by=created_by,
+            legacy_model_specs=LEGACY_REALTIME_AGENT_MODELS,
+        )
+
     async def _ensure_builtin_agent(
         self,
         *,
@@ -265,10 +294,21 @@ class AgentRepository:
         config_context: dict,
         is_subagent: bool,
         created_by: str | None = None,
+        legacy_model_specs: set[str] | None = None,
     ) -> Agent:
-        """落库一个内置 Agent；已存在则原样返回，避免覆盖管理员后续修改。"""
+        """落库内置 Agent；仅迁移明确列出的旧模型，不覆盖管理员配置。"""
         agent = await self.get_by_slug(slug)
         if agent:
+            config_json = dict(agent.config_json or {})
+            current_context = dict(config_json.get("context") or {})
+            if legacy_model_specs and current_context.get("model") in legacy_model_specs:
+                current_context["model"] = config_context["model"]
+                config_json["context"] = current_context
+                agent.config_json = config_json
+                agent.updated_by = created_by or "system"
+                agent.updated_at = utc_now_naive()
+                await self.db.commit()
+                await self.db.refresh(agent)
             return agent
 
         agent = Agent(
@@ -378,7 +418,7 @@ class AgentRepository:
     async def set_default(self, *, agent: Agent, updated_by: str | None = None) -> Agent:
         if agent.is_subagent:
             raise ValueError("子智能体不能设为默认智能体")
-        if not is_builtin_agent(agent):
+        if agent.slug != DEFAULT_AGENT_SLUG:
             raise ValueError("默认智能体已固定为内置智能助手")
         share_config = agent.share_config or DEFAULT_SHARE_CONFIG.copy()
         if share_config.get("access_level") != "global":

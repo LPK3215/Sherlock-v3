@@ -49,6 +49,7 @@ async def lifespan(app: FastAPI):
         async with pg_manager.get_async_session_context() as session:
             repository = AgentRepository(session)
             await repository.ensure_default_agent()
+            await repository.ensure_realtime_agent()
             await repository.ensure_general_purpose_subagent()
             await repository.ensure_web_search_subagent()
             await repository.ensure_deep_research_agents()
@@ -118,6 +119,9 @@ async def lifespan(app: FastAPI):
     """)
     logger.info("Yuxi backend startup complete")
     yield
+    from yuxi.realtime import realtime_session_manager
+
+    await realtime_session_manager.close()
     await tasker.shutdown()
     shutdown_sandbox_provider()
     await close_queue_clients()

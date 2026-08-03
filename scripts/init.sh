@@ -93,6 +93,16 @@ ensure_sandbox_env() {
     set_env_value "SANDBOX_PROVISIONER_TOKEN" "$SANDBOX_PROVISIONER_TOKEN"
 }
 
+ensure_realtime_env() {
+    if grep -Eq '^YUXI_REALTIME_INTERNAL_TOKEN=.+' .env; then
+        return
+    fi
+
+    YUXI_REALTIME_INTERNAL_TOKEN=$(generate_hex 32)
+    set_env_value "YUXI_REALTIME_INTERNAL_TOKEN" "$YUXI_REALTIME_INTERNAL_TOKEN"
+    echo "Generated YUXI_REALTIME_INTERNAL_TOKEN and saved it to .env."
+}
+
 skip_existing_image() {
     local image="$1"
 
@@ -113,6 +123,7 @@ if [ -f ".env" ]; then
     ensure_required_api_env
     ensure_jwt_env
     ensure_sandbox_env
+    ensure_realtime_env
 else
     echo "📝 .env file not found. Let's set up your environment variables."
     echo ""
@@ -158,6 +169,8 @@ else
         echo "Generated SANDBOX_PROVISIONER_TOKEN and saved it to .env."
     fi
 
+    YUXI_REALTIME_INTERNAL_TOKEN=$(generate_hex 32)
+
     # Create .env file
     cat > .env << EOF
 # SiliconFlow API Key (required)
@@ -176,6 +189,7 @@ EOF
 JWT_SECRET_KEY=${JWT_SECRET_KEY}
 YUXI_INSTANCE_ID=${YUXI_INSTANCE_ID}
 SANDBOX_PROVISIONER_TOKEN=${SANDBOX_PROVISIONER_TOKEN}
+YUXI_REALTIME_INTERNAL_TOKEN=${YUXI_REALTIME_INTERNAL_TOKEN}
 EOF
 
     echo "✅ .env file created successfully!"

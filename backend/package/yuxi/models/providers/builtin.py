@@ -2,6 +2,17 @@
 
 from typing import Any
 
+
+QWEN3_VL_REALTIME_MODEL = {
+    "id": "Qwen/Qwen3-VL-8B-Thinking",
+    "type": "chat",
+    "display_name": "Qwen/Qwen3-VL-8B-Thinking",
+    "input_modalities": ["text", "image"],
+}
+
+REQUIRED_BUILTIN_MODELS = {"modelscope": [QWEN3_VL_REALTIME_MODEL]}
+
+
 BUILTIN_PROVIDERS: list[dict[str, Any]] = [
     {
         "provider_id": "openai",
@@ -160,7 +171,10 @@ BUILTIN_PROVIDERS: list[dict[str, Any]] = [
         "display_name": "ModelScope",
         "base_url": "https://api-inference.modelscope.cn/v1",
         "api_key_env": "MODELSCOPE_ACCESS_TOKEN",
+        "capabilities": ["chat"],
         "models_endpoint": "https://api-inference.modelscope.cn/v1/models",
+        "enabled_models": [QWEN3_VL_REALTIME_MODEL],
+        "is_enabled": True,
     },
     {
         "provider_id": "opencode",
