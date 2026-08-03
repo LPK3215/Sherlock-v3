@@ -13,6 +13,7 @@ import {
   usePipecatClientTransportState,
   useRTVIClientEvent,
 } from "@pipecat-ai/client-react";
+import { useBotAudioOutput } from "@pipecat-ai/voice-ui-kit";
 import {
   CameraOff,
   LoaderCircle,
@@ -105,6 +106,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   const transportState = usePipecatClientTransportState();
   const cam = usePipecatClientCamControl();
   const mic = usePipecatClientMicControl();
+  const { setVolume: setBotVolume } = useBotAudioOutput();
 
   /* ---------- Local state ---------- */
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -208,7 +210,15 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
 
   useRTVIClientEvent(
     RTVIEvent.BotStartedSpeaking,
-    useCallback(() => setAssistantActivity("speaking"), []),
+    useCallback(() => {
+      setBotVolume(1);
+      setAssistantActivity("speaking");
+    }, [setBotVolume]),
+  );
+
+  useRTVIClientEvent(
+    RTVIEvent.UserStartedSpeaking,
+    useCallback(() => setBotVolume(0), [setBotVolume]),
   );
 
   useRTVIClientEvent(
@@ -309,7 +319,11 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   }, [cam, mic, connect]);
 
   const doDisconnect = useCallback(async () => {
-    if (disconnect) await disconnect();
+    try {
+      if (disconnect) await disconnect();
+    } finally {
+      setBotVolume(1);
+    }
     setMessages([]);
     setDiagnostics([]);
     setAgentEvents([]);
@@ -319,7 +333,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     setAssistantActivity("idle");
     setScreenShareEnabled(false);
     setError("");
-  }, [disconnect]);
+  }, [disconnect, setBotVolume]);
 
   const sendText = useCallback(
     async (e: FormEvent) => {

@@ -8,6 +8,7 @@ from typing import Any
 
 from pipecat.frames.frames import (
     DataFrame,
+    InterruptionFrame,
     LLMContextFrame,
     LLMFullResponseEndFrame,
     LLMFullResponseStartFrame,
@@ -37,6 +38,11 @@ class YuxiLLMService(LLMService):
         self._run_lock = asyncio.Lock()
 
     async def process_frame(self, frame, direction: FrameDirection):
+        if isinstance(frame, InterruptionFrame):
+            await self.push_frame(frame, direction)
+            await super().process_frame(frame, direction)
+            return
+
         await super().process_frame(frame, direction)
 
         if isinstance(frame, YuxiResumeFrame):

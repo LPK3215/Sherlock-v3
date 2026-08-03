@@ -25,7 +25,7 @@
 
 - 修复实时通道屏幕共享在启用后无法抓帧的问题：客户端等待屏幕媒体创建后将轨道安装到专用 transceiver 并完成重协商；Gateway 在 Pipecat 的 `inactive -> recvonly` 切换后刷新失效的屏幕 track 包装器，将 screen receiver 绑定到有效的 BUNDLE 主 transport，补齐协商后的 codec/SSRC 路由并在按需抓帧时请求关键帧。Yuxi Run 事件改用 Pipecat 原生 RTVI Server Message 封装，避免 WebRTC 客户端静默丢弃 `run.started`、工具和终态事件；实时页面收到首个 `thread_id` 时只更新当前连接参数与本地存储，不再重建 Pipecat 客户端并断开正在进行的通话。Docker 浏览器 E2E 已验证摄像头、屏幕工具、文字、TTS、STT 和回复中再次发送消息取消旧 Run 的完整链路。
 - 完成实时通道的 Yuxi Agent 能力完整性接入与验证：`source=realtime` 继续复用原生 Prompt、模型配置、Tools、Skills、MCP、知识库、SubAgent、checkpoint/history、Summary 和工作区记忆，实时请求元数据不能覆盖已解析的 Agent 资源与权限；System Event Monitor 补齐真实 SSE `custom` 信封下的工具开始、完成、失败事件，并继续展示上下文压缩、用量、错误和终态。修复动态沙箱创建沿用普通 20 秒 HTTP 超时的问题，创建请求改为覆盖沙箱健康检查周期的独立长超时。Docker 测试覆盖 Skill 依赖工具、真实 Milvus 检索与引用、stdio MCP、SubAgent 父子运行、上下文压缩、同线程状态和 `MEMORY.md`，并在测试后清理临时 Agent、MCP、知识库与动态沙箱。
-- 完成实时通道的审批与恢复子链路：Gateway 记录 `approval.required` 对应的 pending interrupt，以结构化回答创建标准 resume Run，并通过 `created_by_run_id` 关联原 interrupted Run；同一 thread 重连时从 Yuxi active Run 与 SSE 历史恢复待审批问题。RTVI 审批回答和重连恢复事件统一进入 Pipecat Pipeline，保证后续插话可以取消正在生成的恢复回答并避开 `StartFrame` 时序竞态；实时页面支持单选、多选、自由输入和拒绝，并在异步恢复失败时解除处理中状态。独立 Docker 浏览器 E2E 已验证审批中断、同 thread 重连、结构化 resume、父 Run 关系和最终回答；语音立即停播、语音回答审批及有副作用工具取消边界仍留待后续阶段验证。
+- 完成实时通道的插话、审批与恢复：Gateway 记录 `approval.required` 对应的 pending interrupt，以结构化或语音原始回答创建标准 resume Run，并通过 `created_by_run_id` 关联原 interrupted Run；同一 thread 重连时从 Yuxi active Run 与 SSE 历史恢复待审批问题。RTVI 审批回答和重连恢复事件统一进入 Pipecat Pipeline；语音插话先清空 TTS/输出链路再取消旧 Yuxi Run，页面在 `UserStartedSpeaking` 时立即静音并在下一次 AI 开口时恢复。独立 Docker 浏览器 E2E 已验证旧 Run 最终 `cancelled`、语音审批 resume 父关联，以及有副作用 MCP 工具在取消窗口内严格只执行一次。
 
 - 修复 Milvus 知识图谱子图查询忽略 `max_depth` 的问题：查询会按请求深度展开路径，并完整返回路径中的中间节点与关系；排除 Chunk 时同时限制整条路径，避免通过 Chunk 间接扩展。路径结果继续遵循现有节点和边数量上限。
 

@@ -172,7 +172,7 @@ async function connectCall() {
   await page.waitForFunction(
     () => document.querySelector(".state-label")?.textContent === "AI 已接通",
     undefined,
-    { timeout: 60000 },
+    { timeout: TIMEOUT_MS },
   );
 }
 

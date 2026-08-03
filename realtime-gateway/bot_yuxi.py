@@ -129,7 +129,7 @@ async def run_bot_yuxi(transport, runner_args) -> None:
     tts = _make_tts_service()
 
     context = LLMContext(messages=[])
-    vad = SileroVADAnalyzer(params=VADParams(stop_secs=0.8, start_secs=0.2, confidence=0.4))
+    vad = SileroVADAnalyzer(params=VADParams(stop_secs=0.8, start_secs=0.08, confidence=0.4))
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,
         realtime_service_mode=False,

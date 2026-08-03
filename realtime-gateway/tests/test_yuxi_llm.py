@@ -1,15 +1,42 @@
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
-from pipecat.frames.frames import LLMContextFrame
+from pipecat.frames.frames import InterruptionFrame, LLMContextFrame
 from pipecat.processors.aggregators.llm_context import LLMContext
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
+from pipecat.services.llm_service import LLMService
 
 from yuxi_client import YuxiRunEvent
 from yuxi_llm import YuxiLLMService, YuxiResumeFrame
+
+
+@pytest.mark.asyncio
+async def test_interruption_reaches_output_before_run_cancellation_finishes(monkeypatch):
+    cancellation_started = asyncio.Event()
+    finish_cancellation = asyncio.Event()
+
+    async def wait_for_cancellation(_service, _frame, _direction):
+        cancellation_started.set()
+        await finish_cancellation.wait()
+
+    monkeypatch.setattr(LLMService, "process_frame", wait_for_cancellation)
+
+    service = YuxiLLMService(AsyncMock())
+    service.push_frame = AsyncMock()
+    frame = InterruptionFrame()
+
+    task = asyncio.create_task(service.process_frame(frame, FrameDirection.DOWNSTREAM))
+    await asyncio.wait_for(cancellation_started.wait(), timeout=1)
+
+    service.push_frame.assert_awaited_once_with(frame, FrameDirection.DOWNSTREAM)
+    assert not task.done()
+
+    finish_cancellation.set()
+    await task
 
 
 def test_latest_user_input_ignores_local_assistant_history():

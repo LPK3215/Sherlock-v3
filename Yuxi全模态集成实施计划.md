@@ -1,6 +1,6 @@
 # Yuxi 全模态实时 Agent 集成实施计划
 
-> 文档状态：实施中（阶段 4 的审批与恢复子链路已完成，插话、语音审批和副作用取消边界待验证）
+> 文档状态：实施中（阶段 1-4 已完成，下一步进入阶段 5：显式图片和屏幕输入）
 >
 > 编写日期：2026-08-02
 >
@@ -619,7 +619,7 @@ Yuxi 已支持多模态 `image_url` 输入。第一版视觉集成采用显式�
 
 ### 阶段 4：插话、取消、审批和恢复
 
-状态：**进行中（2026-08-03）**。审批卡片、按钮结构化回答、标准 resume Run、父 Run 关联和同 thread 重连恢复已经完成，并通过独立 Docker 浏览器 E2E；语音立即停播、语音回答审批和有副作用工具取消边界尚未验证。阶段记录见 `docs/vibe/2026-08-03-realtime-interruption-approval-resume.md`。
+状态：**已完成（2026-08-03）**。审批卡片、按钮与语音回答、标准 resume Run、父 Run 关联、同 thread 重连恢复、语音插话停播与旧 Run 终态，以及有副作用工具的取消边界均已通过独立 Docker 浏览器 E2E。阶段记录见 `docs/vibe/2026-08-03-realtime-interruption-approval-resume.md`。
 
 目标：达到可持续通话所需的控制语义。
 
@@ -916,7 +916,7 @@ test(realtime): add multimodal regression suite
 - [x] 知识库和引用生效。
 - [x] checkpoint、历史、Summary 和长期工作区信息生效。
 - [x] 审批卡片、按钮结构化回答和标准 resume Run 生效。
-- [ ] 语音回答审批生效。
+- [x] 语音回答审批生效。
 
 ### 全模态
 
@@ -928,7 +928,7 @@ test(realtime): add multimodal regression suite
 - [x] 摄像头按需工具可用。
 - [x] 屏幕按需工具可用。
 - [x] 回复未结束时再次发送文字会取消旧 Run，并正常执行新消息。
-- [ ] 语音插话可立即停止声音且不破坏 Agent 状态。
+- [x] 语音插话可立即停止声音且不破坏 Agent 状态。
 
 ### 稳定与安全
 
