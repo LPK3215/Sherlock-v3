@@ -16,11 +16,13 @@ import {
 import { useBotAudioOutput } from "@pipecat-ai/voice-ui-kit";
 import {
   CameraOff,
+  Camera,
   LoaderCircle,
   Logs,
   Mic,
   MicOff,
   MonitorUp,
+  Paperclip,
   Phone,
   PhoneOff,
   SendHorizontal,
@@ -49,7 +51,10 @@ interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   failed?: boolean;
+  mediaSource?: MediaSource;
 }
+
+type MediaSource = "camera" | "screen";
 
 type Diagnostic = [string, string];
 
@@ -113,6 +118,8 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   const [input, setInput] = useState("");
   const [pendingSends, setPendingSends] = useState(0);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
+  const [mediaSource, setMediaSource] = useState<MediaSource | null>(null);
+  const [mediaSourceUpdating, setMediaSourceUpdating] = useState(false);
   const [assistantActivity, setAssistantActivity] = useState<
     "idle" | "thinking" | "speaking"
   >("idle");
@@ -298,6 +305,8 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     setApprovalProcessing(false);
     setAssistantActivity("idle");
     setScreenShareEnabled(false);
+    setMediaSource(null);
+    setMediaSourceUpdating(false);
     seenTranscriptsRef.current.clear();
     try {
       mic.enableMic(true);
@@ -332,6 +341,8 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     seenTranscriptsRef.current.clear();
     setAssistantActivity("idle");
     setScreenShareEnabled(false);
+    setMediaSource(null);
+    setMediaSourceUpdating(false);
     setError("");
   }, [disconnect, setBotVolume]);
 
@@ -341,16 +352,26 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
       const text = input.trim();
       if (!text || !client) return;
       const messageId = createMessageId();
+      const attachedMediaSource = mediaSource;
       setPendingSends((count) => count + 1);
       setAssistantActivity("thinking");
       setMessages((prev) => [
         ...prev,
-        { id: messageId, role: "user", text },
+        { id: messageId, role: "user", text, mediaSource: attachedMediaSource ?? undefined },
       ]);
       setInput("");
       try {
         await client.sendText(text, { run_immediately: true, audio_response: true });
+        setMediaSource(null);
       } catch (err: unknown) {
+        if (attachedMediaSource) {
+          try {
+            await client.sendClientRequest("yuxi.media.attach", { source: null }, 5000);
+            setMediaSource(null);
+          } catch {
+            /* keep the original send failure as the user-facing error */
+          }
+        }
         setMessages((prev) =>
           prev.map((message) =>
             message.id === messageId ? { ...message, failed: true } : message,
@@ -362,7 +383,43 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
         requestAnimationFrame(() => inputRef.current?.focus());
       }
     },
-    [client, input],
+    [client, input, mediaSource],
+  );
+
+  useRTVIClientEvent(
+    RTVIEvent.UserTranscript,
+    useCallback(
+      (data: TranscriptData) => {
+        if (data.final && data.text?.trim() && mediaSource) setMediaSource(null);
+      },
+      [mediaSource],
+    ),
+  );
+
+  const selectMediaSource = useCallback(
+    async (source: MediaSource | null) => {
+      if (!client || mediaSourceUpdating) return;
+      if (source === "camera" && !cam.isCamEnabled) {
+        setError("请先打开摄像头");
+        return;
+      }
+      if (source === "screen" && !screenShareEnabled) {
+        setError("请先开始屏幕共享");
+        return;
+      }
+
+      setMediaSourceUpdating(true);
+      setError("");
+      try {
+        await client.sendClientRequest("yuxi.media.attach", { source }, 5000);
+        setMediaSource(source);
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? "图片附加设置失败");
+      } finally {
+        setMediaSourceUpdating(false);
+      }
+    },
+    [cam.isCamEnabled, client, mediaSourceUpdating, screenShareEnabled],
   );
 
   const toggleCam = useCallback(() => {
@@ -539,6 +596,11 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
                 >
                   <span>{message.role === "user" ? "你" : "AI"}</span>
                   <p>{message.text}</p>
+                  {message.mediaSource && (
+                    <small className="message-media">
+                      {message.mediaSource === "camera" ? "已附带摄像头画面" : "已附带屏幕画面"}
+                    </small>
+                  )}
                   {message.failed && <small>发送失败</small>}
                 </div>
               ))}
@@ -571,24 +633,59 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
 
       {/* ========== Text composer ========== */}
       {isConnected && (
-        <form className="text-composer" onSubmit={sendText}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="发送消息…"
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            className={pendingSends > 0 ? "send-pending" : ""}
-            disabled={!input.trim()}
-            title="发送"
-          >
-            <SendHorizontal />
-          </button>
-        </form>
+        <div className="composer-shell">
+          <div className="media-attach-control" aria-label="下一轮附带画面">
+            <Paperclip aria-hidden="true" />
+            <button
+              type="button"
+              className={!mediaSource ? "media-option-active" : ""}
+              disabled={mediaSourceUpdating}
+              onClick={() => void selectMediaSource(null)}
+            >
+              不附图
+            </button>
+            <button
+              type="button"
+              className={mediaSource === "camera" ? "media-option-active" : ""}
+              disabled={mediaSourceUpdating || !cam.isCamEnabled}
+              onClick={() => void selectMediaSource("camera")}
+              title={cam.isCamEnabled ? "下一轮附带摄像头画面" : "请先打开摄像头"}
+            >
+              <Camera aria-hidden="true" />
+              摄像头
+            </button>
+            {!isMobile && (
+              <button
+                type="button"
+                className={mediaSource === "screen" ? "media-option-active" : ""}
+                disabled={mediaSourceUpdating || !screenShareEnabled}
+                onClick={() => void selectMediaSource("screen")}
+                title={screenShareEnabled ? "下一轮附带共享屏幕" : "请先开始屏幕共享"}
+              >
+                <MonitorUp aria-hidden="true" />
+                屏幕
+              </button>
+            )}
+          </div>
+          <form className="text-composer" onSubmit={sendText}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="发送消息…"
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              className={pendingSends > 0 ? "send-pending" : ""}
+              disabled={!input.trim() || mediaSourceUpdating}
+              title="发送"
+            >
+              <SendHorizontal />
+            </button>
+          </form>
+        </div>
       )}
 
       {/* ========== Call controls ========== */}

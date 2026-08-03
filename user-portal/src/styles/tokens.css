@@ -1,0 +1,133 @@
+/* ============================================================
+   灵犀 AI · 设计变量（提取自 Ardot 设计稿 710845481922077）
+   颜色：RGB 0~1 浮点 → 十六进制
+   ============================================================ */
+:root {
+  /* 背景层 */
+  --bg-app: #060608;
+  --bg-base: #0a0a0b;          /* 0.039,0.039,0.043 */
+  --bg-sidebar: #141417;       /* 0.078,0.078,0.090 */
+  --surface-1: #1c1c20;        /* 0.110,0.110,0.125 */
+  --surface-2: #17171b;        /* 0.090,0.090,0.110 */
+  --surface-3: #121215;        /* 0.071,0.071,0.084 */
+  --surface-glass: rgba(11, 11, 14, 0.92);
+
+  /* 描边 */
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.10);
+  --border-gray: #26262b;      /* 0.150 */
+
+  /* 强调色（主题色，由 ThemeSwitcher 切换） */
+  --accent: #7c3aed;           /* 0.486,0.227,0.929 */
+  --accent-light: #a855f7;     /* 0.659,0.333,0.969 */
+  --accent-grad: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --accent-soft: rgba(124, 58, 237, 0.16);
+  --accent-soft-2: rgba(124, 58, 237, 0.12);
+  --accent-ring: rgba(124, 58, 237, 0.45);
+  --accent-text: #c4b5fd;      /* 0.769,0.710,0.992 */
+
+  /* 文本 */
+  --text-primary: #fafafa;     /* 0.980 */
+  --text-secondary: #a1a1aa;   /* 0.631 */
+  --text-tertiary: #71717a;    /* 0.443 */
+
+  /* 状态色 */
+  --green: #34d399;            /* 0.204,0.827,0.600 */
+  --green-soft: #a7f3d0;       /* 0.655,0.953,0.816 */
+  --red: #e5484d;              /* 0.898,0.282,0.302 */
+
+  /* 圆角 */
+  --r-xs: 8px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 18px;
+  --r-2xl: 24px;
+  --r-3xl: 28px;
+  --r-pill: 999px;
+
+  /* 字体 */
+  --font-sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+    'Microsoft YaHei', 'Segoe UI', sans-serif;
+
+  /* 阴影 */
+  --shadow-bar: 0 8px 28px rgba(0, 0, 0, 0.22);
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.20);
+  --shadow-pop: 0 10px 32px rgba(0, 0, 0, 0.30);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* 主题色切换（由视频页 ThemeSwitcher 驱动 --accent 系列变量） */
+[data-theme='violet'] {
+  --accent: #7c3aed;
+  --accent-light: #a855f7;
+  --accent-grad: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --accent-soft: rgba(124, 58, 237, 0.16);
+  --accent-soft-2: rgba(124, 58, 237, 0.12);
+  --accent-ring: rgba(124, 58, 237, 0.45);
+  --accent-text: #c4b5fd;
+}
+[data-theme='blue'] {
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --accent-grad: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  --accent-soft: rgba(59, 130, 246, 0.16);
+  --accent-soft-2: rgba(59, 130, 246, 0.12);
+  --accent-ring: rgba(59, 130, 246, 0.45);
+  --accent-text: #bfdbfe;
+}
+[data-theme='green'] {
+  --accent: #10b981;
+  --accent-light: #34d399;
+  --accent-grad: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --accent-soft: rgba(16, 185, 129, 0.16);
+  --accent-soft-2: rgba(16, 185, 129, 0.12);
+  --accent-ring: rgba(16, 185, 129, 0.45);
+  --accent-text: #a7f3d0;
+}
+[data-theme='amber'] {
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --accent-grad: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --accent-soft: rgba(245, 158, 11, 0.16);
+  --accent-soft-2: rgba(245, 158, 11, 0.12);
+  --accent-ring: rgba(245, 158, 11, 0.45);
+  --accent-text: #fde68a;
+}
+[data-theme='rose'] {
+  --accent: #f43f5e;
+  --accent-light: #fb7185;
+  --accent-grad: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+  --accent-soft: rgba(244, 63, 94, 0.16);
+  --accent-soft-2: rgba(244, 63, 94, 0.12);
+  --accent-ring: rgba(244, 63, 94, 0.45);
+  --accent-text: #fecdd3;
+}
