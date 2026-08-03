@@ -118,7 +118,24 @@ Gateway 不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversati
 | 插话、取消、审批和 resume | 已验证 | 使用标准 Run 语义 |
 | Agent 按需 camera/screen 工具 | 已验证 | 新鲜帧可以进入 Agent |
 | 用户显式附带 camera/screen | 已验证 | 完整 E2E：选择→附图标记→Gateway 抓帧→API 422 拒绝非视觉模型 |
-| 一次完整的工程集成验收 | 部分完成 | 第一步代码和测试完成，第二步待执行 |",
+| 一次完整的工程集成验收 | 部分完成 | 第一步和第二步完成，第三步待执行 |
+
+### 第二步：Agent 能力接入验收
+
+状态：**已完成**（9/10 场景验证通过，场景 9 跳过因无视觉模型配置）。
+
+| # | 场景 | 证据 | 结果 |
+|---|---|---|---|
+| 1 | 基础会话 | `test_realtime_run_keeps_tools_checkpoint_history_and_workspace_memory` | ✅ PASSED |
+| 2 | 工具 | 同上，工具调用和结果验证 | ✅ PASSED |
+| 3 | Skill/MCP | `test_realtime_run_calls_configured_mcp_tool` | ✅ PASSED |
+| 4 | 知识库 | `test_realtime_skill_dependency_queries_knowledge_base_with_source_reference` | ✅ PASSED |
+| 5 | SubAgent | `test_subagent_stream_records_run_and_shares_output_files` | ✅ PASSED |
+| 6 | 记忆 | `test_realtime_run_keeps_tools_checkpoint_history_and_workspace_memory` | ✅ PASSED |
+| 7 | 审批/插话 | DB 记录：`interrupted → resume → completed` + `cancelled` | ✅ 已验证 |
+| 8 | 视觉显式输入 | 浏览器 E2E：选择→附图标记→Gateway 抓帧→422 | ✅ 已验证 |
+| 9 | 视觉按需工具 | `test_read_file_multimodal_e2e` | ⏭️ 跳过（无视觉模型） |
+| 10 | 持久化 | DB 查询：消息/Run/元数据全部存储 | ✅ 已验证 |
 
 因此当前结论不是“所有功能都完成”，而是“Yuxi Agent 能力已经分项接通，剩余显式多模态输入和最终集成验收”。
 
@@ -292,7 +309,7 @@ Gateway：
 
 ## 8. 当前执行清单
 
-当前只执行第一步。
+第一步已完成。第二步 Agent 能力接入验收已完成（9/10 场景验证通过，场景 9 跳过因无视觉模型）。
 
 - [x] 标准 AgentRun 与 realtime 文字/语音主链路
 - [x] Tools、Skills、MCP、知识库、SubAgent、记忆接入证据
@@ -304,7 +321,7 @@ Gateway：
 - [x] Gateway `yuxi.media.attach` 一次性状态
 - [x] 文字/STT final 与新鲜帧原子提交
 - [x] camera、screen、非视觉模型和历史显示定向测试
-- [ ] Agent 能力接入验收
+- [x] Agent 能力接入验收（9/10 场景通过，场景 9 视觉按需工具因无视觉模型跳过）
 - [ ] 最终工程端到端验收和交付记录
 
 ## 9. 工程闭环之后再做的事项
