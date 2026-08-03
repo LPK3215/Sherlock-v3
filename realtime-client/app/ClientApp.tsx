@@ -129,12 +129,16 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   const [approvalQuestions, setApprovalQuestions] = useState<ApprovalQuestion[]>([]);
   const [approvalProcessing, setApprovalProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [reconnecting, setReconnecting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const seenTranscriptsRef = useRef(new Set<string>());
   const pipRef = useRef<HTMLDivElement>(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [pipPosition, setPipPosition] = useState({ x: 24, y: 82 });
+  const userHangupRef = useRef(false);
+  const wasConnectedRef = useRef(false);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ---------- Derived ---------- */
   const isConnected = transportState === "ready";
@@ -145,7 +149,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     transportState === "connected";
 
   const canMute = isConnected;
-  const stateLabel = STATE_LABELS[transportState] ?? transportState;
+  const stateLabel = reconnecting ? "重连中…" : (STATE_LABELS[transportState] ?? transportState);
   const isStable = READY_STATES.has(transportState);
 
   /* ---------- Derived: error ---------- */
@@ -328,6 +332,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   }, [cam, mic, connect]);
 
   const doDisconnect = useCallback(async () => {
+    userHangupRef.current = true;
     try {
       if (disconnect) await disconnect();
     } finally {
@@ -345,6 +350,39 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     setMediaSourceUpdating(false);
     setError("");
   }, [disconnect, setBotVolume]);
+
+  /* ---------- Auto-reconnect on unexpected disconnect ---------- */
+  useEffect(() => {
+    if (transportState === "ready") {
+      wasConnectedRef.current = true;
+      userHangupRef.current = false;
+      setReconnecting(false);
+      return;
+    }
+    if (
+      wasConnectedRef.current &&
+      !userHangupRef.current &&
+      (transportState === "disconnected" || transportState === "error") &&
+      !reconnecting &&
+      connect
+    ) {
+      setReconnecting(true);
+      reconnectTimerRef.current = setTimeout(() => {
+        connect().catch(() => {
+          /* 重连失败，3 秒后再次尝试 */
+          reconnectTimerRef.current = setTimeout(() => {
+            setReconnecting(false);
+          }, 3000);
+        });
+      }, 1000);
+    }
+    return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    };
+  }, [transportState, reconnecting, connect]);
 
   const sendText = useCallback(
     async (e: FormEvent) => {

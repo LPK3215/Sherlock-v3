@@ -170,9 +170,19 @@ class YuxiAgentClient:
         )
 
         try:
-            async for event in self.stream_run_events(run_id):
-                self._update_pending_interrupt(event)
-                yield event
+            last_seq = "0-0"
+            run_terminated = False
+            for _retry in range(10):
+                async for event in self.stream_run_events(run_id, after_seq=last_seq):
+                    self._update_pending_interrupt(event)
+                    if event.seq:
+                        last_seq = event.seq
+                    yield event
+                    if event.event == "end":
+                        run_terminated = True
+                if run_terminated:
+                    break
+                await asyncio.sleep(1)
         finally:
             if self.active_run_id == run_id:
                 self.active_run_id = None
