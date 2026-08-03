@@ -1,0 +1,37 @@
+# Sherlock 正式用户端产品化
+
+> 日期：2026-08-04
+> 状态：已完成
+
+## 目标
+
+保留 Yuxi `web` 作为管理端，将现有 `realtime-client` 产品化为独立用户端。两个前端直接调用同一套 Yuxi 后端接口，不保留独立 Realtime Gateway 或前端业务代理。
+
+## 产品边界
+
+- `web`：Yuxi 管理端，负责模型、Agent、知识库、工具、Skills、MCP 与系统管理。
+- `user-app`：Sherlock 用户端，负责登录、Agent 选择、文字/语音/视频通话、实时字幕、屏幕共享、审批和通话状态。
+- `backend`：唯一业务后端。认证、Thread、AgentRun、Prompt、模型、工具和实时媒体均以 Yuxi 为事实来源。
+- `user-portal`：视觉参考已迁移，目录已删除。
+- `realtime-gateway`：历史功能已迁入 Yuxi 后端，目录已删除。
+
+## 验收标准
+
+- 用户端不再调用 `/api/start` 或 `realtime-gateway`，直接使用 Yuxi `/api/realtime/*`。
+- 保留原客户端的麦克风、摄像头、屏幕共享、PiP、字幕、文字输入、媒体附加、插话、审批和异常重连。
+- 使用 `user-portal` 的暗色用户端布局、视觉层级和控件设计，但所有状态来自真实运行数据。
+- 页面在桌面和移动端为真实响应式布局，不使用固定 1440x900 画布整体缩放。
+- Compose 同时部署 Yuxi `web` 与正式 `user-app`，两者共享 Yuxi API。
+- 完成真实浏览器摄像头、屏幕、文字、语音和 TTS 链路验证。
+- 最终删除 `user-portal` 与 `realtime-gateway`，正式用户端目录命名为 `user-app`。
+
+## Checklist
+
+- [x] Yuxi 直连会话、Offer 与 ICE
+- [x] 用户端产品外壳与登录/Agent 入口
+- [x] 通话布局和真实媒体状态绑定
+- [x] 字幕、消息、媒体附加与审批交互
+- [x] 桌面/移动端响应式验证
+- [x] Docker Compose 用户端服务
+- [x] 浏览器完整链路验证
+- [x] 删除参考目录并更新架构文档

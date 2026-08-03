@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sherlock · Yuxi Realtime",
-  description: "Yuxi realtime voice and video Agent client",
+  title: "Sherlock 实时多模态助手",
+  description: "基于 Yuxi 的 Sherlock 实时语音与视频 Agent 用户端",
 };
 
 export default function RootLayout({

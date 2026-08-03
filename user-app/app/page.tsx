@@ -87,6 +87,10 @@ export default function Home() {
     setSessionReady(true);
   }, [agentSlug]);
 
+  const leaveSession = useCallback(() => {
+    setSessionReady(false);
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     setToken("");
@@ -95,24 +99,44 @@ export default function Home() {
     setError("");
   }, []);
 
-  const requestData = useMemo(
+  const startBotParams = useMemo(
     () => ({
-      yuxi_access_token: token,
+      endpoint: "/yuxi-api/realtime/start",
+      headers: new Headers({
+        Authorization: `Bearer ${token}`,
+      }),
+      requestData: {
       agent_slug: agentSlug,
       thread_id:
         typeof window === "undefined"
           ? null
           : sessionStorage.getItem(`realtime_thread:${agentSlug}`),
+        enableDefaultIceServers: true,
+      },
     }),
     [agentSlug, token],
   );
 
   const handleThreadChange = useCallback(
     (nextThreadId: string) => {
+      const requestData = startBotParams.requestData as {
+        thread_id: string | null;
+      };
       requestData.thread_id = nextThreadId;
       sessionStorage.setItem(`realtime_thread:${agentSlug}`, nextThreadId);
     },
-    [agentSlug, requestData],
+    [agentSlug, startBotParams],
+  );
+
+  const handleStartResponse = useCallback(
+    (response: unknown) => {
+      if (response && typeof response === "object") {
+        const threadId = (response as { threadId?: unknown }).threadId;
+        if (typeof threadId === "string" && threadId) handleThreadChange(threadId);
+      }
+      return response;
+    },
+    [handleThreadChange],
   );
 
   if (!sessionReady) {
@@ -136,7 +160,11 @@ export default function Home() {
       <div className="voice-ui-kit">
         <PipecatAppBase
           transportType="smallwebrtc"
-          connectParams={{ endpoint: "/api/start", requestData }}
+          startBotParams={startBotParams}
+          startBotResponseTransformer={handleStartResponse}
+          transportOptions={{
+            offerUrlTemplate: "/yuxi-api/realtime/sessions/:sessionId/offer",
+          }}
         >
           {({ handleConnect, handleDisconnect }) => (
             <ClientApp
@@ -144,6 +172,7 @@ export default function Home() {
               connect={handleConnect}
               disconnect={handleDisconnect}
               isMobile={isMobile}
+              onLeave={leaveSession}
               onThreadChange={handleThreadChange}
             />
           )}

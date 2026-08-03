@@ -9,6 +9,7 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 开发与运行拓扑以 `docker-compose.yml` 为准。核心开发服务包括：
 
 - `web-dev`：Vue/Vite 前端，挂载 `web/src` 并热重载。
+- `user-app`：Next.js 实时用户端，直接通过同源代理调用 Yuxi API，不承载独立业务后端。
 - `api-dev`：FastAPI API 服务，挂载 `backend/server` 和 `backend/package` 并热重载。
 - `worker-dev`：ARQ 后台任务 worker，处理智能体运行等异步任务。
 - `sandbox-provisioner`：为智能体工具执行提供沙盒环境。
@@ -39,7 +40,9 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 
 ## 前端代码地图
 
-前端是 Vue 3 + Vite 应用，业务入口集中在 `web/src`。
+前端分为管理端 `web` 和实时用户端 `user-app`，二者共享同一个 Yuxi API。
+
+管理端是 Vue 3 + Vite 应用，业务入口集中在 `web/src`。
 
 - `main.js` 挂载应用，`App.vue` 是根组件。
 - `router` 定义页面路由和权限跳转。普通用户默认进入智能体对话，图谱、知识库、仪表盘、扩展管理等页面带管理员权限约束。
@@ -48,6 +51,8 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 - `views` 是页面级入口，`components` 是可复用界面块；智能体对话、知识库、图谱、扩展管理等复杂页面由 view 组合多个 component。
 - `composables` 放可组合的前端运行逻辑，例如流式消息处理、运行事件订阅、审批、人机输入和智能体线程状态。
 - `utils` 放前端通用工具和轻量转换逻辑；样式集中在 `assets/css`，颜色和基础规范优先复用 `base.css` 与现有 less 文件。
+
+`user-app` 是 Next.js + React 用户端，Pipecat 客户端负责浏览器媒体设备、SmallWebRTC、字幕与实时控制；`app/page.tsx` 负责 Yuxi 登录、Agent 选择和实时会话入口，`ClientApp.tsx` 负责通话状态、文字/语音/视频/屏幕、审批与事件交互。它只调用 `/api/auth`、`/api/agent` 和 `/api/realtime`，不启动或依赖独立 Gateway。
 
 ## 运行链路
 
@@ -67,6 +72,7 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 
 - Docker Compose 是开发环境的事实来源。开发时优先检查容器、日志和热重载，不要默认要求本地裸跑服务。
 - HTTP 路由层应保持薄；领域流程放在 `yuxi.services`，持久化查询放在 `yuxi.repositories`。
+- `web` 与 `user-app` 可以独立部署，但业务接口、认证、AgentRun 和实时媒体都必须归属同一个 Yuxi 后端。
 - 前端 API 调用应集中在 `web/src/apis`，组件不要散落拼接后端 URL。
 - 智能体能力通过 context、middleware、toolkits、backends 组合；知识库通过工具访问，不要把知识库、MCP、Skills 或沙盒逻辑硬编码进单个页面或路由。
 - LITE 模式必须允许跳过知识库、图谱、评估等重依赖能力；新增相关接口或初始化逻辑时要尊重这个边界。

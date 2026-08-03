@@ -4,9 +4,11 @@
 >
 > 更新时间：2026-08-03
 >
-> 当前目标：将实时通话作为 Yuxi 原生前后端能力交付，不保留独立 Gateway 或独立前端服务。
+> 当前目标：将实时通话作为 Yuxi 原生后端能力交付；保留管理端 `web` 与用户端 `user-app` 两套前端，但二者只使用同一个 Yuxi 后端，不保留独立 Gateway。
 
-后端启动时由 Yuxi 原生初始化流程注册 `Qwen/Qwen3-VL-8B-Instruct` 的 `text/image` 能力，并幂等创建绑定该模型和实时业务提示词的 `sherlock-realtime` Agent；不再依赖一次性 SQL 或参考 Gateway 配置。
+后端启动时由 Yuxi 原生初始化流程注册 `Qwen/Qwen3-VL-8B-Thinking` 的 `text/image` 能力，并幂等创建绑定该模型和实时业务提示词的 `sherlock-realtime` Agent；不再依赖一次性 SQL 或参考 Gateway 配置。
+
+> 说明：本文后半部分保留的 Gateway 测试与分阶段记录仅用于追溯早期验证过程，不代表当前运行架构。当前运行边界以 `ARCHITECTURE.md` 和 `docker-compose.yml` 为准。
 
 ## 1. 当前到底要完成什么
 
@@ -31,7 +33,7 @@
 - 完整监控平台、SLO 和生产告警
 - 生产级短期 Session 凭证和复杂的高可用恢复
 - 全量故障注入、灾备和运营后台
-- 正式 `user-portal` 接入
+- 正式 `user-app` 用户端产品化
 - 连续逐帧视频理解或原始音视频录制
 
 这些内容在工程闭环完成后单独规划，不能反过来阻塞当前集成证明。
@@ -93,9 +95,9 @@ Yuxi 继续负责：
 
 ### 4.3 前端迁移是下一阶段
 
-- `realtime-client` 只保留为页面实现参考，不再通过 Compose 部署。
+- `user-app` 作为正式实时用户端通过 Compose 独立部署，并直接调用 Yuxi API。
 - 下一阶段把实时通话页面写入选定的正式前端项目并调用 Yuxi `/api/realtime`。
-- 前端迁移完成后删除 `realtime-client` 和 `realtime-gateway` 参考目录。
+- 前端迁移完成后删除 `realtime-client`、`user-portal` 和 `realtime-gateway` 参考目录，正式代码保留在 `user-app` 与 Yuxi 后端中。
 
 ## 5. 当前真实状态
 
@@ -330,7 +332,7 @@ Gateway：
 - Trace、指标、成本和数据删除策略
 - 并发、多 Gateway、限流、配额和灰度
 - 完整安全评审、故障注入和生产运维
-- 正式 `user-portal` 接入
+- 正式 `user-app` 用户端产品化
 
 ## 10. 计划维护规则
 

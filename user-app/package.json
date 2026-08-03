@@ -1,5 +1,5 @@
 {
-  "name": "screen-ui-kit-client",
+  "name": "sherlock-user-app",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.11.0",
@@ -29,10 +29,5 @@
     "eslint-config-next": "15.5.22",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "@pipecat-ai/small-webrtc-transport@1.10.6": "patches/@pipecat-ai__small-webrtc-transport@1.10.6.patch"
-    }
   }
 }

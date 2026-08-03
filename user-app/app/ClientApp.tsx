@@ -15,8 +15,10 @@ import {
 } from "@pipecat-ai/client-react";
 import { useBotAudioOutput } from "@pipecat-ai/voice-ui-kit";
 import {
+  ArrowLeft,
   CameraOff,
   Camera,
+  Clock3,
   LoaderCircle,
   Logs,
   Mic,
@@ -26,6 +28,7 @@ import {
   Phone,
   PhoneOff,
   SendHorizontal,
+  Sparkles,
   Video,
   VideoOff,
 } from "lucide-react";
@@ -63,6 +66,7 @@ interface Props {
   connect?: () => void | Promise<void>;
   disconnect?: () => void | Promise<void>;
   isMobile: boolean;
+  onLeave: () => void;
   onThreadChange: (threadId: string) => void;
 }
 
@@ -105,7 +109,7 @@ const appendChunk = (current: string, chunk: string) => {
 
 /* ------- Component ------- */
 
-export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadChange }: Props) {
+export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange }: Props) {
   /* ---------- Pipecat hooks ---------- */
   const client = usePipecatClient();
   const transportState = usePipecatClientTransportState();
@@ -130,6 +134,8 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   const [approvalProcessing, setApprovalProcessing] = useState(false);
   const [error, setError] = useState("");
   const [reconnecting, setReconnecting] = useState(false);
+  const [connectedAt, setConnectedAt] = useState<number | null>(null);
+  const [durationSeconds, setDurationSeconds] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const seenTranscriptsRef = useRef(new Set<string>());
@@ -148,9 +154,9 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     transportState === "authenticated" ||
     transportState === "connected";
 
-  const canMute = isConnected;
   const stateLabel = reconnecting ? "重连中…" : (STATE_LABELS[transportState] ?? transportState);
   const isStable = READY_STATES.has(transportState);
+  const formattedDuration = `${String(Math.floor(durationSeconds / 60)).padStart(2, "0")}:${String(durationSeconds % 60).padStart(2, "0")}`;
 
   /* ---------- Derived: error ---------- */
 
@@ -159,6 +165,22 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setConnectedAt(null);
+      setDurationSeconds(0);
+      return;
+    }
+    const startedAt = connectedAt ?? Date.now();
+    if (!connectedAt) setConnectedAt(startedAt);
+    const updateDuration = () => {
+      setDurationSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    };
+    updateDuration();
+    const timer = window.setInterval(updateDuration, 1000);
+    return () => window.clearInterval(timer);
+  }, [connectedAt, isConnected]);
 
   /* ---------- RTVI events ---------- */
   useRTVIClientEvent(
@@ -351,6 +373,11 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     setError("");
   }, [disconnect, setBotVolume]);
 
+  const leaveSession = useCallback(async () => {
+    if (isConnected || isTransitioning) await doDisconnect();
+    onLeave();
+  }, [doDisconnect, isConnected, isTransitioning, onLeave]);
+
   /* ---------- Auto-reconnect on unexpected disconnect ---------- */
   useEffect(() => {
     if (transportState === "ready") {
@@ -368,7 +395,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
     ) {
       setReconnecting(true);
       reconnectTimerRef.current = setTimeout(() => {
-        connect().catch(() => {
+        Promise.resolve(connect()).catch(() => {
           /* 重连失败，3 秒后再次尝试 */
           reconnectTimerRef.current = setTimeout(() => {
             setReconnecting(false);
@@ -552,41 +579,28 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
   /* ---------- Render ---------- */
   return (
     <main className="call-shell" onClick={() => setShowLog(false)}>
-      {/* ========== Video stage ========== */}
-      <div className="video-stage">
-        <PipecatClientVideo
-          participant="local"
-          fit="cover"
-          mirror
-          className="camera-feed"
-        />
-
-        {!cam.isCamEnabled && (
-          <div className="camera-off-state">
-            <CameraOff size={36} strokeWidth={1.4} />
-            <span>摄像头已关闭</span>
-          </div>
-        )}
-
-        <div className="video-shade" />
-      </div>
-
-      {/* ========== Header ========== */}
       <header className="call-header">
-        <div className="call-identity">
-          <div
-            className={`status-dot${isConnected ? " status-ready" : ""}${
-              isTransitioning ? " status-connecting" : ""
-            }${transportState === "error" ? " status-error" : ""}`}
-          />
+        <div className="header-primary">
+          <button type="button" className="icon-btn" title="返回 Agent 选择" onClick={() => void leaveSession()}>
+            <ArrowLeft />
+          </button>
           <div>
             <strong>{agentName}</strong>
-            <span className="state-label">{stateLabel}</span>
+            <span>Sherlock 实时对话</span>
           </div>
         </div>
-
-        {isConnected && (
-          <div className="header-actions">
+        <div className="header-actions">
+          <div className={`connection-badge${isConnected ? " connection-ready" : ""}${transportState === "error" ? " connection-error" : ""}`}>
+            <i />
+            <span>{stateLabel}</span>
+          </div>
+          {isConnected && (
+            <div className="duration-badge">
+              <Clock3 />
+              <time>{formattedDuration}</time>
+            </div>
+          )}
+          {isConnected && (
             <button
               type="button"
               className={`icon-btn${showLog ? " icon-btn-active" : ""}`}
@@ -598,35 +612,69 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
             >
               <Logs />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
-      {/* ========== Error banner ========== */}
       {error && (
-        <div className="error-banner" onClick={() => setError("")}>
+        <button type="button" className="error-banner" onClick={() => setError("")}>
           {error}
-        </div>
+        </button>
       )}
 
-      {/* ========== Diagnostic strip ========== */}
-      {isConnected && diagnostics.length > 0 && (
-        <div className="diagnostic-strip">
-          {diagnostics.map(([k, v]) => (
-            <span key={k}>
-              {k}: {String(v).slice(0, 28)}
+      <section className="call-content">
+        <div className="assistant-stage">
+          <div className={`assistant-presence assistant-${assistantActivity}${isConnected ? " assistant-online" : ""}`}>
+            <div className="assistant-avatar">
+              <Sparkles />
+            </div>
+            <strong>{agentName}</strong>
+            <span>
+              {!isConnected
+                ? stateLabel
+                : assistantActivity === "thinking"
+                  ? "正在思考"
+                  : assistantActivity === "speaking"
+                    ? "正在回答"
+                    : "正在聆听"}
             </span>
-          ))}
-        </div>
-      )}
+            <div className="sound-wave" aria-hidden="true">
+              {Array.from({ length: 16 }, (_, index) => <i key={index} />)}
+            </div>
+          </div>
 
-      {/* ========== Conversation and live events ========== */}
-      {isConnected && (
-        <section
-          className={`interaction-workspace${showLog ? " workspace-log-open" : ""}`}
-        >
-          {(messages.length > 0 || assistantActivity !== "idle") && (
-            <div className="conversation-layer" ref={scrollRef}>
+          {!isConnected && (
+            <div className="start-call-panel">
+              <p>开始后即可使用语音、视频、文字或共享屏幕与 Agent 对话。</p>
+              <button type="button" className="start-call-action" onClick={doConnect} disabled={!isStable}>
+                {isTransitioning ? <LoaderCircle className="spin" /> : <Phone />}
+                <span>{isTransitioning ? stateLabel : "开始通话"}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <aside className="conversation-panel">
+          <header className="conversation-header">
+            <div>
+              <strong>实时对话</strong>
+              <span>{messages.length > 0 ? `${messages.length} 条消息` : "语音转写与文字消息"}</span>
+            </div>
+            {diagnostics.length > 0 && (
+              <span className="diagnostic-count" title={diagnostics.map(([key, value]) => `${key}: ${value}`).join("\n")}>
+                媒体正常
+              </span>
+            )}
+          </header>
+
+          <div className="conversation-layer" ref={scrollRef}>
+            {messages.length === 0 && assistantActivity === "idle" ? (
+              <div className="conversation-empty">
+                <Sparkles />
+                <p>{isConnected ? "等待你开始对话" : "接通后，对话内容会显示在这里"}</p>
+              </div>
+            ) : (
+              <>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -648,165 +696,69 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
                   {assistantActivity === "thinking" ? "AI 正在思考" : "AI 正在回答"}
                 </div>
               )}
-            </div>
-          )}
-
-          {approvalQuestions.length > 0 && (
-            <ApprovalPrompt
-              questions={approvalQuestions}
-              processing={approvalProcessing}
-              onSubmit={submitApproval}
-              onReject={() => submitApproval("reject")}
-            />
-          )}
-
-          <div
-            className={`log-overlay${showLog ? " log-overlay-open" : ""}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <EventStreamPanel agentEvents={agentEvents} onClose={() => setShowLog(false)} />
-          </div>
-        </section>
-      )}
-
-      {/* ========== Text composer ========== */}
-      {isConnected && (
-        <div className="composer-shell">
-          <div className="media-attach-control" aria-label="下一轮附带画面">
-            <Paperclip aria-hidden="true" />
-            <button
-              type="button"
-              className={!mediaSource ? "media-option-active" : ""}
-              disabled={mediaSourceUpdating}
-              onClick={() => void selectMediaSource(null)}
-            >
-              不附图
-            </button>
-            <button
-              type="button"
-              className={mediaSource === "camera" ? "media-option-active" : ""}
-              disabled={mediaSourceUpdating || !cam.isCamEnabled}
-              onClick={() => void selectMediaSource("camera")}
-              title={cam.isCamEnabled ? "下一轮附带摄像头画面" : "请先打开摄像头"}
-            >
-              <Camera aria-hidden="true" />
-              摄像头
-            </button>
-            {!isMobile && (
-              <button
-                type="button"
-                className={mediaSource === "screen" ? "media-option-active" : ""}
-                disabled={mediaSourceUpdating || !screenShareEnabled}
-                onClick={() => void selectMediaSource("screen")}
-                title={screenShareEnabled ? "下一轮附带共享屏幕" : "请先开始屏幕共享"}
-              >
-                <MonitorUp aria-hidden="true" />
-                屏幕
-              </button>
+              </>
             )}
           </div>
-          <form className="text-composer" onSubmit={sendText}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="发送消息…"
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              className={pendingSends > 0 ? "send-pending" : ""}
-              disabled={!input.trim() || mediaSourceUpdating}
-              title="发送"
-            >
-              <SendHorizontal />
-            </button>
-          </form>
-        </div>
-      )}
 
-      {/* ========== Call controls ========== */}
-      <nav className="call-controls" onClick={(e) => e.stopPropagation()}>
-        {/* Mic */}
-        <button
-          type="button"
-          className={`control-button${!mic.isMicEnabled ? " control-muted" : ""}`}
-          data-tooltip={mic.isMicEnabled ? "麦克风已开" : "麦克风已关"}
-          onClick={toggleMic}
-          disabled={transportState === "disconnecting"}
-        >
-          {mic.isMicEnabled ? <Mic /> : <MicOff />}
-        </button>
+          {isConnected && approvalQuestions.length > 0 && (
+            <ApprovalPrompt questions={approvalQuestions} processing={approvalProcessing} onSubmit={submitApproval} onReject={() => submitApproval("reject")} />
+          )}
 
-        {/* Camera */}
-        <button
-          type="button"
-          className={`control-button${cam.isCamEnabled ? " control-active" : ""}`}
-          data-tooltip={cam.isCamEnabled ? "摄像头已开" : "摄像头已关"}
-          onClick={toggleCam}
-          disabled={!isStable && isConnected}
-        >
-          {cam.isCamEnabled ? <Video /> : <VideoOff />}
-        </button>
+          {isConnected && (
+            <div className="composer-shell">
+              <div className="media-attach-control" aria-label="下一轮附带画面">
+                <Paperclip aria-hidden="true" />
+                <button type="button" className={!mediaSource ? "media-option-active" : ""} disabled={mediaSourceUpdating} onClick={() => void selectMediaSource(null)}>
+                  不附图
+                </button>
+                <button type="button" className={mediaSource === "camera" ? "media-option-active" : ""} disabled={mediaSourceUpdating || !cam.isCamEnabled} onClick={() => void selectMediaSource("camera")} title={cam.isCamEnabled ? "下一轮附带摄像头画面" : "请先打开摄像头"}>
+                  <Camera aria-hidden="true" />摄像头
+                </button>
+                {!isMobile && (
+                  <button type="button" className={mediaSource === "screen" ? "media-option-active" : ""} disabled={mediaSourceUpdating || !screenShareEnabled} onClick={() => void selectMediaSource("screen")} title={screenShareEnabled ? "下一轮附带共享屏幕" : "请先开始屏幕共享"}>
+                    <MonitorUp aria-hidden="true" />屏幕
+                  </button>
+                )}
+              </div>
+              <form className="text-composer" onSubmit={sendText}>
+                <input ref={inputRef} type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="发送消息" autoComplete="off" />
+                <button type="submit" className={pendingSends > 0 ? "send-pending" : ""} disabled={!input.trim() || mediaSourceUpdating} title="发送">
+                  <SendHorizontal />
+                </button>
+              </form>
+            </div>
+          )}
+        </aside>
+      </section>
 
-        {/* Screen share (desktop only) */}
-        {!isMobile && (
-          <button
-            type="button"
-            className={`control-button${screenShareEnabled ? " control-active" : ""}`}
-            data-tooltip={screenShareEnabled ? "屏幕共享中" : "屏幕共享已关"}
-            onClick={toggleScreen}
-            disabled={!canMute}
-          >
-            <MonitorUp />
+      <div className={`log-overlay${showLog ? " log-overlay-open" : ""}`} onClick={(event) => event.stopPropagation()}>
+        <EventStreamPanel agentEvents={agentEvents} onClose={() => setShowLog(false)} />
+      </div>
+
+      {isConnected && (
+        <nav className="call-controls" onClick={(event) => event.stopPropagation()} aria-label="通话控制">
+          <button type="button" className={`control-button${!mic.isMicEnabled ? " control-muted" : ""}`} data-tooltip={mic.isMicEnabled ? "关闭麦克风" : "打开麦克风"} onClick={toggleMic}>
+            {mic.isMicEnabled ? <Mic /> : <MicOff />}
           </button>
-        )}
-
-        {/* Call / Hangup */}
-        {isConnected ? (
-          <button
-            type="button"
-            className="control-button call-button hangup-button"
-            data-tooltip="挂断"
-            onClick={doDisconnect}
-          >
+          <button type="button" className={`control-button${cam.isCamEnabled ? " control-active" : ""}`} data-tooltip={cam.isCamEnabled ? "关闭摄像头" : "打开摄像头"} onClick={toggleCam}>
+            {cam.isCamEnabled ? <Video /> : <VideoOff />}
+          </button>
+          {!isMobile && (
+            <button type="button" className={`control-button${screenShareEnabled ? " control-active" : ""}`} data-tooltip={screenShareEnabled ? "停止共享" : "共享屏幕"} onClick={toggleScreen}>
+              <MonitorUp />
+            </button>
+          )}
+          <button type="button" className="control-button hangup-button" data-tooltip="挂断" onClick={doDisconnect}>
             <PhoneOff />
           </button>
-        ) : (
-          <button
-            type="button"
-            className="control-button call-button start-button"
-            data-tooltip="开始通话"
-            onClick={doConnect}
-            disabled={!isStable}
-          >
-            {isTransitioning ? <LoaderCircle className="spin" /> : <Phone />}
-          </button>
-        )}
-      </nav>
+        </nav>
+      )}
 
-      {/* ========== PIP (connected) ========== */}
       {isConnected && (
-        <div
-          ref={pipRef}
-          className="camera-pip"
-          aria-label="可拖动的全局摄像头预览"
-          title="拖动调整预览位置"
-          onPointerDown={startPipDrag}
-          onPointerMove={movePip}
-          onClick={(event) => event.stopPropagation()}
-          style={{
-            left: pipPosition.x,
-            top: pipPosition.y,
-          }}
-        >
-          <PipecatClientVideo
-            participant="local"
-            fit="contain"
-            mirror
-            className="camera-pip-video"
-          />
+        <div ref={pipRef} className={`camera-pip${cam.isCamEnabled ? "" : " camera-pip-off"}`} aria-label="可拖动的摄像头预览" title="拖动调整预览位置" onPointerDown={startPipDrag} onPointerMove={movePip} onClick={(event) => event.stopPropagation()} style={{ left: pipPosition.x, top: pipPosition.y }}>
+          <PipecatClientVideo participant="local" fit="cover" mirror className="camera-pip-video" />
+          {!cam.isCamEnabled && <CameraOff />}
+          <span>{cam.isCamEnabled ? "你" : "摄像头已关闭"}</span>
         </div>
       )}
     </main>

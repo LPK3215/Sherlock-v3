@@ -204,6 +204,28 @@ services:
     command: pnpm run server
     restart: unless-stopped
 
+  user-app:
+    build:
+      context: ./user-app
+      dockerfile: Dockerfile
+    image: sherlock-user-app:${YUXI_VERSION:-0.7.1}
+    volumes:
+      - ./user-app/app:/app/app
+      - ./user-app/public:/app/public
+      - ./user-app/next.config.ts:/app/next.config.ts
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=development
+      - YUXI_SERVER_URL=http://api:5050
+    command: pnpm dev --hostname 0.0.0.0
+    restart: unless-stopped
+
   # region neo4j
   graph:
     image: neo4j:5.26

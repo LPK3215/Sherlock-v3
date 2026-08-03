@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, LogIn, LogOut } from "lucide-react";
+import { ArrowRight, Bot, LockKeyhole, LogIn, LogOut, Sparkles, UserRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 export interface YuxiAgent {
@@ -35,6 +35,7 @@ export function SessionGate({
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
+  const selectedAgent = agents.find((agent) => agent.slug === agentSlug);
 
   const submitLogin = async (event: FormEvent) => {
     event.preventDefault();
@@ -49,47 +50,46 @@ export function SessionGate({
   return (
     <main className="session-gate">
       <header className="session-brand">
-        <span className="session-brand-mark">S</span>
+        <span className="session-brand-mark"><Sparkles /></span>
         <div>
           <strong>Sherlock</strong>
-          <span>Yuxi Realtime</span>
+          <span>实时多模态助手</span>
         </div>
       </header>
+
+      <section className="session-intro">
+        <span className="session-kicker">SHERLOCK LIVE</span>
+        <h1>与你的 AI Agent<br />自然交流</h1>
+        <p>一套 Yuxi 后端，直接支持文字、语音、视频与屏幕内容。</p>
+        <div className="session-capabilities" aria-label="支持的对话方式">
+          <span>语音</span><span>视频</span><span>文字</span><span>屏幕</span>
+        </div>
+      </section>
 
       <section className="session-form" aria-busy={loading}>
         {!authenticated ? (
           <form onSubmit={submitLogin}>
             <div className="session-heading">
               <LogIn />
-              <h1>登录 Yuxi</h1>
+              <div><h2>登录</h2><p>使用 Yuxi 账号继续</p></div>
             </div>
             <label>
               <span>账号</span>
-              <input
-                autoComplete="username"
-                autoFocus
-                value={loginId}
-                onChange={(event) => setLoginId(event.target.value)}
-              />
+              <div className="field-control"><UserRound /><input autoComplete="username" autoFocus value={loginId} onChange={(event) => setLoginId(event.target.value)} /></div>
             </label>
             <label>
               <span>密码</span>
-              <input
-                autoComplete="current-password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              <div className="field-control"><LockKeyhole /><input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></div>
             </label>
             <button type="submit" className="session-primary" disabled={loading || !loginId || !password}>
-              {loading ? "正在登录" : "登录"}
+              <span>{loading ? "正在登录" : "登录"}</span><ArrowRight />
             </button>
           </form>
         ) : (
           <div>
             <div className="session-heading">
               <Bot />
-              <h1>选择 Agent</h1>
+              <div><h2>选择 Agent</h2><p>选择本次对话使用的助手</p></div>
             </div>
             <label>
               <span>Agent</span>
@@ -101,8 +101,9 @@ export function SessionGate({
                 ))}
               </select>
             </label>
+            {selectedAgent?.description && <p className="agent-description">{selectedAgent.description}</p>}
             <button type="button" className="session-primary" disabled={loading || !agentSlug} onClick={onStart}>
-              进入通话
+              <span>进入通话</span><ArrowRight />
             </button>
             <button type="button" className="session-secondary" onClick={onLogout}>
               <LogOut />

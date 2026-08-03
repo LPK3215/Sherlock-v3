@@ -4,7 +4,7 @@ import http from "node:http";
 import net from "node:net";
 
 const API_URL = process.env.E2E_API_URL || "http://api:5050";
-const CLIENT_HOST = process.env.E2E_CLIENT_HOST || "realtime-client";
+const CLIENT_HOST = process.env.E2E_CLIENT_HOST || "user-app";
 const CLIENT_PORT = Number(process.env.E2E_CLIENT_PORT || "3000");
 const ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN || "";
 const PLAYWRIGHT_MODULE =
@@ -300,16 +300,16 @@ async function installSession(context) {
 }
 
 async function connectCall() {
-  await page.locator('button[data-tooltip="开始通话"]').click();
+  await page.locator("button.start-call-action").click();
   await page.waitForFunction(
-    () => document.querySelector(".state-label")?.textContent === "AI 已接通",
+    () => document.querySelector(".connection-badge")?.textContent?.includes("AI 已接通"),
     undefined,
     { timeout: TIMEOUT_MS },
   );
 }
 
 async function sendText(text) {
-  const input = page.locator('input[placeholder="发送消息…"]');
+  const input = page.locator('input[placeholder="发送消息"]');
   await input.fill(text);
   await input.press("Enter");
 }

@@ -4,7 +4,7 @@ import net from "node:net";
 import path from "node:path";
 
 const API_URL = process.env.E2E_API_URL || "http://api:5050";
-const CLIENT_HOST = process.env.E2E_CLIENT_HOST || "realtime-client";
+const CLIENT_HOST = process.env.E2E_CLIENT_HOST || "user-app";
 const CLIENT_PORT = Number(process.env.E2E_CLIENT_PORT || "3000");
 const ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN || "";
 const PLAYWRIGHT_MODULE =
@@ -298,7 +298,7 @@ async function installMediaFixtures(context) {
 }
 
 async function sendText(text) {
-  const input = page.locator('input[placeholder="发送消息…"]');
+  const input = page.locator('input[placeholder="发送消息"]');
   await input.fill(text);
   await input.press("Enter");
 }
@@ -379,9 +379,9 @@ try {
   await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
   assert.equal(await page.evaluate(() => window.isSecureContext), true);
   await page.getByRole("button", { name: "进入通话" }).click();
-  await page.locator('button[data-tooltip="开始通话"]').click();
+  await page.locator("button.start-call-action").click();
   await page.waitForFunction(
-    () => document.querySelector(".state-label")?.textContent === "AI 已接通",
+    () => document.querySelector(".connection-badge")?.textContent?.includes("AI 已接通"),
     undefined,
     { timeout: 60000 },
   );
@@ -424,8 +424,8 @@ try {
   await waitForAssistant("CAMERA RED 742");
   console.log(JSON.stringify({ check: "camera", status: "passed" }));
 
-  await page.locator('button[data-tooltip="屏幕共享已关"]').click();
-  await page.locator('button[data-tooltip="屏幕共享中"]').waitFor({ timeout: 30000 });
+  await page.locator('button[data-tooltip="共享屏幕"]').click();
+  await page.locator('button[data-tooltip="停止共享"]').waitFor({ timeout: 30000 });
   await page.waitForFunction(
     () =>
       window.__outboundVideoStats().then((stats) =>
