@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.utils.auth_middleware import get_required_user
 from yuxi.storage.redis import sync_redis_client
+from yuxi.utils.auth_utils import AuthUtils
 from yuxi.utils.logging_config import logger
 
 router = APIRouter(prefix="/realtime", tags=["realtime"])
@@ -41,7 +42,7 @@ async def create_realtime_session(
     """将当前用户的 access_token 存入 Redis，返回 session_id 供 Gateway 查询。"""
     session_id = f"rt-{uuid.uuid4()}"
     session_data: dict[str, Any] = {
-        "access_token": user.access_token,
+        "access_token": AuthUtils.create_access_token({"sub": str(user.id)}),
         "agent_slug": payload.agent_slug,
         "thread_id": payload.thread_id,
     }
