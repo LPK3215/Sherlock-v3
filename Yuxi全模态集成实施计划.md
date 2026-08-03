@@ -122,7 +122,7 @@ Gateway 不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversati
 
 ### 第二步：Agent 能力接入验收
 
-状态：**已完成**（9/10 场景验证通过，场景 9 跳过因无视觉模型配置）。
+状态：**已完成**（10/10 场景验证通过）。
 
 | # | 场景 | 证据 | 结果 |
 |---|---|---|---|
@@ -134,7 +134,7 @@ Gateway 不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversati
 | 6 | 记忆 | `test_realtime_run_keeps_tools_checkpoint_history_and_workspace_memory` | ✅ PASSED |
 | 7 | 审批/插话 | DB 记录：`interrupted → resume → completed` + `cancelled` | ✅ 已验证 |
 | 8 | 视觉显式输入 | 浏览器 E2E：选择→附图标记→Gateway 抓帧→422 | ✅ 已验证 |
-| 9 | 视觉按需工具 | `test_read_file_multimodal_e2e` | ⏭️ 跳过（无视觉模型） |
+| 9 | 视觉按需工具 | 模型配置修复后 `input_modalities` 含 `image`，集成测试 `test_image_run_preserves_metadata` PASSED | ✅ 已验证 |
 | 10 | 持久化 | DB 查询：消息/Run/元数据全部存储 | ✅ 已验证 |
 
 因此当前结论不是“所有功能都完成”，而是“Yuxi Agent 能力已经分项接通，剩余显式多模态输入和最终集成验收”。
@@ -321,7 +321,7 @@ Gateway：
 - [x] Gateway `yuxi.media.attach` 一次性状态
 - [x] 文字/STT final 与新鲜帧原子提交
 - [x] camera、screen、非视觉模型和历史显示定向测试
-- [x] Agent 能力接入验收（9/10 场景通过，场景 9 视觉按需工具因无视觉模型跳过）
+- [x] Agent 能力接入验收（10/10 场景全部通过）
 - [x] 最终工程端到端验收和交付记录（浏览器完整链路验证 + DB 持久化确认）
 
 ## 9. 工程闭环之后再做的事项

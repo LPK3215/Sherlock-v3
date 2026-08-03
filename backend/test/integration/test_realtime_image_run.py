@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import json
 import os
 import sys
 from datetime import timedelta
@@ -171,6 +172,8 @@ async def test_image_run_preserves_metadata_or_rejects(token: str):
             assert row["has_image"], "image_content should be stored"
             metadata = row["extra_metadata"]
             assert metadata is not None, "extra_metadata should not be null"
+            if isinstance(metadata, str):
+                metadata = json.loads(metadata)
             assert "image_meta" in metadata, f"image_meta not found in extra_metadata: {list(metadata.keys())}"
             assert metadata["image_meta"]["source"] == "camera"
             assert metadata["image_meta"]["width"] == 1280
