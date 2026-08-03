@@ -1,0 +1,90 @@
+diff --git a/dist/index.js b/dist/index.js
+index 3e5e75709bcf9b8226999dcbb3f6e75bb062f55d..3b91ac4360b929c6c4ef2006b040a55756519636 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -2659,7 +2659,7 @@ var $8381b73e1f76ead9$export$c95c65abc5f47125 = /** @class */ function(_super) {
+     };
+     DailyMediaManager.prototype.enableScreenShare = function(enable) {
+-        if (enable) this._daily.startScreenShare();
+-        else this._daily.stopScreenShare();
++        if (enable) return this._daily.startScreenShare();
++        return this._daily.stopScreenShare();
+     };
+     Object.defineProperty(DailyMediaManager.prototype, "isCamEnabled", {
+         get: function() {
+@@ -3435,6 +3435,6 @@ class $8381b73e1f76ead9$export$62043589d053a879 extends (0, $7ytRB$pipecataiclie
+         if (this.mediaManager.supportsScreenShare) // For now, we only support receiving a single video track
+         this.pc.addTransceiver("video", {
+-            direction: "sendonly"
++            direction: "inactive"
+         });
+     }
+     getAudioTransceiver() {
+@@ -3545,9 +3545,6 @@ class $8381b73e1f76ead9$export$62043589d053a879 extends (0, $7ytRB$pipecataiclie
+         pc.getTransceivers().forEach((transceiver)=>{
+             if (transceiver.stop) transceiver.stop();
+         });
+-        pc.getSenders().forEach((sender)=>{
+-            sender.track?.stop();
+-        });
+         pc.close();
+     }
+     async stop() {
+@@ -3611,6 +3608,11 @@ class $8381b73e1f76ead9$export$62043589d053a879 extends (0, $7ytRB$pipecataiclie
+     async enableScreenShare(enable) {
+         if (!this.mediaManager.supportsScreenShare) throw new (0, $7ytRB$pipecataiclientjs.UnsupportedFeatureError)("enableScreenShare", "mediaManager", "Screen sharing is not supported by the current media manager");
+-        this.mediaManager.enableScreenShare(enable);
++        await this.mediaManager.enableScreenShare(enable);
++        const screenTrack = enable ? this.tracks().local.screenVideo : null;
++        const screenTransceiver = this.getScreenVideoTransceiver();
++        await screenTransceiver.sender.replaceTrack(screenTrack);
++        screenTransceiver.direction = enable ? "sendonly" : "inactive";
++        await this.negotiate();
+         this.sendSignallingMessage(new $8381b73e1f76ead9$var$TrackStatusMessage($8381b73e1f76ead9$var$SCREEN_VIDEO_TRANSCEIVER_INDEX, enable));
+     }
+     get isCamEnabled() {
+diff --git a/dist/index.module.js b/dist/index.module.js
+index cd4f1e8c56d727cea23c062d8048abdcd6cc9eb5..f2835f3d242a52e63547f8d6197f253c6d65098c 100644
+--- a/dist/index.module.js
++++ b/dist/index.module.js
+@@ -2635,7 +2635,7 @@ var $22ece045290c996a$export$c95c65abc5f47125 = /** @class */ function(_super) {
+     };
+     DailyMediaManager.prototype.enableScreenShare = function(enable) {
+-        if (enable) this._daily.startScreenShare();
+-        else this._daily.stopScreenShare();
++        if (enable) return this._daily.startScreenShare();
++        return this._daily.stopScreenShare();
+     };
+     Object.defineProperty(DailyMediaManager.prototype, "isCamEnabled", {
+         get: function() {
+@@ -3411,6 +3411,6 @@ class $b31644dc78dca54a$export$62043589d053a879 extends (0, $99wTV$Transport) {
+         if (this.mediaManager.supportsScreenShare) // For now, we only support receiving a single video track
+         this.pc.addTransceiver("video", {
+-            direction: "sendonly"
++            direction: "inactive"
+         });
+     }
+     getAudioTransceiver() {
+@@ -3521,9 +3521,6 @@ class $b31644dc78dca54a$export$62043589d053a879 extends (0, $99wTV$Transport) {
+         pc.getTransceivers().forEach((transceiver)=>{
+             if (transceiver.stop) transceiver.stop();
+         });
+-        pc.getSenders().forEach((sender)=>{
+-            sender.track?.stop();
+-        });
+         pc.close();
+     }
+     async stop() {
+@@ -3587,6 +3584,11 @@ class $b31644dc78dca54a$export$62043589d053a879 extends (0, $99wTV$Transport) {
+     async enableScreenShare(enable) {
+         if (!this.mediaManager.supportsScreenShare) throw new (0, $99wTV$UnsupportedFeatureError)("enableScreenShare", "mediaManager", "Screen sharing is not supported by the current media manager");
+-        this.mediaManager.enableScreenShare(enable);
++        await this.mediaManager.enableScreenShare(enable);
++        const screenTrack = enable ? this.tracks().local.screenVideo : null;
++        const screenTransceiver = this.getScreenVideoTransceiver();
++        await screenTransceiver.sender.replaceTrack(screenTrack);
++        screenTransceiver.direction = enable ? "sendonly" : "inactive";
++        await this.negotiate();
+         this.sendSignallingMessage(new $b31644dc78dca54a$var$TrackStatusMessage($b31644dc78dca54a$var$SCREEN_VIDEO_TRANSCEIVER_INDEX, enable));
+     }
+     get isCamEnabled() {

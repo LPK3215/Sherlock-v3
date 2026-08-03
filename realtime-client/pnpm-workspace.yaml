@@ -1,0 +1,2 @@
+patchedDependencies:
+  '@pipecat-ai/small-webrtc-transport@1.10.6': patches/@pipecat-ai__small-webrtc-transport@1.10.6.patch
