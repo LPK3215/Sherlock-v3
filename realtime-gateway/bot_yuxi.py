@@ -125,6 +125,7 @@ async def run_bot_yuxi(transport, runner_args) -> None:
     )
     register_frame_broker(frame_broker)
     yuxi_llm = YuxiLLMService(yuxi_client)
+    yuxi_llm._frame_broker = frame_broker
     stt = _make_stt_service()
     tts = _make_tts_service()
 
@@ -179,6 +180,9 @@ async def run_bot_yuxi(transport, runner_args) -> None:
     async def on_client_message(rtvi, message):
         if message.type == "yuxi.approval.answer":
             await worker.queue_frames([YuxiResumeFrame(answer=message.data)])
+        elif message.type == "yuxi.media.attach":
+            source = message.data.get("source") if isinstance(message.data, dict) else None
+            yuxi_llm._media_source = source
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):

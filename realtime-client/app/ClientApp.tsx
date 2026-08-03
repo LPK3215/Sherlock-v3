@@ -366,7 +366,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
       } catch (err: unknown) {
         if (attachedMediaSource) {
           try {
-            await client.sendClientRequest("yuxi.media.attach", { source: null }, 5000);
+            client.sendClientMessage("yuxi.media.attach", { source: null });
             setMediaSource(null);
           } catch {
             /* keep the original send failure as the user-facing error */
@@ -411,7 +411,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onThreadCh
       setMediaSourceUpdating(true);
       setError("");
       try {
-        await client.sendClientRequest("yuxi.media.attach", { source }, 5000);
+        client.sendClientMessage("yuxi.media.attach", { source });
         setMediaSource(source);
       } catch (err: unknown) {
         setError((err as Error)?.message ?? "图片附加设置失败");

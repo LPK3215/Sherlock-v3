@@ -103,6 +103,20 @@ def resolve_agent_run_model_spec(model_spec: str | None, agent_item, agent_backe
     return resolve_chat_model_spec(getattr(context, "model", None))
 
 
+def _check_model_vision_capability(model_spec: str, has_image: bool) -> None:
+    """当用户提交图片时，校验当前模型是否支持图片输入。"""
+    if not has_image:
+        return
+    info = model_cache.get_model_info(model_spec)
+    if not info:
+        raise HTTPException(status_code=422, detail="无法获取模型信息，不能确认图片能力")
+    if "image" not in (info.input_modalities or []):
+        raise HTTPException(
+            status_code=422,
+            detail=f"模型 '{info.display_name}' 不支持图片输入，请切换到支持视觉的模型",
+        )
+
+
 def _build_run_response(run) -> dict:
     return {
         "run_id": run.id,
@@ -396,6 +410,8 @@ async def create_agent_run_view(
         resolved_model_spec = scope.parent_run.input_payload["model_spec"]
     else:
         resolved_model_spec = resolve_agent_run_model_spec(model_spec, scope.agent_item, scope.agent_backend)
+        has_image = input_message is not None and input_message.image_content is not None
+        _check_model_vision_capability(resolved_model_spec, has_image=has_image)
 
     run_input_message = _prepare_run_input_message(
         run_type=run_type,
@@ -465,6 +481,8 @@ def _prepare_run_input_message(
     if run_type == "chat":
         if input_message is None:
             raise HTTPException(status_code=422, detail="input_message 不能为空")
+        if image_meta := meta.get("image_meta"):
+            metadata["image_meta"] = image_meta
         if raw_message := input_message.raw_message():
             metadata["raw_message"] = raw_message
         return input_message.with_metadata(metadata)

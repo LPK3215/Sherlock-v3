@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from pipecat.frames.frames import (
     DataFrame,
@@ -36,6 +36,8 @@ class YuxiLLMService(LLMService):
         super().__init__(name="LLM(Yuxi AgentRun)")
         self._client = client
         self._run_lock = asyncio.Lock()
+        self._media_source: Literal["none", "camera", "screen"] | None = None
+        self._frame_broker: Any = None
 
     async def process_frame(self, frame, direction: FrameDirection):
         if isinstance(frame, InterruptionFrame):
@@ -54,13 +56,45 @@ class YuxiLLMService(LLMService):
             return
 
         query, image_content = self._latest_user_input(frame.context)
-        await self._run_agent(query=query, image_content=image_content)
+        image_meta = None
+        if self._media_source and self._media_source != "none":
+            image_content, image_meta = await self._capture_fresh_frame()
+        await self._run_agent(
+            query=query,
+            image_content=image_content,
+            image_meta=image_meta,
+            resume=None,
+        )
+
+    async def _capture_fresh_frame(self) -> tuple[str | None, dict[str, Any] | None]:
+        source = self._media_source
+        if not source or source == "none" or not self._frame_broker:
+            return None, None
+        try:
+            payload = await self._frame_broker.capture(source, 3000)
+        except TimeoutError:
+            await self.push_error(error_msg=f"抓取{source}画面超时，请确保媒体源已开启")
+            return None, None
+        except RuntimeError as exc:
+            await self.push_error(error_msg=str(exc))
+            return None, None
+        return (
+            payload.get("data_base64"),
+            {
+                "source": payload.get("source"),
+                "captured_at": payload.get("captured_at"),
+                "width": payload.get("width"),
+                "height": payload.get("height"),
+                "mime_type": payload.get("mime_type"),
+            },
+        )
 
     async def _run_agent(
         self,
         *,
         query: str | None,
         image_content: str | None = None,
+        image_meta: dict[str, Any] | None = None,
         resume: Any | None = None,
     ) -> None:
         async with self._run_lock:
@@ -72,6 +106,7 @@ class YuxiLLMService(LLMService):
                 async for event in self._client.run_turn(
                     query,
                     image_content=image_content,
+                    image_meta=image_meta,
                     resume=resume,
                 ):
                     await self._push_agent_event(event)
@@ -80,6 +115,8 @@ class YuxiLLMService(LLMService):
                             await self.stop_ttfb_metrics()
                             first_delta = False
                         await self._push_llm_text(delta)
+                if image_content is not None:
+                    self._media_source = None
             except asyncio.CancelledError:
                 await self._client.cancel_active_run()
                 raise

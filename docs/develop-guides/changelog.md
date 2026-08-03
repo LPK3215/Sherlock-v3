@@ -29,6 +29,8 @@
 
 - 修复 Milvus 知识图谱子图查询忽略 `max_depth` 的问题：查询会按请求深度展开路径，并完整返回路径中的中间节点与关系；排除 Chunk 时同时限制整条路径，避免通过 Chunk 间接扩展。路径结果继续遵循现有节点和边数量上限。
 
+- 完成实时通道显式摄像头和屏幕图片输入：后端在创建图片 Run 前通过 `input_modalities` 校验模型是否支持视觉，非视觉模型返回 422 而非静默丢图，`ModelInfo` 缓存补充 `input_modalities` 字段并在重建时从模型配置写入；图片来源、抓取时间、宽高和 MIME 通过 `meta.image_meta` 存入消息 `extra_metadata`，继续复用已有 `multimodal_image` 消息体系。Gateway 处理 `yuxi.media.attach` 客户端消息维护 `none/camera/screen` 一次性选择，下一条文字或 STT final 到达时通过 FrameBroker 抓取新鲜帧（最长边 1280、JPEG quality 82），文字、图片和元数据一次性提交给 Yuxi，Run 创建成功后才清除选择；approval/resume 不消费媒体选择，抓帧超时、轨道未连接和 Run 创建失败均推送可理解错误且不清除选择。前端三态控件根据 Gateway 确认更新状态，未启用的媒体来源禁用选择，用户消息中显示本轮附带的媒体来源。前端 `yuxi.media.attach` 从 `sendClientRequest`（需响应）改为 `sendClientMessage`（不需要响应），避免 Gateway 无响应时超时导致选择不生效。后端 8 项单元测试、Gateway 8 项单元测试和后端集成测试全部通过，浏览器 E2E 验证了选择→附图标记→Gateway 抓帧→API 422 拒绝非视觉模型的完整链路。
+
 - 修复线程文件接口的同步文件 I/O 阻塞：交付物预览仅异步读取媒体类型识别所需的 512 字节文件头，不再同步加载完整文件；线程文件全文读取和目录扫描下沉到工作线程，避免大文件或大目录并发访问时阻塞 API 事件循环。
 - 修复应用 lifespan 关闭时未释放共享 Neo4j driver 的问题，避免同进程重载或重复启动后残留图数据库连接。
 - 修复删除 Milvus 知识库阻塞事件循环：`MilvusKB.delete_database` 恢复异步基类契约，并将同步的主集合与图集合清理下沉到工作线程，避免删除期间阻塞其他对话和 SSE 推送。

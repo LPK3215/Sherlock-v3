@@ -117,8 +117,8 @@ Gateway 不得保存第二套 Prompt、Agent、Tool、长期记忆或 Conversati
 | Summary 和 usage 事件 | 已验证 | 可投影到事件面板 |
 | 插话、取消、审批和 resume | 已验证 | 使用标准 Run 语义 |
 | Agent 按需 camera/screen 工具 | 已验证 | 新鲜帧可以进入 Agent |
-| 用户显式附带 camera/screen | 未完成 | 客户端控件已有，Gateway 尚未接通 |
-| 一次完整的工程集成验收 | 未完成 | 显式附图完成后执行 |
+| 用户显式附带 camera/screen | 已验证 | 完整 E2E：选择→附图标记→Gateway 抓帧→API 422 拒绝非视觉模型 |
+| 一次完整的工程集成验收 | 部分完成 | 第一步代码和测试完成，第二步待执行 |",
 
 因此当前结论不是“所有功能都完成”，而是“Yuxi Agent 能力已经分项接通，剩余显式多模态输入和最终集成验收”。
 
@@ -182,7 +182,7 @@ Gateway 测试需要固定一个可重复的 Docker 测试入口，避免每次�
 
 ### 第一步：完成显式摄像头和屏幕图片输入
 
-状态：**正在实施**。
+状态：**已完成**。
 
 目标：用户选择 camera 或 screen 后，下一条文字或语音与一张新鲜画面原子进入同一个 Yuxi AgentRun。
 
@@ -299,11 +299,11 @@ Gateway：
 - [x] 插话、取消、审批和 resume 接入证据
 - [x] Agent 按需 camera/screen 工具
 - [x] 当前前端显式附图三态控件通过静态检查和构建
-- [ ] 后端视觉模型能力预检
-- [ ] 图片来源、时间、尺寸和 MIME 元数据
-- [ ] Gateway `yuxi.media.attach` 一次性状态
-- [ ] 文字/STT final 与新鲜帧原子提交
-- [ ] camera、screen、非视觉模型和历史显示定向测试
+- [x] 后端视觉模型能力预检
+- [x] 图片来源、时间、尺寸和 MIME 元数据
+- [x] Gateway `yuxi.media.attach` 一次性状态
+- [x] 文字/STT final 与新鲜帧原子提交
+- [x] camera、screen、非视觉模型和历史显示定向测试
 - [ ] Agent 能力接入验收
 - [ ] 最终工程端到端验收和交付记录
 

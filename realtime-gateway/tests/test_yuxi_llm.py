@@ -74,6 +74,7 @@ async def test_agent_events_use_rtvi_server_message_frame():
             query: str,
             *,
             image_content: str | None = None,
+            image_meta=None,
             resume=None,
         ):
             assert query == "新的问题"
@@ -128,6 +129,7 @@ async def test_resume_frame_uses_structured_answer():
             query: str | None,
             *,
             image_content: str | None = None,
+            image_meta=None,
             resume=None,
         ):
             assert query is None

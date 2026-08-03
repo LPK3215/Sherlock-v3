@@ -37,6 +37,7 @@ class ModelInfo:
     # 可选配置
     headers: dict[str, str] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
+    input_modalities: list[str] = field(default_factory=list)
 
     # Embedding 专属
     dimension: int | None = None
@@ -57,6 +58,7 @@ class ModelInfo:
             "provider_type": self.provider_type,
             "headers": self.headers,
             "extra": self.extra,
+            "input_modalities": self.input_modalities,
             "dimension": self.dimension,
             "batch_size": self.batch_size,
         }
@@ -73,6 +75,7 @@ class ModelInfo:
             provider_type=data["provider_type"],
             headers=data.get("headers", {}),
             extra=data.get("extra", {}),
+            input_modalities=data.get("input_modalities", []),
             dimension=data.get("dimension"),
             batch_size=data.get("batch_size", 40),
         )
@@ -156,6 +159,7 @@ class ModelCache:
                     provider_type=provider.provider_type,
                     headers=dict(provider.headers_json or {}),
                     extra=dict(provider.extra_json or {}),
+                    input_modalities=model.get("input_modalities", []),
                     dimension=model.get("dimension"),
                     batch_size=model.get("batch_size", 40),
                 )

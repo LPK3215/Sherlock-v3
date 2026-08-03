@@ -114,6 +114,7 @@ class YuxiAgentClient:
         query: str | None,
         *,
         image_content: str | None = None,
+        image_meta: dict[str, Any] | None = None,
         resume: Any | None = None,
     ) -> AsyncIterator[YuxiRunEvent]:
         thread_id = await self.ensure_thread()
@@ -122,12 +123,14 @@ class YuxiAgentClient:
             resume = query if resume is None else resume
             query = None
             image_content = None
+            image_meta = None
         elif resume is not None:
             raise YuxiAPIError("当前没有需要恢复的 Yuxi Agent Run", status_code=409)
 
         run = await self._create_run_after_active_run_finishes(
             query=query,
             image_content=image_content,
+            image_meta=image_meta,
             thread_id=thread_id,
             resume=resume,
             created_by_run_id=pending_interrupt["run_id"] if pending_interrupt else None,
@@ -208,6 +211,7 @@ class YuxiAgentClient:
         *,
         query: str | None,
         image_content: str | None,
+        image_meta: dict[str, Any] | None,
         thread_id: str,
         resume: Any | None,
         created_by_run_id: str | None,
@@ -216,6 +220,8 @@ class YuxiAgentClient:
         meta = {"request_id": request_id, "source": "realtime", "channel": "voice"}
         if self.config.session_id:
             meta["realtime_session_id"] = self.config.session_id
+        if image_meta:
+            meta["image_meta"] = image_meta
         body = {
             "query": query,
             "agent_slug": self.config.agent_slug,
