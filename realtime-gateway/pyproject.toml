@@ -7,6 +7,7 @@ dependencies = [
     "httpx>=0.28.1,<1",
     "pipecat-ai[webrtc,silero,openai,runner,whisper,funasr,kokoro,moonshine,piper,pocket-tts]>=1.7.0",
     "piper-tts[zh]>=1.6.0",
+    "redis>=5.0,<6",
     "regex>=2026.7.19",
 ]
 

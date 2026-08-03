@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  // Use BOT_START_URL from environment or fallback to localhost
   const botStartUrl =
     process.env.BOT_START_URL || 'http://localhost:7860/start';
+  const yuxiApiUrl =
+    process.env.YUXI_SERVER_URL || 'http://localhost:5050';
 
   try {
-    // Prepare headers - make API key optional
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Only add Authorization header if API key is provided
     if (process.env.BOT_START_PUBLIC_API_KEY) {
       headers.Authorization = `Bearer ${process.env.BOT_START_PUBLIC_API_KEY}`;
     }
@@ -36,6 +35,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 通过 Yuxi API 将 access_token 存入 Redis，获取 session_id
+    // Gateway 只收到 session_id，不再明文传递 token
+    const sessionResponse = await fetch(
+      `${yuxiApiUrl}/api/realtime/session`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${yuxiAccessToken}`,
+        },
+        body: JSON.stringify({
+          agent_slug: agentSlug,
+          thread_id: threadId,
+        }),
+      },
+    );
+
+    let yuxiSessionId: string | null = null;
+    if (sessionResponse.ok) {
+      const sessionData = await sessionResponse.json();
+      yuxiSessionId = sessionData.session_id;
+    }
+
+    // 构建 Gateway 请求体：优先使用 session_id，回退到明文 token（兼容）
+    const gatewayBody: Record<string, unknown> = {
+      agent_slug: agentSlug,
+    };
+    if (yuxiSessionId) {
+      gatewayBody.yuxi_session_id = yuxiSessionId;
+    } else {
+      gatewayBody.yuxi_access_token = yuxiAccessToken;
+    }
+    if (threadId) {
+      gatewayBody.thread_id = threadId;
+    }
+
     const response = await fetch(botStartUrl, {
       method: 'POST',
       headers,
@@ -43,11 +78,7 @@ export async function POST(request: NextRequest) {
         createDailyRoom: false,
         enableDefaultIceServers: true,
         transport: 'webrtc',
-        body: {
-          yuxi_access_token: yuxiAccessToken,
-          agent_slug: agentSlug,
-          thread_id: threadId,
-        },
+        body: gatewayBody,
       }),
     });
 

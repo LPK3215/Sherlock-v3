@@ -32,11 +32,31 @@ class YuxiSessionConfig:
     def from_runner_body(cls, body: Any, *, session_id: str | None = None) -> "YuxiSessionConfig":
         payload = body if isinstance(body, dict) else {}
         base_url = os.getenv("YUXI_BASE_URL", "http://localhost:5050").strip().rstrip("/")
-        access_token = str(
-            payload.get("yuxi_access_token") or os.getenv("YUXI_ACCESS_TOKEN", "")
-        ).strip()
-        agent_slug = str(payload.get("agent_slug") or os.getenv("YUXI_AGENT_SLUG", "")).strip()
-        thread_id = str(payload.get("thread_id") or os.getenv("YUXI_THREAD_ID", "")).strip() or None
+
+        # 优先通过 Redis Session Registry 查询凭证，避免 token 在请求体中明文传递
+        access_token = ""
+        agent_slug = ""
+        thread_id: str | None = None
+
+        registry_session_id = str(payload.get("yuxi_session_id") or "").strip() or None
+        if registry_session_id:
+            from session_registry import load_session
+
+            session_data = load_session(registry_session_id)
+            if session_data:
+                access_token = str(session_data.get("access_token") or "").strip()
+                agent_slug = str(session_data.get("agent_slug") or "").strip()
+                thread_id = str(session_data.get("thread_id") or "").strip() or None
+
+        # 兼容：如果 Redis 没有命中，回退到请求体中的明文 token
+        if not access_token:
+            access_token = str(
+                payload.get("yuxi_access_token") or os.getenv("YUXI_ACCESS_TOKEN", "")
+            ).strip()
+        if not agent_slug:
+            agent_slug = str(payload.get("agent_slug") or os.getenv("YUXI_AGENT_SLUG", "")).strip()
+        if not thread_id:
+            thread_id = str(payload.get("thread_id") or os.getenv("YUXI_THREAD_ID", "")).strip() or None
 
         parsed_url = urlparse(base_url)
         if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
