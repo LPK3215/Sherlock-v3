@@ -102,7 +102,7 @@ export default function Home() {
       thread_id:
         typeof window === "undefined"
           ? null
-          : localStorage.getItem(`realtime_thread:${agentSlug}`),
+          : sessionStorage.getItem(`realtime_thread:${agentSlug}`),
     }),
     [agentSlug, token],
   );
@@ -110,7 +110,7 @@ export default function Home() {
   const handleThreadChange = useCallback(
     (nextThreadId: string) => {
       requestData.thread_id = nextThreadId;
-      localStorage.setItem(`realtime_thread:${agentSlug}`, nextThreadId);
+      sessionStorage.setItem(`realtime_thread:${agentSlug}`, nextThreadId);
     },
     [agentSlug, requestData],
   );
