@@ -114,6 +114,29 @@ async def test_skills_prompt_uses_prepared_prompt_skills_at_request_level():
     assert not hasattr(context, "_visible_skills")
 
 
+def test_skills_section_preserves_sherlock_as_the_global_identity():
+    section = SkillsMiddleware()._build_skills_section(
+        [
+            {
+                "name": "学生拍题助手",
+                "description": "通用题目分析",
+                "path": "/home/gem/skills/student-problem-solving/SKILL.md",
+            },
+            {
+                "name": "法律顾问",
+                "description": "合同分析",
+                "path": "/home/gem/skills/legal-advisor/SKILL.md",
+            },
+        ]
+    )
+
+    assert "以下 Skill 是夏洛克可按需读取和调用的领域能力包" in section
+    assert "不是新的 Agent 或新的身份" in section
+    assert "多个 Skill 可以共存并按任务组合使用" in section
+    assert "学生拍题助手" in section
+    assert "法律顾问" in section
+
+
 @pytest.mark.asyncio
 async def test_awrap_model_call_mounts_dependencies_only_for_readable_activated_skills(monkeypatch):
     monkeypatch.setattr(
