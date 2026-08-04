@@ -181,6 +181,7 @@ export default function Home() {
               apiBase="/yuxi-api"
               threadId={currentThreadId}
               startResponse={rawStartBotResponse}
+              accessToken={token}
             />
           )}
         </PipecatAppBase>
