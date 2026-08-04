@@ -139,6 +139,9 @@ export default function Home() {
     [handleThreadChange],
   );
 
+  const realtimeThreadId =
+    (startBotParams.requestData as { thread_id?: string | null }).thread_id ?? null;
+
   if (!sessionReady) {
     return (
       <SessionGate
@@ -174,6 +177,8 @@ export default function Home() {
               isMobile={isMobile}
               onLeave={leaveSession}
               onThreadChange={handleThreadChange}
+              apiBase="/yuxi-api"
+              threadId={realtimeThreadId}
             />
           )}
         </PipecatAppBase>
@@ -181,6 +186,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 async function responseMessage(response: Response) {
   const payload = (await response.json().catch(() => null)) as

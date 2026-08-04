@@ -68,6 +68,8 @@ interface Props {
   isMobile: boolean;
   onLeave: () => void;
   onThreadChange: (threadId: string) => void;
+  apiBase: string;
+  threadId: string | null;
 }
 
 export interface AgentEvent {
@@ -109,7 +111,7 @@ const appendChunk = (current: string, chunk: string) => {
 
 /* ------- Component ------- */
 
-export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange }: Props) {
+export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId }: Props) {
   /* ---------- Pipecat hooks ---------- */
   const client = usePipecatClient();
   const transportState = usePipecatClientTransportState();
@@ -145,6 +147,29 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   const userHangupRef = useRef(false);
   const wasConnectedRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!threadId || !client) return;
+    let cancelled = false;
+    const checkApproval = async () => {
+      const response = await fetch(`${apiBase}/agent/thread/${threadId}/active_run`);
+      if (!response.ok || cancelled) return;
+      const payload = (await response.json()) as { interrupt?: { chunk?: Record<string, unknown> } };
+      const chunk = payload.interrupt?.chunk;
+      const questions = normalizeApprovalQuestions(chunk?.questions);
+      if (questions.length > 0 && !cancelled) {
+        setApprovalQuestions(questions);
+        setApprovalProcessing(false);
+        setAssistantActivity("idle");
+      }
+    };
+    void checkApproval();
+    const timer = window.setInterval(() => void checkApproval(), 1500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [apiBase, client, threadId]);
 
   /* ---------- Derived ---------- */
   const isConnected = transportState === "ready";

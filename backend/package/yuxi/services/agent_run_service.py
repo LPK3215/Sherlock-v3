@@ -944,5 +944,19 @@ async def get_active_run_by_thread(*, thread_id: str, current_uid: str, db: Asyn
     )
     run = result.scalar_one_or_none()
     if run and run.status in ("pending", "running", "cancel_requested", "interrupted"):
-        return {"run": run.to_dict()}
+        result_payload: dict = {"run": run.to_dict()}
+        if run.status == "interrupted":
+            events = await list_run_stream_events(str(run.id), after_seq="0-0", limit=200)
+            interrupt = next(
+                (
+                    event.get("payload")
+                    for event in events
+                    if event.get("event_type") == "interrupt"
+                    and isinstance(event.get("payload"), dict)
+                ),
+                None,
+            )
+            if interrupt:
+                result_payload["interrupt"] = interrupt
+        return result_payload
     return {"run": None}
