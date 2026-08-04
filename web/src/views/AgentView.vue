@@ -78,6 +78,15 @@
               </template>
             </a-dropdown>
           </template>
+          <template #input-actions-right>
+            <button
+              type="button"
+              class="realtime-entry-btn"
+              @click="openRealtimeAgent"
+            >
+              实时通话
+            </button>
+          </template>
         </AgentChatComponent>
       </div>
     </div>
@@ -203,6 +212,16 @@ const handleThreadChange = (threadId) => {
   } else {
     router.replace({ name: 'AgentComp' })
   }
+}
+
+const openRealtimeAgent = () => {
+  router.push({
+    name: 'AgentRealtime',
+    query: {
+      agent_id: selectedAgentId.value || '',
+      thread_id: getRouteThreadId() || ''
+    }
+  })
 }
 
 const agentQuickSwitchOptions = computed(() =>

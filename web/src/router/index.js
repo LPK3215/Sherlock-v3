@@ -51,6 +51,12 @@ const router = createRouter({
           meta: { keepAlive: true, requiresAuth: true }
         },
         {
+          path: 'realtime',
+          name: 'AgentRealtime',
+          component: () => import('../views/RealtimeAgentView.vue'),
+          meta: { keepAlive: false, requiresAuth: true }
+        },
+        {
           path: ':thread_id',
           name: 'AgentCompWithThreadId',
           component: () => import('../views/AgentView.vue'),
