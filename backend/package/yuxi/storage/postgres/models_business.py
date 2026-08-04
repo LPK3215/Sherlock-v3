@@ -308,6 +308,39 @@ class LearningWrongQuestion(Base):
         }
 
 
+class LegalMatter(Base):
+    """用户明确要求保存的法律事务摘要。"""
+
+    __tablename__ = "legal_matters"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uid = Column(String(64), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    matter_type = Column(String(64), nullable=False, default="general", index=True)
+    summary = Column(Text, nullable=False)
+    risk_summary = Column(Text, nullable=True)
+    next_actions = Column(Text, nullable=True)
+    status = Column(String(32), nullable=False, default="active", index=True)
+    extra_metadata = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=utc_now_naive, index=True)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "uid": self.uid,
+            "title": self.title,
+            "matter_type": self.matter_type,
+            "summary": self.summary,
+            "risk_summary": self.risk_summary,
+            "next_actions": self.next_actions,
+            "status": self.status,
+            "metadata": self.extra_metadata or {},
+            "created_at": format_utc_datetime(self.created_at),
+            "updated_at": format_utc_datetime(self.updated_at),
+        }
+
+
 class Conversation(Base):
     """Conversation table - 对话表"""
 
