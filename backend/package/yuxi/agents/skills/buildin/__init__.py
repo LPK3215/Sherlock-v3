@@ -100,4 +100,26 @@ BUILTIN_SKILLS: list[BuiltinSkillSpec] = [
         version="2026.08.04",
         tool_dependencies=("ocr_parse_file",),
     ),
+    BuiltinSkillSpec(
+        slug="visual-observation",
+        source_dir=_SKILLS_ROOT / "visual-observation",
+        description="视觉观察总流程:读取当前图片、摄像头或屏幕画面,区分直接观察与推断,按需核验并在确认后保存摘要。",
+        version="2026.08.04",
+        tool_dependencies=("save_visual_observation", "list_visual_observations"),
+    ),
+    BuiltinSkillSpec(
+        slug="visual-identification",
+        source_dir=_SKILLS_ROOT / "visual-identification",
+        description="识别当前画面中的物体、植物、动物、商品或设备,表达候选结果、依据和不确定性。",
+        version="2026.08.04",
+        skill_dependencies=("visual-observation",),
+    ),
+    BuiltinSkillSpec(
+        slug="visual-research",
+        source_dir=_SKILLS_ROOT / "visual-research",
+        description="对视觉识别结果进行按需搜索或知识库核验,保留来源并避免把候选识别说成专业鉴定。",
+        version="2026.08.04",
+        tool_dependencies=("query_kb", "open_kb_document", "search_file"),
+        skill_dependencies=("visual-observation", "knowledge-base"),
+    ),
 ]

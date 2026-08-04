@@ -101,7 +101,7 @@ async def resolve_configured_runtime_tools(context) -> list[Any]:
     selected_tool_names: set[str] = set()
     buildin_tools = {
         tool.name: tool
-        for category in ("buildin", "learning", "legal")
+        for category in ("buildin", "learning", "legal", "visual")
         for tool in get_tool_instances_by_category(category)
     }
 

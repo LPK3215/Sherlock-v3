@@ -188,7 +188,7 @@ async def test_capability_query_is_available_for_both_domain_contexts():
     legal_result = list_sherlock_capabilities.func(runtime=SimpleNamespace(context=legal_context))
 
     registered = {item["slug"] for item in student_result["registered_capabilities"]}
-    assert {"junior-math-learning", "legal-matter-analysis"} <= registered
+    assert {"junior-math-learning", "legal-matter-analysis", "visual-observation"} <= registered
     assert student_result["active_skills"] == ["junior-math-learning", "knowledge-base"]
     assert legal_result["active_skills"] == [
         "legal-matter-analysis",

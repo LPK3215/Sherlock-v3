@@ -341,6 +341,49 @@ class LegalMatter(Base):
         }
 
 
+class VisualObservation(Base):
+    """用户确认保存的视觉观察摘要,不保存原始图片或视频帧。"""
+
+    __tablename__ = "visual_observations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uid = Column(String(64), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    subject = Column(String(255), nullable=False)
+    user_question = Column(Text, nullable=True)
+    direct_observation = Column(Text, nullable=False)
+    candidate_identification = Column(Text, nullable=True)
+    research_summary = Column(Text, nullable=True)
+    confidence = Column(String(32), nullable=True)
+    location = Column(String(255), nullable=True)
+    observed_at = Column(DateTime, nullable=True)
+    source_reference = Column(String(1024), nullable=True)
+    user_note = Column(Text, nullable=True)
+    extra_metadata = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=utc_now_naive, index=True)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "uid": self.uid,
+            "title": self.title,
+            "subject": self.subject,
+            "user_question": self.user_question,
+            "direct_observation": self.direct_observation,
+            "candidate_identification": self.candidate_identification,
+            "research_summary": self.research_summary,
+            "confidence": self.confidence,
+            "location": self.location,
+            "observed_at": format_utc_datetime(self.observed_at),
+            "source_reference": self.source_reference,
+            "user_note": self.user_note,
+            "metadata": self.extra_metadata or {},
+            "created_at": format_utc_datetime(self.created_at),
+            "updated_at": format_utc_datetime(self.updated_at),
+        }
+
+
 class Conversation(Base):
     """Conversation table - 对话表"""
 
