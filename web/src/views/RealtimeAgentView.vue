@@ -33,7 +33,7 @@
         </div>
         <a-form class="composer" @submit.prevent="sendText">
           <a-input v-model:value="draft" :disabled="!connected" placeholder="输入实时消息" />
-          <a-button html-type="submit" type="primary" :disabled="!connected || !draft.trim()">发送</a-button>
+          <a-button html-type="submit" type="primary" aria-label="发送实时消息" :disabled="!connected || !draft.trim()">发送</a-button>
         </a-form>
         <a-alert v-if="approvalQuestions.length" type="warning" message="AI 需要确认" show-icon>
           <template #description>
@@ -56,9 +56,11 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const localVideo = ref(null)
 const remoteAudio = ref(null)
 const draft = ref('')
@@ -81,6 +83,7 @@ let pcId = ''
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
 const agentName = computed(() => String(route.query.agent_name || agentSlug.value || '当前 Agent'))
+const authHeaders = () => userStore.getAuthHeaders()
 
 const addMessage = (role, text) => messages.value.push({ id: `${Date.now()}-${Math.random()}`, role, text })
 
@@ -91,7 +94,7 @@ async function toggleCall() {
   try {
     const start = await fetch('/api/realtime/start', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ agent_slug: agentSlug.value, thread_id: threadId.value || null, enableDefaultIceServers: true })
     })
     if (!start.ok) throw new Error('实时会话创建失败')
@@ -105,7 +108,7 @@ async function toggleCall() {
       if (!event.candidate || !sessionId || !peer) return
       fetch(`/api/realtime/sessions/${sessionId}/offer`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           pc_id: pcId,
           candidates: [{
@@ -141,7 +144,7 @@ async function toggleCall() {
     const offer = await peer.createOffer()
     await peer.setLocalDescription(offer)
     const response = await fetch(`/api/realtime/sessions/${sessionId}/offer`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ sdp: offer.sdp, type: offer.type })
     })
     if (!response.ok) throw new Error('WebRTC 协商失败')
