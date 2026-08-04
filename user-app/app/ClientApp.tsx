@@ -71,6 +71,7 @@ interface Props {
   apiBase: string;
   threadId: string | null;
   agentSlug: string;
+  initialApprovalQuestions: ApprovalQuestion[];
   startResponse: unknown;
   accessToken: string;
 }
@@ -114,7 +115,7 @@ const appendChunk = (current: string, chunk: string) => {
 
 /* ------- Component ------- */
 
-export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId, startResponse, accessToken, agentSlug }: Props) {
+export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId, startResponse, accessToken, agentSlug, initialApprovalQuestions }: Props) {
   /* ---------- Pipecat hooks ---------- */
   const client = usePipecatClient();
   const transportState = usePipecatClientTransportState();
@@ -150,6 +151,10 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   const userHangupRef = useRef(false);
   const wasConnectedRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (initialApprovalQuestions.length > 0) setApprovalQuestions(initialApprovalQuestions);
+  }, [initialApprovalQuestions]);
 
   useEffect(() => {
     if (!startResponse || typeof startResponse !== "object") return;

@@ -4,6 +4,7 @@ import { PipecatAppBase } from "@pipecat-ai/voice-ui-kit";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ClientApp } from "./ClientApp";
+import { normalizeApprovalQuestions, type ApprovalQuestion } from "./ApprovalPrompt";
 import { SessionGate, type YuxiAgent } from "./SessionGate";
 
 import "@pipecat-ai/voice-ui-kit/styles.scoped";
@@ -18,6 +19,7 @@ export default function Home() {
   const [agentSlug, setAgentSlug] = useState("");
   const [sessionReady, setSessionReady] = useState(false);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+  const [externalApprovalQuestions, setExternalApprovalQuestions] = useState<ApprovalQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -91,7 +93,30 @@ export default function Home() {
 
   const leaveSession = useCallback(() => {
     setSessionReady(false);
+    setExternalApprovalQuestions([]);
   }, []);
+
+  useEffect(() => {
+    if (!sessionReady || !token) return;
+    let cancelled = false;
+    const checkApproval = async () => {
+      const threadId = currentThreadId || sessionStorage.getItem(`realtime_thread:${agentSlug}`);
+      if (!threadId) return;
+      const response = await fetch(`/yuxi-api/agent/thread/${threadId}/active_run`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok || cancelled) return;
+      const payload = (await response.json()) as { interrupt?: { chunk?: Record<string, unknown> } };
+      const questions = normalizeApprovalQuestions(payload.interrupt?.chunk?.questions);
+      if (!cancelled) setExternalApprovalQuestions(questions);
+    };
+    void checkApproval();
+    const timer = window.setInterval(() => void checkApproval(), 1500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [agentSlug, currentThreadId, sessionReady, token]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
@@ -184,6 +209,7 @@ export default function Home() {
               startResponse={rawStartBotResponse}
               accessToken={token}
               agentSlug={agentSlug}
+              initialApprovalQuestions={externalApprovalQuestions}
             />
           )}
         </PipecatAppBase>
