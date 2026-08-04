@@ -97,7 +97,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!sessionReady || !token) return;
+    if (!token) return;
     let cancelled = false;
     const checkApproval = async () => {
       const threadId = currentThreadId || sessionStorage.getItem(`realtime_thread:${agentSlug}`);
@@ -116,7 +116,7 @@ export default function Home() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [agentSlug, currentThreadId, sessionReady, token]);
+  }, [agentSlug, currentThreadId, token]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
