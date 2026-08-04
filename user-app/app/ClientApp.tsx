@@ -360,6 +360,21 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   );
 
   useRTVIClientEvent(
+    RTVIEvent.UICommand,
+    useCallback((data: { command?: string; payload?: unknown }) => {
+      if (data.command !== "yuxi.approval.required") return;
+      const payload = data.payload as Record<string, unknown> | undefined;
+      const detail = payload?.detail as Record<string, unknown> | undefined;
+      const questions = normalizeApprovalQuestions(detail?.questions);
+      if (questions.length > 0) {
+        setApprovalQuestions(questions);
+        setApprovalProcessing(false);
+        setAssistantActivity("idle");
+      }
+    }, []),
+  );
+
+  useRTVIClientEvent(
     RTVIEvent.Error,
     useCallback((data: unknown) => {
       const msg = data as Record<string, unknown> | undefined;

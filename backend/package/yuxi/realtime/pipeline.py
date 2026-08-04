@@ -29,7 +29,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame, RTVIUICommandFrame
 from pipecat.services.llm_service import LLMService
 from pipecat.services.settings import LLMSettings
 from pipecat.transports.base_transport import TransportParams
@@ -267,6 +267,13 @@ class YuxiRealtimeLLMService(LLMService):
                             data={"type": "yuxi-agent-event", "payload": realtime_payload}
                         )
                     )
+                    if realtime_payload.get("type") == "approval.required":
+                        await self.push_frame(
+                            RTVIUICommandFrame(
+                                command="yuxi.approval.required",
+                                payload=realtime_payload,
+                            )
+                        )
                     for delta in _event_text_deltas(event):
                         await self._push_llm_text(delta)
                 if image_content is not None:
