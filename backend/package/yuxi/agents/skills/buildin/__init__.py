@@ -53,4 +53,19 @@ BUILTIN_SKILLS: list[BuiltinSkillSpec] = [
         version="2026.06.05",
         mcp_dependencies=("mcp-server-chart",),
     ),
+    BuiltinSkillSpec(
+        slug="junior-math-learning",
+        source_dir=_SKILLS_ROOT / "junior-math-learning",
+        description="初中数学学习助手:识别题目、结合知识库分步讲解、整理错题并给出复习建议。",
+        version="2026.08.04",
+        tool_dependencies=(
+            "save_wrong_question",
+            "list_wrong_questions",
+            "update_wrong_question",
+            "delete_wrong_question",
+            "query_kb",
+            "open_kb_document",
+        ),
+        skill_dependencies=("knowledge-base",),
+    ),
 ]

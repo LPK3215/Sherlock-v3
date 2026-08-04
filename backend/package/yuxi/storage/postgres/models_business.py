@@ -273,6 +273,41 @@ class Skill(Base):
         }
 
 
+class LearningWrongQuestion(Base):
+    """学生学习助手的错题记录。"""
+
+    __tablename__ = "learning_wrong_questions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uid = Column(String(64), nullable=False, index=True)
+    question = Column(Text, nullable=False)
+    student_answer = Column(Text, nullable=True)
+    analysis = Column(Text, nullable=True)
+    grade = Column(String(64), nullable=True, index=True)
+    subject = Column(String(64), nullable=False, default="数学", index=True)
+    knowledge_point = Column(String(255), nullable=True, index=True)
+    review_status = Column(String(32), nullable=False, default="pending", index=True)
+    extra_metadata = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=utc_now_naive, index=True)
+    updated_at = Column(DateTime, default=utc_now_naive, onupdate=utc_now_naive)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "uid": self.uid,
+            "question": self.question,
+            "student_answer": self.student_answer,
+            "analysis": self.analysis,
+            "grade": self.grade,
+            "subject": self.subject,
+            "knowledge_point": self.knowledge_point,
+            "review_status": self.review_status,
+            "metadata": self.extra_metadata or {},
+            "created_at": format_utc_datetime(self.created_at),
+            "updated_at": format_utc_datetime(self.updated_at),
+        }
+
+
 class Conversation(Base):
     """Conversation table - 对话表"""
 

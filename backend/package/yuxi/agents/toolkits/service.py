@@ -99,7 +99,9 @@ async def resolve_configured_runtime_tools(context) -> list[Any]:
 
     selected_tools = []
     selected_tool_names: set[str] = set()
-    buildin_tools = {tool.name: tool for tool in get_tool_instances_by_category("buildin")}
+    buildin_tools = {
+        tool.name: tool for category in ("buildin", "learning") for tool in get_tool_instances_by_category(category)
+    }
 
     for tool_name in getattr(context, "tools", None) or []:
         if not isinstance(tool_name, str) or tool_name in selected_tool_names:
