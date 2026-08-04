@@ -387,6 +387,10 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
             llm._media_source = source if source in {"none", "camera", "screen"} else None
         elif message.type == "yuxi.approval.answer":
             answer = message.data
+            # RTVI versions differ on whether the client payload is exposed
+            # directly or retains the outer ``d`` envelope.
+            if isinstance(answer, dict) and set(answer) == {"d"}:
+                answer = answer["d"]
             async with llm._run_lock:
                 await llm.push_frame(LLMFullResponseStartFrame())
                 try:
