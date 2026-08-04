@@ -122,4 +122,25 @@ BUILTIN_SKILLS: list[BuiltinSkillSpec] = [
         tool_dependencies=("query_kb", "open_kb_document", "search_file"),
         skill_dependencies=("visual-observation", "knowledge-base"),
     ),
+    BuiltinSkillSpec(
+        slug="career-work",
+        source_dir=_SKILLS_ROOT / "career-work",
+        description="职场与个人工作总流程:整理工作事项、会议和面试信息,生成行动项并按需保存用户确认的记录。",
+        version="2026.08.04",
+        tool_dependencies=("save_career_record", "list_career_records"),
+    ),
+    BuiltinSkillSpec(
+        slug="career-document",
+        source_dir=_SKILLS_ROOT / "career-document",
+        description="处理简历、求职材料、会议纪要和职业文档,区分原文事实、建议和待确认信息。",
+        version="2026.08.04",
+        skill_dependencies=("career-work",),
+    ),
+    BuiltinSkillSpec(
+        slug="career-planning",
+        source_dir=_SKILLS_ROOT / "career-planning",
+        description="把用户明确的职业目标拆成可执行的阶段、行动项和复盘记录,不替用户做未经确认的承诺。",
+        version="2026.08.04",
+        skill_dependencies=("career-work",),
+    ),
 ]
