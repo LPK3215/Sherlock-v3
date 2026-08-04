@@ -34,6 +34,17 @@
           <a-input v-model:value="draft" :disabled="!connected" placeholder="输入实时消息" />
           <a-button html-type="submit" type="primary" :disabled="!connected || !draft.trim()">发送</a-button>
         </a-form>
+        <a-alert v-if="approvalQuestions.length" type="warning" message="AI 需要确认" show-icon>
+          <template #description>
+            <div v-for="question in approvalQuestions" :key="question.question_id" class="approval-question">
+              <strong>{{ question.question }}</strong>
+              <a-radio-group v-model:value="approvalAnswers[question.question_id]">
+                <a-radio v-for="option in question.options" :key="option.value" :value="option.value">{{ option.label }}</a-radio>
+              </a-radio-group>
+            </div>
+            <a-button type="primary" size="small" @click="submitApproval">提交确认</a-button>
+          </template>
+        </a-alert>
         <a-alert v-if="error" type="error" :message="error" show-icon />
       </section>
     </main>
@@ -55,6 +66,8 @@ const connecting = ref(false)
 const cameraOn = ref(false)
 const screenOn = ref(false)
 const error = ref('')
+const approvalQuestions = ref([])
+const approvalAnswers = ref({})
 let peer = null
 let dataChannel = null
 let sessionId = ''
@@ -134,9 +147,25 @@ function sendText() {
 function handleServerMessage(raw) {
   try {
     const event = typeof raw === 'string' ? JSON.parse(raw) : raw
-    const text = event?.data?.text || event?.data?.payload?.detail?.text
+    const payload = event?.data || event
+    const custom = payload?.payload || payload?.data || payload
+    const eventPayload = custom?.payload || custom
+    const text = eventPayload?.text || eventPayload?.detail?.text
     if (text) addMessage('assistant', text)
+    const detail = eventPayload?.detail || eventPayload?.payload?.detail
+    const questions = detail?.questions || detail?.interrupt_info?.questions
+    if (eventPayload?.type === 'approval.required' && Array.isArray(questions)) approvalQuestions.value = questions
   } catch { /* ignore non-JSON transport frames */ }
+}
+
+function submitApproval() {
+  if (!dataChannel) return
+  dataChannel.send(JSON.stringify({
+    type: 'client-message',
+    data: { t: 'yuxi.approval.answer', d: approvalAnswers.value }
+  }))
+  approvalQuestions.value = []
+  approvalAnswers.value = {}
 }
 
 async function toggleCamera() {
@@ -186,4 +215,5 @@ onBeforeUnmount(disconnect)
 .message-user { margin-left: auto; color: #fff; background: var(--main-700); }
 .message-assistant { color: var(--gray-1000); background: var(--gray-100); }
 .composer { border-top: 1px solid var(--gray-200); }
+.approval-question { display: grid; gap: 6px; margin-bottom: 10px; }
 </style>
