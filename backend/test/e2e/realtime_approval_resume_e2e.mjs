@@ -81,7 +81,7 @@ async function createAgent() {
           model: CHAT_MODEL,
           system_prompt: [
             "You are a deterministic approval end-to-end test assistant.",
-            "When asked for the release channel, call ask_user_question exactly once.",
+            "When the latest user message asks which release channel to use, you MUST call ask_user_question exactly once before producing any text; do not answer the question yourself.",
             'Use questions=[{"question_id":"approval_choice","question":"Which release channel?","options":[{"label":"Stable","value":"stable"},{"label":"Preview","value":"preview"}],"multi_select":false,"allow_other":false}].',
             "After the tool returns an answer whose approval_choice is stable, answer exactly APPROVAL RESUME OK 861.",
             "Do not call any other tool.",
@@ -236,6 +236,14 @@ async function waitForRunStatus(runId, expected) {
   throw new Error(`Run ${runId} did not reach ${expected}`);
 }
 
+async function waitForApprovalQuestion(question) {
+  await page.waitForFunction(
+    (value) => [...document.querySelectorAll(".approval-prompt legend")].some((node) => node.textContent?.includes(value)),
+    question,
+    { timeout: TIMEOUT_MS },
+  );
+}
+
 try {
   const provider = await api(`/api/system/model-providers/${providerId}`);
   providerModels = provider.data?.enabled_models || [];
@@ -271,19 +279,19 @@ try {
   const parentStartedBefore = await runStartedCount();
   await sendText("Ask me which release channel to use.");
   const interruptedRunId = await waitForRunStarted(parentStartedBefore);
-  await page.getByText("Which release channel?", { exact: true }).waitFor({ timeout: TIMEOUT_MS });
+  await waitForApprovalQuestion("Which release channel?");
   await waitForRunStatus(interruptedRunId, "interrupted");
   const interruptedRun = await api(`/api/agent/runs/${interruptedRunId}`);
   const interruptedThreadId = interruptedRun.run?.conversation_thread_id;
   assert(interruptedThreadId, "Interrupted run is missing conversation_thread_id");
   await page.waitForFunction(
-    ({ key, value }) => localStorage.getItem(key) === value,
+    ({ key, value }) => sessionStorage.getItem(key) === value,
     { key: `realtime_thread:${agentSlug}`, value: interruptedThreadId },
     { timeout: 30000 },
   );
 
   await reconnectCall();
-  await page.getByText("Which release channel?", { exact: true }).waitFor({ timeout: TIMEOUT_MS });
+  await waitForApprovalQuestion("Which release channel?");
 
   const resumeStartedBefore = await runStartedCount();
   await page.getByText("Stable", { exact: true }).click();
