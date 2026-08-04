@@ -69,6 +69,8 @@ const cameraOn = ref(false)
 const screenOn = ref(false)
 const error = ref('')
 const status = ref('尚未接通')
+const reconnecting = ref(false)
+let reconnectTimer = null
 const approvalQuestions = ref([])
 const approvalAnswers = ref({})
 let peer = null
@@ -119,7 +121,16 @@ async function toggleCall() {
       status.value = state === 'connected' ? 'AI 已接通' : state || '连接中'
       if (['failed', 'disconnected', 'closed'].includes(state)) {
         connected.value = false
-        if (state !== 'closed') error.value = '实时连接已断开,请重新连接'
+        if (state !== 'closed') {
+          error.value = '实时连接已断开,正在重连'
+          if (!reconnecting.value) {
+            reconnecting.value = true
+            reconnectTimer = window.setTimeout(() => {
+              reconnecting.value = false
+              toggleCall()
+            }, 1000)
+          }
+        }
       }
     }
     dataChannel = peer.createDataChannel('rtvi')
@@ -151,6 +162,7 @@ async function toggleCall() {
 function sendText() {
   const text = draft.value.trim()
   if (!text || !dataChannel) return
+  dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'interrupt', d: {} } }))
   addMessage('user', text)
   dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'send-text', d: { content: text, options: { run_immediately: true, audio_response: true } } } }))
   draft.value = ''
@@ -205,6 +217,8 @@ function disconnect() {
   dataChannel = null
   connected.value = false
   status.value = '尚未接通'
+  if (reconnectTimer) window.clearTimeout(reconnectTimer)
+  reconnecting.value = false
   cameraOn.value = false
   screenOn.value = false
 }
