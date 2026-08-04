@@ -59,6 +59,7 @@ async def test_career_tools_use_uid_and_reject_blank_summary(monkeypatch):
     with pytest.raises(ValueError, match="标题和摘要不能为空"):
         await career.save_career_record.coroutine(title="工作", summary=" ", runtime=_runtime())
 
+    monkeypatch.setattr(career, "interrupt", lambda _payload: {"save_career_record": "confirm"})
     await career.save_career_record.coroutine(
         title="项目会议", summary="确认接口范围", record_type="meeting", runtime=_runtime()
     )
@@ -66,6 +67,35 @@ async def test_career_tools_use_uid_and_reject_blank_summary(monkeypatch):
 
     assert _FakeRepository.calls[0][1]["uid"] == "worker-1"
     assert _FakeRepository.calls[1][1] == {"uid": "worker-2", "record_type": None, "status": "open", "limit": 7}
+
+
+@pytest.mark.asyncio
+async def test_career_record_requires_confirmation_before_persisting(monkeypatch):
+    _patch_storage(monkeypatch)
+    monkeypatch.setattr(career, "interrupt", lambda _payload: {"save_career_record": "cancel"})
+
+    result = await career.save_career_record.coroutine(title="项目会议", summary="确认接口范围", runtime=_runtime())
+
+    assert result == {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
+    assert _FakeRepository.calls == []
+
+
+@pytest.mark.asyncio
+async def test_career_record_confirmation_payload_is_explicit(monkeypatch):
+    _patch_storage(monkeypatch)
+    payloads = []
+    monkeypatch.setattr(
+        career,
+        "interrupt",
+        lambda payload: payloads.append(payload) or {"save_career_record": "confirm"},
+    )
+
+    await career.save_career_record.coroutine(title="项目会议", summary="确认接口范围", runtime=_runtime())
+
+    question = payloads[0]["questions"][0]
+    assert payloads[0]["source"] == "career_record_confirmation"
+    assert question["question_id"] == "save_career_record"
+    assert {option["value"] for option in question["options"]} == {"confirm", "cancel"}
 
 
 def test_career_skills_are_registered_and_isolated_from_existing_domains():

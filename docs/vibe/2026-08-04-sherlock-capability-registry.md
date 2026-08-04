@@ -180,7 +180,7 @@
 | 工作整理 | 从对话、语音、图片或屏幕内容整理事项 | `career-work` | 通用多模态输入 | 不需要 | 不需要 | 当前会话只读分析 | 已实现/已复用 |
 | 职业文档 | 简历、求职材料、会议纪要分析和改写建议 | `career-document` | 文档读取、OCR、通用模型能力 | 可选知识库 | 不需要 | 不虚构经历,只读分析 | 已实现/已复用 |
 | 职业规划 | 将目标拆成阶段、行动项和复盘点 | `career-planning` | 通用推理,可选知识库检索 | 用户可访问知识库 | 不需要 | 计划不自动写入 | 已实现/已复用 |
-| 工作记录 | 用户确认后保存并查询摘要和行动项 | `career-work` | `save_career_record`、`list_career_records` | 不需要 | `career_records` | 保存前明确确认,查询仅当前 UID | 已实现 |
+| 工作记录 | 用户确认后保存并查询摘要和行动项 | `career-work` | `save_career_record`、`list_career_records` | 不需要 | `career_records` | 保存前通过 Yuxi interrupt 明确确认,查询仅当前 UID | 已实现/已验收 |
 
 ### 8.3 三个 Skill 与边界
 
@@ -189,6 +189,19 @@
 - `career-planning`:负责目标拆解和复盘建议,不替用户作出职业承诺。
 
 劳动合同、劳动争议或其他法律问题交给法律能力按需处理;职业领域不会复制法律知识库或法律工具。
+
+### 8.4 第二阶段验收记录
+
+| 验收项 | 证据 | 结果 |
+| --- | --- | --- |
+| 职业文档、会议内容和工作问题的场景边界 | `career-document`、`career-planning` 依赖 `career-work`;输入继续复用文本、语音、图片、屏幕和文档入口 | 通过 |
+| Skill 和 Tool 运行时门控 | `test_career_tools.py` 验证职场 Skill 展开后暴露两个职业工具,视觉 Skill 不获得职业工具 | 通过 |
+| 保存前确认 | `save_career_record` 通过 Yuxi `interrupt` 发起 `career_record_confirmation`;取消分支不创建记录,恢复并选择确认后才落库 | 通过 |
+| 历史记录与权限边界 | `test_career_repository.py` 验证真实 SQLAlchemy 会话中的创建、UID 隔离、类型/状态筛选、排序和 limit | 通过 |
+| 运行数据库 | 2026-08-04 在 Compose PostgreSQL 中执行临时 UID 的创建、查询、隔离和清理验收 | 通过 |
+| 前端工具状态事件 | 复用通用 `tool_call`、`tool_call_delta`、`tool-started`、`tool-finished` 事件链路;职业工具名称由注册表和 ToolCall 载荷传递,不新增领域专用 UI | 通过代码链路和事件归一化测试 |
+
+本阶段仍不宣称真实模型能够对所有职业问题自动识别或替代专业服务;模型自然语言选择 Skill 的质量依赖 Agent 配置、模型能力和实际提示词输入,领域侧已提供清晰的 Skill 描述、依赖和边界。未确认的保存、外部发送和对外承诺仍不得自动执行。
 
 ## 9. 新增领域的登记模板
 

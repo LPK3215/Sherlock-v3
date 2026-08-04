@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from langgraph.prebuilt.tool_node import ToolRuntime
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from yuxi.agents.toolkits.registry import tool
@@ -60,6 +61,28 @@ async def save_career_record(
     }
     if not values["title"] or not values["summary"]:
         raise ValueError("职业记录标题和摘要不能为空")
+
+    confirmation = interrupt(
+        {
+            "source": "career_record_confirmation",
+            "questions": [
+                {
+                    "question_id": "save_career_record",
+                    "question": f'确认保存职业记录“{values["title"]}”吗？',
+                    "options": [
+                        {"label": "确认保存", "value": "confirm"},
+                        {"label": "取消保存", "value": "cancel"},
+                    ],
+                    "multi_select": False,
+                    "allow_other": False,
+                }
+            ],
+        }
+    )
+    answer = confirmation.get("save_career_record") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
+
     async with pg_manager.get_async_session_context() as db:
         item = await CareerRepository(db).create_record(uid=_runtime_uid(runtime), values=values)
     return {"saved": True, "career_record": item.to_dict()}
