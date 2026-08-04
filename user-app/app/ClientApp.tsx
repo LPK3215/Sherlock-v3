@@ -312,12 +312,18 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
               }
             })()
           : message.payload;
+      const eventPayload =
+        payloadValue && typeof payloadValue === "object" &&
+        "payload" in (payloadValue as Record<string, unknown>) &&
+        !("type" in (payloadValue as Record<string, unknown>))
+          ? (payloadValue as Record<string, unknown>).payload
+          : payloadValue;
       if (message.type === "media-diagnostics") {
         const entries = Object.entries((payloadValue as object) ?? {}) as Diagnostic[];
         setDiagnostics(entries);
       }
       if (message.type === "yuxi-agent-event") {
-        const payload = payloadValue as Record<string, unknown>;
+        const payload = eventPayload as Record<string, unknown>;
         const eventType = typeof payload?.type === "string" ? payload.type : "yuxi.event";
         setAgentEvents((current) => [
           ...current.slice(-499),
@@ -327,7 +333,10 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
         if (eventType === "approval.required") {
           const detail = payload.detail as Record<string, unknown> | undefined;
           const interruptInfo = detail?.interrupt_info as Record<string, unknown> | undefined;
-          const questions = normalizeApprovalQuestions(detail?.questions ?? interruptInfo?.questions);
+          const chunk = detail?.chunk as Record<string, unknown> | undefined;
+          const questions = normalizeApprovalQuestions(
+            detail?.questions ?? interruptInfo?.questions ?? chunk?.questions,
+          );
           if (questions.length > 0) {
             setApprovalQuestions(questions);
             setApprovalProcessing(false);
