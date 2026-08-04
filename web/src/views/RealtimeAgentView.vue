@@ -79,6 +79,7 @@ let peer = null
 let dataChannel = null
 let sessionId = ''
 let pcId = ''
+let pendingCandidates = []
 
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
@@ -106,16 +107,21 @@ async function toggleCall() {
     }
     peer.onicecandidate = event => {
       if (!event.candidate || !sessionId || !peer) return
+      const candidate = {
+        candidate: event.candidate.candidate,
+        sdpMid: event.candidate.sdpMid,
+        sdpMLineIndex: event.candidate.sdpMLineIndex
+      }
+      if (!pcId) {
+        pendingCandidates.push(candidate)
+        return
+      }
       fetch(`/api/realtime/sessions/${sessionId}/offer`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           pc_id: pcId,
-          candidates: [{
-            candidate: event.candidate.candidate,
-            sdpMid: event.candidate.sdpMid,
-            sdpMLineIndex: event.candidate.sdpMLineIndex
-          }]
+          candidates: [candidate]
         })
       }).catch(() => {})
     }
@@ -150,6 +156,15 @@ async function toggleCall() {
     if (!response.ok) throw new Error('WebRTC 协商失败')
     const answer = await response.json()
     pcId = answer.pc_id || answer.pcId || ''
+    if (pcId && pendingCandidates.length > 0) {
+      const candidates = pendingCandidates
+      pendingCandidates = []
+      await fetch(`/api/realtime/sessions/${sessionId}/offer`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ pc_id: pcId, candidates })
+      })
+    }
     await peer.setRemoteDescription(answer)
     connected.value = true
     status.value = 'AI 已接通'
@@ -218,6 +233,7 @@ function disconnect() {
   peer?.close()
   peer = null
   dataChannel = null
+  pendingCandidates = []
   connected.value = false
   status.value = '尚未接通'
   if (reconnectTimer) window.clearTimeout(reconnectTimer)
