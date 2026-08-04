@@ -61,6 +61,7 @@ class RealtimeAgentRun:
     def __init__(self, config: RealtimeSessionConfig) -> None:
         self.config = config
         self.active_run_id: str | None = None
+        self.interrupted_run_id: str | None = None
 
     async def run_turn(
         self,
@@ -127,6 +128,48 @@ class RealtimeAgentRun:
             if run.get("status") in {"completed", "failed", "cancelled", "interrupted"}:
                 return
             await asyncio.sleep(0.1)
+
+    async def resume_turn(self, answer: object):
+        """Resume the latest interrupted Yuxi run with the user's approval answer."""
+        parent_run_id = self.interrupted_run_id
+        if not parent_run_id:
+            raise RuntimeError("没有可恢复的中断运行")
+        request_id = f"realtime-resume-{self.config.session_id}-{datetime.now(UTC).timestamp()}"
+        metadata = {
+            "request_id": request_id,
+            "source": "realtime",
+            "channel": "voice",
+            "realtime_session_id": self.config.session_id,
+        }
+        async with pg_manager.get_async_session_context() as db:
+            run = await create_agent_run_view(
+                input_message=None,
+                resume=answer,
+                created_by_run_id=parent_run_id,
+                agent_slug=self.config.agent_slug,
+                thread_id=self.config.thread_id,
+                meta=metadata,
+                current_uid=self.config.uid,
+                db=db,
+            )
+        run_id = str(run["run_id"])
+        self.active_run_id = run_id
+        self.interrupted_run_id = None
+        yield {"event_type": "run.started", "run_id": run_id, "thread_id": self.config.thread_id,
+               "payload": {"run_type": "resume", "created_by_run_id": parent_run_id}}
+        cursor = "0-0"
+        try:
+            while True:
+                events = await list_run_stream_events(run_id, after_seq=cursor, limit=200)
+                for event in events:
+                    cursor = str(event["seq"])
+                    yield event
+                    if event["event_type"] == "end":
+                        return
+                await asyncio.sleep(0.1)
+        finally:
+            if self.active_run_id == run_id:
+                self.active_run_id = None
 
 
 class FrameBroker(FrameProcessor):
@@ -268,6 +311,7 @@ class YuxiRealtimeLLMService(LLMService):
                         )
                     )
                     if realtime_payload.get("type") == "approval.required":
+                        self._agent_run.interrupted_run_id = realtime_payload.get("run_id") or self._agent_run.active_run_id
                         await self.push_frame(
                             RTVIUICommandFrame(
                                 command="yuxi.approval.required",
@@ -341,6 +385,22 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
         if message.type == "yuxi.media.attach":
             source = message.data.get("source") if isinstance(message.data, dict) else None
             llm._media_source = source if source in {"none", "camera", "screen"} else None
+        elif message.type == "yuxi.approval.answer":
+            answer = message.data
+            async with llm._run_lock:
+                await llm.push_frame(LLMFullResponseStartFrame())
+                try:
+                    async for event in agent_run.resume_turn(answer):
+                        realtime_payload = _realtime_event_payload(event)
+                        await llm.push_frame(
+                            RTVIServerMessageFrame(data={"type": "yuxi-agent-event", "payload": realtime_payload})
+                        )
+                        for delta in _event_text_deltas(event):
+                            await llm._push_llm_text(delta)
+                except Exception as exc:
+                    await llm.push_error(error_msg=f"Yuxi AgentRun resume failed: {exc}", exception=exc)
+                finally:
+                    await llm.push_frame(LLMFullResponseEndFrame())
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):

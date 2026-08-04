@@ -20,6 +20,7 @@
             {{ connected ? '结束通话' : '开始通话' }}
           </a-button>
           <a-button :disabled="!connected" @click="toggleCamera">{{ cameraOn ? '关闭摄像头' : '打开摄像头' }}</a-button>
+          <a-button :disabled="!connected" @click="toggleMicrophone">{{ microphoneOn ? '静音麦克风' : '打开麦克风' }}</a-button>
           <a-button :disabled="!connected" @click="toggleScreen">{{ screenOn ? '停止共享' : '共享屏幕' }}</a-button>
         </div>
       </section>
@@ -68,6 +69,7 @@ const messages = ref([])
 const connected = ref(false)
 const connecting = ref(false)
 const cameraOn = ref(false)
+const microphoneOn = ref(false)
 const screenOn = ref(false)
 const error = ref('')
 const status = ref('尚未接通')
@@ -80,6 +82,8 @@ let dataChannel = null
 let sessionId = ''
 let pcId = ''
 let pendingCandidates = []
+let cameraTrack = null
+let screenTrack = null
 
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
@@ -145,7 +149,10 @@ async function toggleCall() {
     dataChannel = peer.createDataChannel('rtvi')
     dataChannel.onmessage = event => handleServerMessage(event.data)
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+    cameraTrack = stream.getVideoTracks()[0] || null
     stream.getTracks().forEach(track => peer.addTrack(track, stream))
+    cameraOn.value = stream.getVideoTracks().some(track => track.enabled)
+    microphoneOn.value = stream.getAudioTracks().some(track => track.enabled)
     if (localVideo.value) localVideo.value.srcObject = stream
     const offer = await peer.createOffer()
     await peer.setLocalDescription(offer)
@@ -192,11 +199,13 @@ function handleServerMessage(raw) {
     const payload = event?.data || event
     const custom = payload?.payload || payload?.data || payload
     const eventPayload = custom?.payload || custom
-    const text = eventPayload?.text || eventPayload?.detail?.text
+    if (payload?.type === 'server-message' && payload.data) return handleServerMessage(payload.data)
+    const text = eventPayload?.text || eventPayload?.detail?.text || eventPayload?.content
     if (text) addMessage('assistant', text)
+    if (eventPayload?.type === 'user-transcription' && eventPayload?.text) addMessage('user', eventPayload.text)
     const detail = eventPayload?.detail || eventPayload?.payload?.detail
     const questions = detail?.questions || detail?.interrupt_info?.questions
-    if (eventPayload?.type === 'approval.required' && Array.isArray(questions)) approvalQuestions.value = questions
+    if ((eventPayload?.type === 'approval.required' || eventPayload?.type === 'yuxi.approval.required') && Array.isArray(questions)) approvalQuestions.value = questions
   } catch { /* ignore non-JSON transport frames */ }
 }
 
@@ -216,12 +225,29 @@ async function toggleCamera() {
   if (track) track.enabled = cameraOn.value
 }
 
+function toggleMicrophone() {
+  microphoneOn.value = !microphoneOn.value
+  const track = localVideo.value?.srcObject?.getAudioTracks?.()[0]
+  if (track) track.enabled = microphoneOn.value
+}
+
 async function toggleScreen() {
   if (!peer) return
+  if (screenOn.value) {
+    screenTrack?.stop()
+    const sender = peer.getSenders().find(item => item.track?.kind === 'video')
+    if (sender && cameraTrack) await sender.replaceTrack(cameraTrack)
+    screenTrack = null
+    screenOn.value = false
+    dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'none' } } }))
+    return
+  }
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
+    screenTrack = stream.getVideoTracks()[0] || null
     const sender = peer.getSenders().find(item => item.track?.kind === 'video')
-    if (sender && stream.getVideoTracks()[0]) sender.replaceTrack(stream.getVideoTracks()[0])
+    if (sender && screenTrack) await sender.replaceTrack(screenTrack)
+    dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'screen' } } }))
     screenOn.value = true
   } catch (reason) {
     error.value = reason?.message || '屏幕共享失败'
@@ -230,6 +256,8 @@ async function toggleScreen() {
 
 function disconnect() {
   peer?.getSenders().forEach(sender => sender.track?.stop())
+  screenTrack = null
+  cameraTrack = null
   peer?.close()
   peer = null
   dataChannel = null
@@ -239,6 +267,7 @@ function disconnect() {
   if (reconnectTimer) window.clearTimeout(reconnectTimer)
   reconnecting.value = false
   cameraOn.value = false
+  microphoneOn.value = false
   screenOn.value = false
 }
 
