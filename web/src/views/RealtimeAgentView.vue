@@ -175,6 +175,19 @@ async function toggleCall() {
       })
     }
     await peer.setRemoteDescription(answer)
+    if (dataChannel.readyState !== 'open') {
+      await new Promise((resolve, reject) => {
+        const timeout = window.setTimeout(() => reject(new Error('实时消息通道建立超时')), 10000)
+        dataChannel.addEventListener('open', () => {
+          window.clearTimeout(timeout)
+          resolve()
+        }, { once: true })
+        dataChannel.addEventListener('error', () => {
+          window.clearTimeout(timeout)
+          reject(new Error('实时消息通道建立失败'))
+        }, { once: true })
+      })
+    }
     connected.value = true
     status.value = 'AI 已接通'
     message.success('实时 Agent 已接通')
@@ -188,11 +201,17 @@ async function toggleCall() {
 
 function sendText() {
   const text = draft.value.trim()
-  if (!text || !dataChannel) return
-  dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'interrupt', d: {} } }))
+  if (!text || !dataChannel || dataChannel.readyState !== 'open') return
+  sendRtviMessage('interrupt', {})
   addMessage('user', text)
-  dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'send-text', d: { content: text, options: { run_immediately: true, audio_response: true } } } }))
+  sendRtviMessage('send-text', { content: text, options: { run_immediately: true, audio_response: true } })
   draft.value = ''
+}
+
+function sendRtviMessage(type, data) {
+  if (!dataChannel || dataChannel.readyState !== 'open') return false
+  dataChannel.send(JSON.stringify({ label: 'rtvi-ai', type: 'client-message', data: { t: type, d: data } }))
+  return true
 }
 
 function handleServerMessage(raw) {
@@ -213,10 +232,7 @@ function handleServerMessage(raw) {
 
 function submitApproval() {
   if (!dataChannel) return
-  dataChannel.send(JSON.stringify({
-    type: 'client-message',
-    data: { t: 'yuxi.approval.answer', d: approvalAnswers.value }
-  }))
+  sendRtviMessage('yuxi.approval.answer', approvalAnswers.value)
   approvalQuestions.value = []
   approvalAnswers.value = {}
 }
@@ -240,14 +256,14 @@ async function toggleScreen() {
     if (screenSender && cameraTrack) await screenSender.replaceTrack(null)
     screenTrack = null
     screenOn.value = false
-    dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'none' } } }))
+    sendRtviMessage('yuxi.media.attach', { source: 'none' })
     return
   }
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
     screenTrack = stream.getVideoTracks()[0] || null
     if (screenSender && screenTrack) await screenSender.replaceTrack(screenTrack)
-    dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'screen' } } }))
+    sendRtviMessage('yuxi.media.attach', { source: 'screen' })
     screenOn.value = true
   } catch (reason) {
     error.value = reason?.message || '屏幕共享失败'
