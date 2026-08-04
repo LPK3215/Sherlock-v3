@@ -182,6 +182,7 @@ export default function Home() {
               threadId={currentThreadId}
               startResponse={rawStartBotResponse}
               accessToken={token}
+              agentSlug={agentSlug}
             />
           )}
         </PipecatAppBase>

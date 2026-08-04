@@ -70,6 +70,7 @@ interface Props {
   onThreadChange: (threadId: string) => void;
   apiBase: string;
   threadId: string | null;
+  agentSlug: string;
   startResponse: unknown;
   accessToken: string;
 }
@@ -113,7 +114,7 @@ const appendChunk = (current: string, chunk: string) => {
 
 /* ------- Component ------- */
 
-export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId, startResponse, accessToken }: Props) {
+export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId, startResponse, accessToken, agentSlug }: Props) {
   /* ---------- Pipecat hooks ---------- */
   const client = usePipecatClient();
   const transportState = usePipecatClientTransportState();
@@ -168,10 +169,15 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   );
 
   useEffect(() => {
-    if (!threadId || !client) return;
+    if (!client) return;
     let cancelled = false;
     const checkApproval = async () => {
-      const response = await fetch(`${apiBase}/agent/thread/${threadId}/active_run`, {
+      const storedThreadId = typeof window !== "undefined"
+        ? sessionStorage.getItem(`realtime_thread:${agentSlug}`)
+        : null;
+      const currentThreadId = threadId || storedThreadId;
+      if (!currentThreadId) return;
+      const response = await fetch(`${apiBase}/agent/thread/${currentThreadId}/active_run`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!response.ok || cancelled) return;
@@ -190,7 +196,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [accessToken, apiBase, client, threadId]);
+  }, [accessToken, agentSlug, apiBase, client, threadId]);
 
   /* ---------- Derived ---------- */
   const isConnected = transportState === "ready";
