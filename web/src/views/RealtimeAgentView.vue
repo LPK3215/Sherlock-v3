@@ -58,6 +58,7 @@ const error = ref('')
 let peer = null
 let dataChannel = null
 let sessionId = ''
+let pcId = ''
 
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
@@ -79,6 +80,24 @@ async function toggleCall() {
     const config = await start.json()
     sessionId = config.sessionId
     peer = new RTCPeerConnection({ iceServers: config.iceConfig?.iceServers || [] })
+    peer.onicecandidate = event => {
+      if (!event.candidate || !sessionId || !peer) return
+      fetch(`/api/realtime/sessions/${sessionId}/offer`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pc_id: pcId,
+          candidates: [{
+            candidate: event.candidate.candidate,
+            sdpMid: event.candidate.sdpMid,
+            sdpMLineIndex: event.candidate.sdpMLineIndex
+          }]
+        })
+      }).catch(() => {})
+    }
+    peer.onconnectionstatechange = () => {
+      if (['failed', 'disconnected', 'closed'].includes(peer?.connectionState)) disconnect()
+    }
     dataChannel = peer.createDataChannel('rtvi')
     dataChannel.onmessage = event => handleServerMessage(event.data)
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
@@ -92,6 +111,7 @@ async function toggleCall() {
     })
     if (!response.ok) throw new Error('WebRTC 协商失败')
     const answer = await response.json()
+    pcId = answer.pc_id || answer.pcId || ''
     await peer.setRemoteDescription(answer)
     connected.value = true
     message.success('实时 Agent 已接通')
