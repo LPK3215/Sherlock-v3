@@ -266,9 +266,13 @@ try {
       "--autoplay-policy=no-user-gesture-required",
       "--disable-dev-shm-usage",
       "--no-sandbox",
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+      "--enable-features=WebRTCPipeWireCapturer",
     ],
   });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await context.grantPermissions(["camera", "microphone"], { origin: "http://localhost:3000" });
   await installSession(context);
   page = await context.newPage();
   await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
