@@ -56,7 +56,7 @@ BUILTIN_SKILLS: list[BuiltinSkillSpec] = [
     BuiltinSkillSpec(
         slug="junior-math-learning",
         source_dir=_SKILLS_ROOT / "junior-math-learning",
-        description="初中数学学习助手:识别题目、结合知识库分步讲解、整理错题并给出复习建议。",
+        description="学生拍题助手:理解多模态题目,自主分析讲解,按需使用知识库和学习记录工具。",
         version="2026.08.04",
         tool_dependencies=(
             "save_wrong_question",

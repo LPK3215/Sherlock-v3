@@ -104,9 +104,16 @@ async def test_update_wrong_question_requires_a_field(monkeypatch: pytest.Monkey
         await learning.update_wrong_question.coroutine(question_id=7, runtime=_runtime())
 
 
-def test_junior_math_skill_declares_learning_and_knowledge_dependencies():
+def test_student_problem_skill_declares_learning_and_knowledge_dependencies():
     spec = next(item for item in BUILTIN_SKILLS if item.slug == "junior-math-learning")
 
     assert "save_wrong_question" in spec.tool_dependencies
     assert "query_kb" in spec.tool_dependencies
     assert spec.skill_dependencies == ("knowledge-base",)
+
+    skill_text = (spec.source_dir / "SKILL.md").read_text(encoding="utf-8")
+    assert "通用学生拍题助手" in skill_text
+    assert "不要因为用户没有上传教材或题库就拒绝解题" in skill_text
+    assert "只有用户要求依据某本教材" in skill_text
+    assert "不要自动记录所有题目" in skill_text
+    assert "只能初中数学" not in skill_text
