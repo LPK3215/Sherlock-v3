@@ -169,7 +169,6 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   );
 
   useEffect(() => {
-    if (!client) return;
     let cancelled = false;
     const checkApproval = async () => {
       const storedThreadId = typeof window !== "undefined"
@@ -196,7 +195,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [accessToken, agentSlug, apiBase, client, threadId]);
+  }, [accessToken, agentSlug, apiBase, threadId]);
 
   /* ---------- Derived ---------- */
   const isConnected = transportState === "ready";
