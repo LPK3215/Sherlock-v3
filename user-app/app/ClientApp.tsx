@@ -272,13 +272,52 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   useRTVIClientEvent(
     RTVIEvent.ServerMessage,
     useCallback((data: Record<string, unknown> | string) => {
-      const msg = typeof data === "string" ? data : data;
-      if (msg && (msg as Record<string, unknown>).type === "media-diagnostics") {
-        const entries = Object.entries((msg as Record<string, unknown>).payload as object ?? {}) as Diagnostic[];
+      const envelope = typeof data === "string" ? data : data;
+      const rawMessage =
+        envelope && typeof envelope === "object" && "data" in envelope
+          ? (envelope.data as Record<string, unknown> | string)
+          : envelope;
+      const msg = (() => {
+        if (typeof rawMessage !== "string") return rawMessage;
+        try {
+          const parsed = JSON.parse(rawMessage);
+          return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+        } catch {
+          return null;
+        }
+      })();
+      if (!msg || typeof msg !== "object") return;
+      const envelopeMessage = msg as Record<string, unknown>;
+      let message = envelopeMessage;
+      if (envelopeMessage.type === "server-message" && envelopeMessage.data !== undefined) {
+        const serverData = envelopeMessage.data;
+        if (serverData && typeof serverData === "object") {
+          message = serverData as Record<string, unknown>;
+        } else if (typeof serverData === "string") {
+          try {
+            const parsed = JSON.parse(serverData);
+            if (parsed && typeof parsed === "object") message = parsed as Record<string, unknown>;
+          } catch {
+            return;
+          }
+        }
+      }
+      const payloadValue =
+        typeof message.payload === "string"
+          ? (() => {
+              try {
+                return JSON.parse(message.payload as string);
+              } catch {
+                return null;
+              }
+            })()
+          : message.payload;
+      if (message.type === "media-diagnostics") {
+        const entries = Object.entries((payloadValue as object) ?? {}) as Diagnostic[];
         setDiagnostics(entries);
       }
-      if (msg && (msg as Record<string, unknown>).type === "yuxi-agent-event") {
-        const payload = (msg as Record<string, unknown>).payload as Record<string, unknown>;
+      if (message.type === "yuxi-agent-event") {
+        const payload = payloadValue as Record<string, unknown>;
         const eventType = typeof payload?.type === "string" ? payload.type : "yuxi.event";
         setAgentEvents((current) => [
           ...current.slice(-499),
