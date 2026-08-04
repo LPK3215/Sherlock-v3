@@ -3,7 +3,7 @@
     <header class="realtime-header">
       <div>
         <h1>实时通话</h1>
-        <p>{{ agentName }} · Yuxi 原生实时 Agent</p>
+        <p>{{ agentName }} · {{ status }}</p>
       </div>
       <a-button @click="router.back">返回对话</a-button>
     </header>
@@ -12,6 +12,7 @@
       <section class="media-panel">
         <div class="media-stage">
           <video ref="localVideo" autoplay muted playsinline />
+          <audio ref="remoteAudio" autoplay />
           <div v-if="!connected" class="media-empty">点击“开始通话”接入实时 Agent</div>
         </div>
         <div class="media-controls">
@@ -59,6 +60,7 @@ import { message } from 'ant-design-vue'
 const route = useRoute()
 const router = useRouter()
 const localVideo = ref(null)
+const remoteAudio = ref(null)
 const draft = ref('')
 const messages = ref([])
 const connected = ref(false)
@@ -66,6 +68,7 @@ const connecting = ref(false)
 const cameraOn = ref(false)
 const screenOn = ref(false)
 const error = ref('')
+const status = ref('尚未接通')
 const approvalQuestions = ref([])
 const approvalAnswers = ref({})
 let peer = null
@@ -93,6 +96,9 @@ async function toggleCall() {
     const config = await start.json()
     sessionId = config.sessionId
     peer = new RTCPeerConnection({ iceServers: config.iceConfig?.iceServers || [] })
+    peer.ontrack = event => {
+      if (remoteAudio.value && event.streams[0]) remoteAudio.value.srcObject = event.streams[0]
+    }
     peer.onicecandidate = event => {
       if (!event.candidate || !sessionId || !peer) return
       fetch(`/api/realtime/sessions/${sessionId}/offer`, {
@@ -109,7 +115,12 @@ async function toggleCall() {
       }).catch(() => {})
     }
     peer.onconnectionstatechange = () => {
-      if (['failed', 'disconnected', 'closed'].includes(peer?.connectionState)) disconnect()
+      const state = peer?.connectionState
+      status.value = state === 'connected' ? 'AI 已接通' : state || '连接中'
+      if (['failed', 'disconnected', 'closed'].includes(state)) {
+        connected.value = false
+        if (state !== 'closed') error.value = '实时连接已断开,请重新连接'
+      }
     }
     dataChannel = peer.createDataChannel('rtvi')
     dataChannel.onmessage = event => handleServerMessage(event.data)
@@ -127,6 +138,7 @@ async function toggleCall() {
     pcId = answer.pc_id || answer.pcId || ''
     await peer.setRemoteDescription(answer)
     connected.value = true
+    status.value = 'AI 已接通'
     message.success('实时 Agent 已接通')
   } catch (reason) {
     error.value = reason?.message || '实时连接失败'
@@ -192,6 +204,7 @@ function disconnect() {
   peer = null
   dataChannel = null
   connected.value = false
+  status.value = '尚未接通'
   cameraOn.value = false
   screenOn.value = false
 }
@@ -209,6 +222,7 @@ onBeforeUnmount(disconnect)
 .media-stage { display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0; background: #101820; }
 .media-stage video { width: 100%; height: 100%; object-fit: cover; }
 .media-empty { color: #d8e5ea; font-size: 16px; }
+.media-stage audio { display: none; }
 .media-controls, .composer { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; }
 .chat-messages { min-height: 0; flex: 1; overflow: auto; padding: 18px; }
 .message { max-width: 88%; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; }
