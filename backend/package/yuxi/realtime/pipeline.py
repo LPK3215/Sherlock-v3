@@ -29,7 +29,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-from pipecat.processors.frameworks.rtvi import RTVIProcessor
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 from pipecat.services.llm_service import LLMService
 from pipecat.services.settings import LLMSettings
 from pipecat.transports.base_transport import TransportParams
@@ -38,7 +38,11 @@ from pipecat.workers.runner import WorkerRunner
 
 from yuxi.realtime.speech import create_stt_service, create_tts_service
 from yuxi.realtime.webrtc import bind_remote_media_sources, refresh_screen_video_track, request_video_keyframe
-from yuxi.services.agent_run_service import cancel_agent_run_view, create_agent_run_view, get_agent_run_view
+from yuxi.services.agent_run_service import (
+    cancel_agent_run_view,
+    create_agent_run_view,
+    get_agent_run_view,
+)
 from yuxi.services.input_message_service import build_chat_input_message
 from yuxi.services.run_queue_service import list_run_stream_events
 from yuxi.storage.postgres.manager import pg_manager
@@ -219,7 +223,6 @@ class YuxiRealtimeLLMService(LLMService):
         )
         self._agent_run = agent_run
         self._frame_broker = frame_broker
-        self._rtvi: RTVIProcessor | None = None
         self._media_source: Literal["none", "camera", "screen"] | None = None
         self._run_lock = asyncio.Lock()
 
@@ -258,10 +261,12 @@ class YuxiRealtimeLLMService(LLMService):
                     image_meta,
                     include_started=True,
                 ):
-                    if self._rtvi:
-                        realtime_payload = _realtime_event_payload(event)
-                        logger.debug("Sending realtime RTVI event type={}", realtime_payload.get("type"))
-                        await self._rtvi.send_server_message({"type": "yuxi-agent-event", "payload": realtime_payload})
+                    realtime_payload = _realtime_event_payload(event)
+                    await self.push_frame(
+                        RTVIServerMessageFrame(
+                            data={"type": "yuxi-agent-event", "payload": realtime_payload}
+                        )
+                    )
                     for delta in _event_text_deltas(event):
                         await self._push_llm_text(delta)
                 if image_content is not None:
@@ -317,8 +322,6 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
         params=PipelineParams(enable_metrics=True, enable_usage_metrics=True),
         idle_timeout_secs=None,
     )
-    llm._rtvi = worker.rtvi
-
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
         bind_remote_media_sources(connection.pc)
