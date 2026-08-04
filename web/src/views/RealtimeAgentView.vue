@@ -84,6 +84,7 @@ let pcId = ''
 let pendingCandidates = []
 let cameraTrack = null
 let screenTrack = null
+let screenSender = null
 
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
@@ -151,6 +152,7 @@ async function toggleCall() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     cameraTrack = stream.getVideoTracks()[0] || null
     stream.getTracks().forEach(track => peer.addTrack(track, stream))
+    screenSender = peer.addTransceiver('video', { direction: 'sendonly' }).sender
     cameraOn.value = stream.getVideoTracks().some(track => track.enabled)
     microphoneOn.value = stream.getAudioTracks().some(track => track.enabled)
     if (localVideo.value) localVideo.value.srcObject = stream
@@ -235,8 +237,7 @@ async function toggleScreen() {
   if (!peer) return
   if (screenOn.value) {
     screenTrack?.stop()
-    const sender = peer.getSenders().find(item => item.track?.kind === 'video')
-    if (sender && cameraTrack) await sender.replaceTrack(cameraTrack)
+    if (screenSender && cameraTrack) await screenSender.replaceTrack(null)
     screenTrack = null
     screenOn.value = false
     dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'none' } } }))
@@ -245,8 +246,7 @@ async function toggleScreen() {
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
     screenTrack = stream.getVideoTracks()[0] || null
-    const sender = peer.getSenders().find(item => item.track?.kind === 'video')
-    if (sender && screenTrack) await sender.replaceTrack(screenTrack)
+    if (screenSender && screenTrack) await screenSender.replaceTrack(screenTrack)
     dataChannel?.readyState === 'open' && dataChannel.send(JSON.stringify({ type: 'client-message', data: { t: 'yuxi.media.attach', d: { source: 'screen' } } }))
     screenOn.value = true
   } catch (reason) {
@@ -258,6 +258,7 @@ function disconnect() {
   peer?.getSenders().forEach(sender => sender.track?.stop())
   screenTrack = null
   cameraTrack = null
+  screenSender = null
   peer?.close()
   peer = null
   dataChannel = null
