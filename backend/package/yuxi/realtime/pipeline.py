@@ -29,7 +29,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
-from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
+from pipecat.processors.frameworks.rtvi import RTVIProcessor
 from pipecat.services.llm_service import LLMService
 from pipecat.services.settings import LLMSettings
 from pipecat.transports.base_transport import TransportParams
@@ -219,6 +219,7 @@ class YuxiRealtimeLLMService(LLMService):
         )
         self._agent_run = agent_run
         self._frame_broker = frame_broker
+        self._rtvi: RTVIProcessor | None = None
         self._media_source: Literal["none", "camera", "screen"] | None = None
         self._run_lock = asyncio.Lock()
 
@@ -257,11 +258,10 @@ class YuxiRealtimeLLMService(LLMService):
                     image_meta,
                     include_started=True,
                 ):
-                    await self.push_frame(
-                        RTVIServerMessageFrame(
-                            data={"type": "yuxi-agent-event", "payload": _realtime_event_payload(event)}
-                        )
-                    )
+                    if self._rtvi:
+                        realtime_payload = _realtime_event_payload(event)
+                        logger.info("Sending realtime RTVI event type={}", realtime_payload.get("type"))
+                        await self._rtvi.send_server_message({"type": "yuxi-agent-event", "payload": realtime_payload})
                     for delta in _event_text_deltas(event):
                         await self._push_llm_text(delta)
                 if image_content is not None:
@@ -317,6 +317,7 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
         params=PipelineParams(enable_metrics=True, enable_usage_metrics=True),
         idle_timeout_secs=None,
     )
+    llm._rtvi = worker.rtvi
 
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
@@ -424,7 +425,21 @@ def _realtime_event_payload(event: dict) -> dict[str, Any]:
             high_level_type = "approval.required"
         else:
             high_level_type = "yuxi.interrupt"
-        detail = chunk if isinstance(chunk, dict) else {"payload": chunk}
+        detail: dict[str, Any] = {"reason": reason}
+        if isinstance(chunk, dict):
+            questions = chunk.get("questions")
+            source = chunk.get("source")
+            if isinstance(questions, list):
+                detail["questions"] = questions
+            if isinstance(source, str) and source:
+                detail["source"] = source
+            interrupt_info = chunk.get("interrupt")
+            if isinstance(interrupt_info, dict):
+                detail["interrupt_info"] = {
+                    key: interrupt_info[key]
+                    for key in ("questions", "source", "thread_id")
+                    if key in interrupt_info
+                }
     elif event_type == "error" or status == "failed":
         high_level_type = "run.failed"
         detail = payload
