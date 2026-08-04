@@ -172,6 +172,7 @@ export default function Home() {
         >
           {({ handleConnect, handleDisconnect, rawStartBotResponse }) => (
             <ClientApp
+              key={currentThreadId || agentSlug}
               agentName={agents.find((agent) => agent.slug === agentSlug)?.name || agentSlug}
               connect={handleConnect}
               disconnect={handleDisconnect}
