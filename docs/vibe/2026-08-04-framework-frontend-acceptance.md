@@ -18,6 +18,7 @@
 
 - 已新增 `/agent/realtime` 原生 Vue 页面,由 `/agent` 官方聊天页面的“实时通话”按钮进入。
 - 真实浏览器专项 smoke 已通过:管理端原生页面完成 WebRTC 建连、文字发送、屏幕共享开关、麦克风静音/恢复。
+- 后端日志确认管理端会话进入统一实时 pipeline,并成功初始化 Whisper STT 与 Piper TTS;兼容审批 payload 的修复后 smoke 复跑通过。
 - 已修复管理端实时接口缺少 Yuxi Authorization 导致的 401。
 - 已修复 ICE candidate 在后端 `pc_id` 返回前提前 PATCH 导致的 404 竞态。
 - 管理端页面已具备文字、摄像头、屏幕共享、音频接收、审批基础交互、插话和自动重连代码;STT/TTS/审批完整闭环仍需使用音频 fixture 和审批 Agent 做专项验收。
