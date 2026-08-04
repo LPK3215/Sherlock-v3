@@ -70,6 +70,7 @@ interface Props {
   onThreadChange: (threadId: string) => void;
   apiBase: string;
   threadId: string | null;
+  startResponse: unknown;
 }
 
 export interface AgentEvent {
@@ -111,7 +112,7 @@ const appendChunk = (current: string, chunk: string) => {
 
 /* ------- Component ------- */
 
-export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId }: Props) {
+export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, onThreadChange, apiBase, threadId, startResponse }: Props) {
   /* ---------- Pipecat hooks ---------- */
   const client = usePipecatClient();
   const transportState = usePipecatClientTransportState();
@@ -147,6 +148,13 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   const userHangupRef = useRef(false);
   const wasConnectedRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!startResponse || typeof startResponse !== "object") return;
+    const response = startResponse as { threadId?: unknown; thread_id?: unknown };
+    const nextThreadId = response.threadId ?? response.thread_id;
+    if (typeof nextThreadId === "string" && nextThreadId) onThreadChange(nextThreadId);
+  }, [onThreadChange, startResponse]);
 
   useEffect(() => {
     if (!threadId || !client) return;

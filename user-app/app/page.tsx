@@ -170,7 +170,7 @@ export default function Home() {
             offerUrlTemplate: "/yuxi-api/realtime/sessions/:sessionId/offer",
           }}
         >
-          {({ handleConnect, handleDisconnect }) => (
+          {({ handleConnect, handleDisconnect, rawStartBotResponse }) => (
             <ClientApp
               agentName={agents.find((agent) => agent.slug === agentSlug)?.name || agentSlug}
               connect={handleConnect}
@@ -180,6 +180,7 @@ export default function Home() {
               onThreadChange={handleThreadChange}
               apiBase="/yuxi-api"
               threadId={currentThreadId}
+              startResponse={rawStartBotResponse}
             />
           )}
         </PipecatAppBase>
