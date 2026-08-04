@@ -58,7 +58,14 @@ class RealtimeAgentRun:
         self.config = config
         self.active_run_id: str | None = None
 
-    async def run_turn(self, query: str, image_content: str | None = None, image_meta: dict | None = None):
+    async def run_turn(
+        self,
+        query: str,
+        image_content: str | None = None,
+        image_meta: dict | None = None,
+        *,
+        include_started: bool = False,
+    ):
         request_id = f"realtime-{self.config.session_id}-{datetime.now(UTC).timestamp()}"
         metadata = {
             "request_id": request_id,
@@ -81,6 +88,13 @@ class RealtimeAgentRun:
 
         run_id = str(run["run_id"])
         self.active_run_id = run_id
+        if include_started:
+            yield {
+                "event_type": "run.started",
+                "run_id": run_id,
+                "thread_id": self.config.thread_id,
+                "payload": {"agent_slug": self.config.agent_slug},
+            }
         cursor = "0-0"
         try:
             while True:
@@ -224,8 +238,17 @@ class YuxiRealtimeLLMService(LLMService):
             await self.push_frame(LLMFullResponseStartFrame())
             await self.start_processing_metrics()
             try:
-                async for event in self._agent_run.run_turn(query, image_content, image_meta):
-                    await self.push_frame(RTVIServerMessageFrame(data={"type": "yuxi-agent-event", "payload": event}))
+                async for event in self._agent_run.run_turn(
+                    query,
+                    image_content,
+                    image_meta,
+                    include_started=True,
+                ):
+                    await self.push_frame(
+                        RTVIServerMessageFrame(
+                            data={"type": "yuxi-agent-event", "payload": _realtime_event_payload(event)}
+                        )
+                    )
                     for delta in _event_text_deltas(event):
                         await self._push_llm_text(delta)
                 if image_content is not None:
@@ -360,3 +383,55 @@ def _event_text_deltas(event: dict) -> list[str]:
         and isinstance(stream_event.get("content"), str)
         and stream_event["content"]
     ]
+
+
+def _realtime_event_payload(event: dict) -> dict[str, Any]:
+    """Adapt standard run events to the small event contract used by RTVI."""
+    if event.get("event_type") == "run.started":
+        return {
+            "type": "run.started",
+            "run_id": event.get("run_id"),
+            "thread_id": event.get("thread_id"),
+            "detail": event.get("payload") or {},
+        }
+
+    event_type = str(event.get("event_type") or "yuxi.event")
+    envelope = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    payload = envelope.get("payload") if isinstance(envelope.get("payload"), dict) else {}
+    run_id = envelope.get("run_id") or event.get("run_id")
+    thread_id = envelope.get("thread_id") or event.get("thread_id")
+    status = payload.get("status")
+
+    if event_type == "interrupt":
+        reason = payload.get("reason")
+        chunk = payload.get("chunk") if isinstance(payload.get("chunk"), dict) else payload
+        if reason == "cancelled":
+            high_level_type = "run.cancelled"
+        elif reason in {"human_approval", "ask_user_question_required", "human_approval_required"}:
+            high_level_type = "approval.required"
+        else:
+            high_level_type = "yuxi.interrupt"
+        detail = chunk if isinstance(chunk, dict) else {"payload": chunk}
+    elif event_type == "error" or status == "failed":
+        high_level_type = "run.failed"
+        detail = payload
+    elif event_type == "end" and status == "cancelled":
+        high_level_type = "run.cancelled"
+        detail = payload
+    elif event_type == "end" and status == "failed":
+        high_level_type = "run.failed"
+        detail = payload
+    elif event_type == "end" and status == "completed":
+        high_level_type = "run.completed"
+        detail = payload
+    else:
+        high_level_type = f"yuxi.{event_type}"
+        detail = payload
+
+    return {
+        "type": high_level_type,
+        "run_id": run_id,
+        "thread_id": thread_id,
+        "detail": detail,
+        "event_type": event_type,
+    }

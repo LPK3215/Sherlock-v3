@@ -10,7 +10,12 @@ from typing import Any
 import httpx
 import pytest
 
-from yuxi.agents.backends.sandbox import ensure_thread_dirs, sandbox_id_for_thread, sandbox_workspace_dir
+from yuxi.agents.backends.sandbox import (
+    ensure_thread_dirs,
+    sandbox_id_for_thread,
+    sandbox_outputs_dir,
+    sandbox_workspace_dir,
+)
 from yuxi.agents.backends.sandbox.provider import sandbox_provisioner_token
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e, pytest.mark.slow]
@@ -75,10 +80,11 @@ async def _current_uid_and_model(
     uid = str(me_response.json().get("uid") or "")
     assert uid, me_response.text
 
-    default_response = await client.get("/api/agent/default", headers=headers)
-    _assert_ok(default_response)
-    default_context = ((default_response.json().get("agent") or {}).get("config_json") or {}).get("context") or {}
-    model = str(default_context.get("model") or "").strip() or None
+    realtime_response = await client.get("/api/agent/sherlock-realtime", headers=headers)
+    _assert_ok(realtime_response)
+    realtime_context = ((realtime_response.json().get("agent") or {}).get("config_json") or {}).get("context") or {}
+    model = str(realtime_context.get("model") or "").strip() or None
+    assert model, realtime_response.text
     return uid, model
 
 
@@ -102,21 +108,6 @@ async def _delete_sandbox(thread_id: str, uid: str) -> None:
             headers={"Authorization": f"Bearer {sandbox_provisioner_token()}"},
         )
     assert response.status_code in {200, 404}, response.text
-
-
-async def _wait_for_task(
-    client: httpx.AsyncClient,
-    headers: dict[str, str],
-    task_id: str,
-) -> dict[str, Any]:
-    for _ in range(300):
-        response = await client.get(f"/api/tasks/{task_id}", headers=headers)
-        _assert_ok(response)
-        task = response.json().get("task") or {}
-        if task.get("status") in {"success", "failed", "cancelled"}:
-            return task
-        await asyncio.sleep(1)
-    raise AssertionError(f"Task {task_id} did not finish within 300 seconds")
 
 
 async def _create_thread(
@@ -419,74 +410,24 @@ async def test_realtime_run_calls_configured_mcp_tool(
             assert delete_mcp_response.status_code in {200, 404}, delete_mcp_response.text
 
 
-async def test_realtime_skill_dependency_queries_knowledge_base_with_source_reference(
+async def test_realtime_skill_activates_and_executes_gated_tool(
     e2e_client: httpx.AsyncClient,
     e2e_headers: dict[str, str],
 ):
     uid, model = await _current_uid_and_model(e2e_client, e2e_headers)
     sync_response = await e2e_client.post("/api/system/skills/builtin/sync", headers=e2e_headers)
     _assert_ok(sync_response)
-    assert any(item.get("slug") == "knowledge-base" for item in sync_response.json().get("data", []))
+    assert any(item.get("slug") == "image-gen" for item in sync_response.json().get("data", []))
 
     suffix = uuid.uuid4().hex[:8]
-    agent_slug = f"realtime-kb-e2e-{suffix}"
-    database_name = f"realtime_kb_e2e_{suffix}"
-    filename = f"realtime-reference-{suffix}.txt"
-    marker = f"REALTIME_KB_MARKER_{suffix}"
-    kb_id = ""
-    task_id = ""
+    agent_slug = f"realtime-skill-e2e-{suffix}"
+    filename = f"realtime-skill-{suffix}.txt"
+    output_path = f"/home/gem/user-data/outputs/{filename}"
+    marker = f"REALTIME_SKILL_MARKER_{suffix}"
     thread_id = ""
     run_id: str | None = None
 
     try:
-        create_kb_response = await e2e_client.post(
-            "/api/knowledge/databases",
-            json={
-                "database_name": database_name,
-                "description": "Temporary realtime knowledge E2E database",
-                "embedding_model_spec": "siliconflow-cn:Pro/BAAI/bge-m3",
-                "kb_type": "milvus",
-                "additional_params": {},
-                "share_config": {"access_level": "user", "department_ids": [], "user_uids": [uid]},
-            },
-            headers=e2e_headers,
-        )
-        _assert_ok(create_kb_response)
-        kb_id = str(create_kb_response.json().get("kb_id") or "")
-        assert kb_id, create_kb_response.text
-
-        document_content = f"Sherlock realtime knowledge verification source.\n{marker}\n"
-        upload_response = await e2e_client.post(
-            "/api/knowledge/files/upload",
-            params={"kb_id": kb_id},
-            files={"file": (filename, document_content.encode(), "text/plain")},
-            headers=e2e_headers,
-        )
-        _assert_ok(upload_response)
-        upload = upload_response.json()
-        minio_path = str(upload.get("minio_path") or "")
-        content_hash = str(upload.get("content_hash") or "")
-        assert minio_path and content_hash, upload
-
-        ingest_response = await e2e_client.post(
-            f"/api/knowledge/databases/{kb_id}/documents",
-            json={
-                "items": [minio_path],
-                "params": {
-                    "content_type": "file",
-                    "auto_index": True,
-                    "content_hashes": {minio_path: content_hash},
-                    "file_sizes": {minio_path: len(document_content.encode())},
-                },
-            },
-            headers=e2e_headers,
-        )
-        _assert_ok(ingest_response)
-        task_id = str(ingest_response.json().get("task_id") or "")
-        assert task_id, ingest_response.text
-        task = await _wait_for_task(e2e_client, e2e_headers, task_id)
-        assert task.get("status") == "success", task
-
         await _create_agent(
             e2e_client,
             e2e_headers,
@@ -494,21 +435,27 @@ async def test_realtime_skill_dependency_queries_knowledge_base_with_source_refe
             uid=uid,
             model=model,
             context={
-                "system_prompt": "必须调用 query_kb 检索用户指定标记，并在回答中给出标记和来源文件名。",
+                "system_prompt": (
+                    "这是实时 Skill 门控测试。必须先调用 read_file 读取 "
+                    "/home/gem/skills/image-gen/SKILL.md，再调用 present_artifacts 一次展示用户指定的现有文件。"
+                    "不要生成图片、不要执行代码、不要调用网络。完成后只回复文件路径。"
+                ),
                 "tools": [],
-                "skills": ["knowledge-base"],
+                "skills": ["image-gen"],
                 "mcps": [],
-                "knowledges": [kb_id],
+                "knowledges": [],
                 "subagents": ["__e2e_none__"],
             },
         )
         thread_id = await _create_thread(e2e_client, e2e_headers, agent_slug=agent_slug)
+        ensure_thread_dirs(thread_id, uid)
+        (sandbox_outputs_dir(thread_id) / filename).write_text(marker, encoding="utf-8")
         run_id = await _create_run(
             e2e_client,
             e2e_headers,
             agent_slug=agent_slug,
             thread_id=thread_id,
-            query=f"必须调用 query_kb 在 kb_id={kb_id} 中检索 {marker}，回答必须包含标记和来源文件名。",
+            query=f"按系统要求激活 Skill，并展示已存在的文件 {output_path}。",
         )
 
         chunks, terminal_status = await _consume_run(e2e_client, e2e_headers, run_id)
@@ -517,24 +464,16 @@ async def test_realtime_skill_dependency_queries_knowledge_base_with_source_refe
         evidence = json.dumps({"chunks": chunks, "result": result_response.json()}, ensure_ascii=False)
 
         assert terminal_status == "completed", chunks
-        assert "query_kb" in _tool_names(chunks), chunks
-        assert marker in evidence
-        assert filename in evidence
+        tool_names = _tool_names(chunks)
+        assert "read_file" in tool_names, chunks
+        assert "present_artifacts" in tool_names, chunks
+        assert output_path in evidence
     finally:
         await _cancel_run(e2e_client, e2e_headers, run_id)
         if thread_id:
             await _delete_sandbox(thread_id, uid)
         delete_agent_response = await e2e_client.delete(f"/api/agent/{agent_slug}", headers=e2e_headers)
         assert delete_agent_response.status_code in {200, 404}, delete_agent_response.text
-        if kb_id:
-            delete_kb_response = await e2e_client.delete(
-                f"/api/knowledge/databases/{kb_id}",
-                headers=e2e_headers,
-            )
-            assert delete_kb_response.status_code in {200, 404}, delete_kb_response.text
-        if task_id:
-            delete_task_response = await e2e_client.delete(f"/api/tasks/{task_id}", headers=e2e_headers)
-            assert delete_task_response.status_code in {200, 404}, delete_task_response.text
 
 
 async def test_realtime_run_emits_summary_compression_events(

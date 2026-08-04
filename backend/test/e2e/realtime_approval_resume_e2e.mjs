@@ -8,7 +8,7 @@ const ACCESS_TOKEN = process.env.E2E_ACCESS_TOKEN || "";
 const PLAYWRIGHT_MODULE =
   process.env.PLAYWRIGHT_MODULE || "/work/node_modules/playwright-core/index.js";
 const CHAT_MODEL =
-  process.env.E2E_CHAT_MODEL || "siliconflow-cn:Qwen/Qwen3-VL-8B-Instruct";
+  process.env.E2E_CHAT_MODEL || "modelscope:Qwen/Qwen3-VL-8B-Thinking";
 const TIMEOUT_MS = Number(process.env.E2E_REALTIME_TIMEOUT_MS || "180000");
 
 assert(ACCESS_TOKEN, "E2E_ACCESS_TOKEN is required");

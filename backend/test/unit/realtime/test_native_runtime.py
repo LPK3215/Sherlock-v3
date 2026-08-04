@@ -73,6 +73,59 @@ def test_yuxi_message_delta_is_forwarded_to_tts():
     assert realtime_pipeline._event_text_deltas(event) == ["你好"]
 
 
+def test_realtime_event_adapter_exposes_run_started():
+    payload = realtime_pipeline._realtime_event_payload(
+        {
+            "event_type": "run.started",
+            "run_id": "run-1",
+            "thread_id": "thread-1",
+            "payload": {"agent_slug": "sherlock-realtime"},
+        }
+    )
+
+    assert payload == {
+        "type": "run.started",
+        "run_id": "run-1",
+        "thread_id": "thread-1",
+        "detail": {"agent_slug": "sherlock-realtime"},
+    }
+
+
+def test_realtime_event_adapter_exposes_approval_required():
+    payload = realtime_pipeline._realtime_event_payload(
+        {
+            "event_type": "interrupt",
+            "payload": {
+                "run_id": "run-1",
+                "thread_id": "thread-1",
+                "payload": {
+                    "reason": "human_approval",
+                    "chunk": {"questions": [{"question": "继续吗?"}]},
+                },
+            },
+        }
+    )
+
+    assert payload["type"] == "approval.required"
+    assert payload["run_id"] == "run-1"
+    assert payload["detail"]["questions"][0]["question"] == "继续吗?"
+
+
+def test_realtime_event_adapter_exposes_completed_run():
+    payload = realtime_pipeline._realtime_event_payload(
+        {
+            "event_type": "end",
+            "payload": {
+                "run_id": "run-1",
+                "thread_id": "thread-1",
+                "payload": {"status": "completed"},
+            },
+        }
+    )
+
+    assert payload["type"] == "run.completed"
+
+
 @pytest.mark.asyncio
 async def test_realtime_agent_is_registered_with_model_and_prompt(monkeypatch: pytest.MonkeyPatch):
     repository = AgentRepository(None)

@@ -304,6 +304,8 @@
 
 <!-- 添加到这里 -->
 
+- 修复实时用户端事件契约:将 Yuxi AgentRun 的标准事件在 RTVI 边界适配为 `run.started`、`approval.required`、`run.cancelled` 与 `run.failed`,保留原始运行事件并让实时插话、审批和失败状态可被用户端正确观察
+
 
 ---
 

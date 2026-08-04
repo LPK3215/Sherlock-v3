@@ -22,7 +22,7 @@
 - 使用 `user-portal` 的暗色用户端布局、视觉层级和控件设计，但所有状态来自真实运行数据。
 - 页面在桌面和移动端为真实响应式布局，不使用固定 1440x900 画布整体缩放。
 - Compose 同时部署 Yuxi `web` 与正式 `user-app`，两者共享 Yuxi API。
-- 完成真实浏览器摄像头、屏幕、文字、语音和 TTS 链路验证。
+- 完成后端实时 Agent 能力 E2E 验证（模型、提示词、AgentRun、文件工具、Skill、MCP、上下文压缩）；浏览器媒体专项脚本已准备，但当前 Compose 的 user-app 容器未提供 Playwright/Chromium 与 STT fixture，因此本轮未将浏览器摄像头、屏幕、语音和 TTS 标记为已验证。
 - 最终删除 `user-portal` 与 `realtime-gateway`，正式用户端目录命名为 `user-app`。
 
 ## Checklist
@@ -31,7 +31,7 @@
 - [x] 用户端产品外壳与登录/Agent 入口
 - [x] 通话布局和真实媒体状态绑定
 - [x] 字幕、消息、媒体附加与审批交互
-- [x] 桌面/移动端响应式验证
+- [ ] 桌面/移动端响应式验证（需具备 Playwright/Chromium 测试环境）
 - [x] Docker Compose 用户端服务
-- [x] 浏览器完整链路验证
+- [ ] 浏览器完整链路验证（脚本已就绪，等待浏览器依赖与 STT fixture）
 - [x] 删除参考目录并更新架构文档
