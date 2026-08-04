@@ -56,6 +56,7 @@ def test_visual_tools_are_registered_and_categorized():
 @pytest.mark.asyncio
 async def test_visual_tools_use_current_uid_and_validate_required_fields(monkeypatch):
     _patch_storage(monkeypatch)
+    monkeypatch.setattr(visual, "interrupt", lambda payload: {payload["questions"][0]["question_id"]: "confirm"})
 
     with pytest.raises(ValueError, match="标题、对象和直接观察内容不能为空"):
         await visual.save_visual_observation.coroutine(
@@ -68,6 +69,20 @@ async def test_visual_tools_use_current_uid_and_validate_required_fields(monkeyp
 
     assert _FakeRepository.calls[0][1]["uid"] == "user-1"
     assert _FakeRepository.calls[1][1] == {"uid": "user-2", "subject": "植物", "limit": 5}
+
+
+@pytest.mark.asyncio
+async def test_visual_save_does_not_persist_without_confirmation(monkeypatch):
+    _patch_storage(monkeypatch)
+    monkeypatch.setattr(visual, "interrupt", lambda _payload: {"save_visual_observation": "cancel"})
+
+    result = await visual.save_visual_observation.coroutine(
+        title="窗台观察", subject="植物", direct_observation="绿色叶片", runtime=_runtime()
+    )
+
+    assert result["saved"] is False
+    assert result["cancelled"] is True
+    assert _FakeRepository.calls == []
 
 
 def test_visual_skills_and_three_domain_closure_are_registered():

@@ -78,6 +78,7 @@ def test_legal_tools_are_registered_with_metadata():
 @pytest.mark.asyncio
 async def test_legal_tools_use_current_user_uid(monkeypatch: pytest.MonkeyPatch):
     _patch_legal_storage(monkeypatch)
+    monkeypatch.setattr(legal, "interrupt", lambda payload: {payload["questions"][0]["question_id"]: "confirm"})
 
     await legal.save_legal_matter.coroutine(title="合同争议", summary="用户确认的摘要", runtime=_runtime())
     await legal.list_legal_matters.coroutine(runtime=_runtime(), matter_type="contract", limit=5)
@@ -87,6 +88,39 @@ async def test_legal_tools_use_current_user_uid(monkeypatch: pytest.MonkeyPatch)
     assert all(call[1]["uid"] == "user-1" for call in _FakeRepository.calls)
     assert _FakeRepository.calls[1][1]["limit"] == 5
     assert _FakeRepository.calls[2][1]["matter_id"] == 11
+
+
+@pytest.mark.asyncio
+async def test_legal_write_tools_do_not_persist_without_confirmation(monkeypatch: pytest.MonkeyPatch):
+    _patch_legal_storage(monkeypatch)
+    monkeypatch.setattr(legal, "interrupt", lambda _payload: {"save_legal_matter": "cancel"})
+
+    result = await legal.save_legal_matter.coroutine(title="合同争议", summary="摘要", runtime=_runtime())
+
+    assert result["saved"] is False
+    assert result["cancelled"] is True
+    assert _FakeRepository.calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("tool_name", "kwargs", "result_key"),
+    [
+        ("update_legal_matter", {"matter_id": 11, "status": "closed"}, "updated"),
+        ("delete_legal_matter", {"matter_id": 11}, "deleted"),
+    ],
+)
+async def test_legal_update_and_delete_do_not_persist_without_confirmation(
+    monkeypatch: pytest.MonkeyPatch, tool_name: str, kwargs: dict, result_key: str
+):
+    _patch_legal_storage(monkeypatch)
+    monkeypatch.setattr(legal, "interrupt", lambda _payload: {"ignored": "cancel"})
+
+    result = await getattr(legal, tool_name).coroutine(runtime=_runtime(), **kwargs)
+
+    assert result[result_key] is False
+    assert result["cancelled"] is True
+    assert _FakeRepository.calls == []
 
 
 @pytest.mark.asyncio

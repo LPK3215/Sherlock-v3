@@ -85,6 +85,7 @@ async def test_save_wrong_question_rejects_blank_question(monkeypatch: pytest.Mo
 @pytest.mark.asyncio
 async def test_learning_tools_use_current_user_uid(monkeypatch: pytest.MonkeyPatch):
     _patch_learning_storage(monkeypatch)
+    monkeypatch.setattr(learning, "interrupt", lambda payload: {payload["questions"][0]["question_id"]: "confirm"})
 
     await learning.save_wrong_question.coroutine(question="2x=4", runtime=_runtime())
     await learning.list_wrong_questions.coroutine(runtime=_runtime(), subject="数学", limit=5)
@@ -94,6 +95,39 @@ async def test_learning_tools_use_current_user_uid(monkeypatch: pytest.MonkeyPat
     assert all(call[1]["uid"] == "student-1" for call in _FakeRepository.calls)
     assert _FakeRepository.calls[1][1]["limit"] == 5
     assert _FakeRepository.calls[2][1]["question_id"] == 7
+
+
+@pytest.mark.asyncio
+async def test_learning_write_tools_do_not_persist_without_confirmation(monkeypatch: pytest.MonkeyPatch):
+    _patch_learning_storage(monkeypatch)
+    monkeypatch.setattr(learning, "interrupt", lambda _payload: {"save_wrong_question": "cancel"})
+
+    result = await learning.save_wrong_question.coroutine(question="2x=4", runtime=_runtime())
+
+    assert result["saved"] is False
+    assert result["cancelled"] is True
+    assert _FakeRepository.calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("tool_name", "kwargs", "result_key"),
+    [
+        ("update_wrong_question", {"question_id": 7, "review_status": "reviewed"}, "updated"),
+        ("delete_wrong_question", {"question_id": 7}, "deleted"),
+    ],
+)
+async def test_learning_update_and_delete_do_not_persist_without_confirmation(
+    monkeypatch: pytest.MonkeyPatch, tool_name: str, kwargs: dict, result_key: str
+):
+    _patch_learning_storage(monkeypatch)
+    monkeypatch.setattr(learning, "interrupt", lambda _payload: {"ignored": "cancel"})
+
+    result = await getattr(learning, tool_name).coroutine(runtime=_runtime(), **kwargs)
+
+    assert result[result_key] is False
+    assert result["cancelled"] is True
+    assert _FakeRepository.calls == []
 
 
 @pytest.mark.asyncio

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from langgraph.prebuilt.tool_node import ToolRuntime
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from yuxi.agents.toolkits.registry import tool
@@ -64,6 +65,21 @@ async def save_visual_observation(
     }
     if not values["title"] or not values["subject"] or not values["direct_observation"]:
         raise ValueError("视觉观察标题、对象和直接观察内容不能为空")
+    confirmation = interrupt(
+        {
+            "source": "visual_observation_confirmation",
+            "questions": [{
+                "question_id": "save_visual_observation",
+                "question": f'确认保存视觉观察“{values["title"]}”吗?',
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("save_visual_observation") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
         item = await VisualRepository(db).create_observation(uid=_runtime_uid(runtime), values=values)
     return {"saved": True, "visual_observation": item.to_dict()}

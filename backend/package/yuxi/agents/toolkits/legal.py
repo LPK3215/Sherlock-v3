@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from langgraph.prebuilt.tool_node import ToolRuntime
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from yuxi.agents.toolkits.registry import tool
@@ -49,6 +50,21 @@ async def save_legal_matter(
     }
     if not values["title"] or not values["summary"]:
         raise ValueError("法律事务标题和摘要不能为空")
+    confirmation = interrupt(
+        {
+            "source": "legal_matter_confirmation",
+            "questions": [{
+                "question_id": "save_legal_matter",
+                "question": f'确认保存法律事务“{values["title"]}”吗?',
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("save_legal_matter") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
         item = await LegalRepository(db).create_matter(uid=_runtime_uid(runtime), values=values)
     return {"saved": True, "legal_matter": item.to_dict()}
@@ -118,6 +134,21 @@ async def update_legal_matter(
     }
     if not values:
         raise ValueError("至少提供一个要更新的字段")
+    confirmation = interrupt(
+        {
+            "source": "legal_matter_confirmation",
+            "questions": [{
+                "question_id": "update_legal_matter",
+                "question": f"确认修改法律事务记录 {matter_id} 吗?",
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("update_legal_matter") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"updated": False, "cancelled": True, "reason": "用户未确认修改"}
     async with pg_manager.get_async_session_context() as db:
         item = await LegalRepository(db).update_matter(
             uid=_runtime_uid(runtime), matter_id=matter_id, values=values
@@ -139,6 +170,21 @@ class DeleteLegalMatterInput(BaseModel):
     args_schema=DeleteLegalMatterInput,
 )
 async def delete_legal_matter(matter_id: int, runtime: ToolRuntime) -> dict:
+    confirmation = interrupt(
+        {
+            "source": "legal_matter_confirmation",
+            "questions": [{
+                "question_id": "delete_legal_matter",
+                "question": f"确认删除法律事务记录 {matter_id} 吗?",
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("delete_legal_matter") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"deleted": False, "cancelled": True, "reason": "用户未确认删除"}
     async with pg_manager.get_async_session_context() as db:
         deleted = await LegalRepository(db).delete_matter(uid=_runtime_uid(runtime), matter_id=matter_id)
     if not deleted:

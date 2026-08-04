@@ -67,10 +67,10 @@
 | 题目理解 | 图片、摄像头、屏幕或文档中的题目讲解 | 图片、视频帧、文档、文字 | 学生拍题助手:识别题目、确认理解、分步讲解 | 图片/文档解析、通用模型视觉理解 | 可选知识库 | 不需要 | 读取当前用户输入 | 已实现/已复用 |
 | 题目理解 | 语音描述不会做的步骤 | 语音转写、上下文 | 学生拍题助手:结合上下文追问 | STT、通用对话 | 可选知识库 | 不需要 | 读取当前会话 | 已实现/已复用 |
 | 解题辅导 | 检查答案并解释错误原因 | 题目、答案、用户解题过程 | 学生拍题助手:分析思路、指出错误、给出下一步 | 通用推理,必要时知识库检索 | 可选知识库 | 不需要 | 只读分析 | 已实现/已复用 |
-| 错题整理 | 用户要求保存错题 | 题目、答案、错误原因、学科、知识点 | 学生拍题助手:整理字段、请求确认、保存 | `save_wrong_question` | 不需要 | `learning_wrong_questions` | 用户明确要求或确认后写入 | 已实现 |
+| 错题整理 | 用户要求保存错题 | 题目、答案、错误原因、学科、知识点 | 学生拍题助手:整理字段、请求确认、保存 | `save_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后写入 | 已实现/已验证 |
 | 错题历史 | 查询自己的错题 | 学科、知识点、复习状态、数量 | 学生拍题助手:查询并解释复习建议 | `list_wrong_questions` | 不需要 | `learning_wrong_questions` | 仅当前用户 UID | 已实现 |
-| 错题维护 | 修改复习状态或讲解 | 记录 ID、修改内容 | 学生拍题助手:确认后更新 | `update_wrong_question` | 不需要 | `learning_wrong_questions` | 修改前明确确认 | 已实现 |
-| 错题维护 | 删除错题 | 记录 ID | 学生拍题助手:确认后删除 | `delete_wrong_question` | 不需要 | `learning_wrong_questions` | 删除前明确确认 | 已实现 |
+| 错题维护 | 修改复习状态或讲解 | 记录 ID、修改内容 | 学生拍题助手:确认后更新 | `update_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后更新 | 已实现/已验证 |
+| 错题维护 | 删除错题 | 记录 ID | 学生拍题助手:确认后删除 | `delete_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后删除 | 已实现/已验证 |
 | 资料问答 | 根据用户上传的课本、试卷或讲义回答 | 文档、图片、问题 | 学生拍题助手 + knowledge-base Skill | `search_knowledge_base` 等现有知识库工具 | 用户配置知识库 | 由知识库系统管理 | 只访问用户有权限的知识库 | 条件启用 |
 | 学习画像 | 保存年级、目标和稳定偏好 | 用户明确提供的信息 | 待建学生画像流程 | 待设计画像读写 Tool | 不需要 | 待建学生画像表 | 写入前确认,支持查看和删除 | 规划中 |
 | 学习计划 | 制定、查询和更新学习任务 | 目标、时间、学科 | 待建学习计划 Skill | 待设计计划 CRUD Tool | 可选知识库 | 待建学习计划表 | 新增、修改、删除前确认 | 规划中 |
@@ -114,7 +114,7 @@
 | 法规依据 | 查询某个法律问题的公开依据 | 问题、地区、时间、用户事实 | 法规检索 Skill:澄清范围、检索、引用、说明版本 | 官方网页/API 检索、知识库检索、来源引用 | 官方法规知识库或授权 API | 通常不需要 | 外部请求和来源可追溯 | 条件启用 |
 | 事实整理 | 整理事件经过和证据清单 | 对话、文档、图片、录音转写 | 事实整理 Skill:按时间线区分事实和推测 | 时间线生成、文件读取 | 用户资料 | 不需要 | 不自动判断事实真伪 | 已实现/已复用 |
 | 文书辅助 | 根据用户事实生成沟通稿或材料提纲 | 用户事实、模板、目标 | 文书辅助 Skill:先确认用途和收件对象 | 模板读取、文档生成 | 用户模板、公开样例 | 不需要 | 发送或提交前必须确认 | 规划中 |
-| 案件记录 | 用户要求保存案件摘要和后续事项 | 用户确认的摘要、标签、时间 | 法律事务总 Skill:展示待保存字段、确认后写入 | `save_legal_matter`、`list_legal_matters`、`update_legal_matter`、`delete_legal_matter` | 不需要 | `legal_matters` | 写入、修改、删除均需确认 | 已实现 |
+| 案件记录 | 用户要求保存案件摘要和后续事项 | 用户确认的摘要、标签、时间 | 法律事务总 Skill:展示待保存字段、确认后写入 | `save_legal_matter`、`list_legal_matters`、`update_legal_matter`、`delete_legal_matter` | 不需要 | `legal_matters` | 写入、修改、删除均通过 Yuxi interrupt 确认 | 已实现/已验证 |
 
 ### 6.3 法律领域依赖清单
 
@@ -149,7 +149,7 @@
 | 当前观察 | 看懂图片、摄像头或屏幕中的内容 | `visual-observation` | 模型视觉能力、现有实时帧入口 | 不需要 | 不需要 | 读取当前用户输入 | 已实现/已复用 |
 | 候选识别 | 识别植物、动物、物品、商品或设备 | `visual-identification` | 当前多模态输入 | 可选 | 不需要 | 只读分析,不承诺专业鉴定 | 已实现/已复用 |
 | 资料核验 | 用户要求来源或结果不确定 | `visual-research` | `query_kb`、`open_kb_document`、`search_file` | 用户可访问知识库 | 通常不需要 | 仅访问授权资料 | 条件启用 |
-| 观察历史 | 用户要求保存或查询观察摘要 | `visual-observation` | `save_visual_observation`、`list_visual_observations` | 不需要 | `visual_observations` | 保存前明确确认,查询仅当前 UID | 已实现 |
+| 观察历史 | 用户要求保存或查询观察摘要 | `visual-observation` | `save_visual_observation`、`list_visual_observations` | 不需要 | `visual_observations` | 保存通过 Yuxi interrupt 确认,查询仅当前 UID | 已实现/已验证 |
 
 ### 7.3 三个 Skill 与边界
 

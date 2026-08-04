@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from langgraph.prebuilt.tool_node import ToolRuntime
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
 
 from yuxi.agents.toolkits.registry import tool
@@ -52,6 +53,21 @@ async def save_wrong_question(
     }
     if not values["question"]:
         raise ValueError("题目不能为空")
+    confirmation = interrupt(
+        {
+            "source": "learning_record_confirmation",
+            "questions": [{
+                "question_id": "save_wrong_question",
+                "question": "确认保存这道错题及其讲解摘要吗?",
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("save_wrong_question") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
         item = await LearningRepository(db).create_wrong_question(uid=_runtime_uid(runtime), values=values)
     return {"saved": True, "wrong_question": item.to_dict()}
@@ -121,6 +137,21 @@ async def update_wrong_question(
     }
     if not values:
         raise ValueError("至少提供一个要更新的字段")
+    confirmation = interrupt(
+        {
+            "source": "learning_record_confirmation",
+            "questions": [{
+                "question_id": "update_wrong_question",
+                "question": f"确认修改错题记录 {question_id} 吗?",
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("update_wrong_question") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"updated": False, "cancelled": True, "reason": "用户未确认修改"}
     async with pg_manager.get_async_session_context() as db:
         item = await LearningRepository(db).update_wrong_question(
             uid=_runtime_uid(runtime), question_id=question_id, values=values
@@ -142,6 +173,21 @@ class DeleteWrongQuestionInput(BaseModel):
     args_schema=DeleteWrongQuestionInput,
 )
 async def delete_wrong_question(question_id: int, runtime: ToolRuntime) -> dict:
+    confirmation = interrupt(
+        {
+            "source": "learning_record_confirmation",
+            "questions": [{
+                "question_id": "delete_wrong_question",
+                "question": f"确认删除错题记录 {question_id} 吗?",
+                "options": [{"label": "确认执行", "value": "confirm"}, {"label": "取消执行", "value": "cancel"}],
+                "multi_select": False,
+                "allow_other": False,
+            }],
+        }
+    )
+    answer = confirmation.get("delete_wrong_question") if isinstance(confirmation, dict) else confirmation
+    if answer != "confirm":
+        return {"deleted": False, "cancelled": True, "reason": "用户未确认删除"}
     async with pg_manager.get_async_session_context() as db:
         deleted = await LearningRepository(db).delete_wrong_question(uid=_runtime_uid(runtime), question_id=question_id)
     if not deleted:
