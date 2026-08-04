@@ -739,7 +739,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
             )}
           </div>
 
-          {isConnected && approvalQuestions.length > 0 && (
+          {approvalQuestions.length > 0 && (
             <ApprovalPrompt questions={approvalQuestions} processing={approvalProcessing} onSubmit={submitApproval} onReject={() => submitApproval("reject")} />
           )}
 
