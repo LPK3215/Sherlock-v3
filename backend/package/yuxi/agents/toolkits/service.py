@@ -105,6 +105,12 @@ async def resolve_configured_runtime_tools(context) -> list[Any]:
         for tool in get_tool_instances_by_category(category)
     }
 
+    # 能力目录是只读的基础工具,不依赖具体领域 Skill,确保用户始终可以询问夏洛克能做什么。
+    capability_tool = buildin_tools.get("list_sherlock_capabilities")
+    if capability_tool is not None:
+        selected_tools.append(capability_tool)
+        selected_tool_names.add(capability_tool.name)
+
     for tool_name in getattr(context, "tools", None) or []:
         if not isinstance(tool_name, str) or tool_name in selected_tool_names:
             continue

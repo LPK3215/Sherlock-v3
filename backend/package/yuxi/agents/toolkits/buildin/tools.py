@@ -19,6 +19,52 @@ from yuxi.utils.paths import (
     VIRTUAL_PATH_OUTPUTS,
     WORKSPACE_DIR_NAME,
 )
+
+
+def _registered_capabilities() -> list[dict[str, object]]:
+    """Return the built-in capability catalog without exposing implementation details."""
+    from yuxi.agents.skills.buildin import BUILTIN_SKILLS
+
+    dependency_slugs = {
+        dependency
+        for skill in BUILTIN_SKILLS
+        for dependency in skill.skill_dependencies
+    }
+    return [
+        {
+            "slug": skill.slug,
+            "name": skill.description.split(":", 1)[0] or skill.slug,
+            "description": skill.description,
+            "kind": "domain" if skill.slug not in dependency_slugs else "supporting",
+        }
+        for skill in BUILTIN_SKILLS
+    ]
+
+
+@tool(
+    category="buildin",
+    tags=["能力", "Skill", "查询"],
+    display_name="查询夏洛克能力",
+    description="列出夏洛克已注册的领域能力,并说明当前会话已激活的 Skill 和可用工具。只读,不会改变运行配置。",
+)
+def list_sherlock_capabilities(runtime: ToolRuntime) -> dict[str, object]:
+    """让用户查询注册能力与本轮运行时能力的边界。"""
+    context = runtime.context
+    registered = _registered_capabilities()
+    registered_slugs = {item["slug"] for item in registered}
+    active_slug_order = getattr(context, "_prompt_skills", None) or getattr(context, "skills", None) or []
+    active_slugs = set(active_slug_order) & registered_slugs
+    active_tools = set(getattr(context, "tools", None) or [])
+    dependency_map = getattr(context, "_runtime_skill_dependency_map", None) or {}
+    for slug in active_slugs:
+        active_tools.update((dependency_map.get(slug) or {}).get("tools", []))
+    return {
+        "identity": "夏洛克",
+        "registered_capabilities": registered,
+        "active_skills": [slug for slug in active_slug_order if slug in active_slugs],
+        "active_tools": sorted(active_tools),
+        "note": "已注册能力可以按用户意图启用;当前可调用范围仍受本次会话、权限、Skill 激活状态和工具配置限制。",
+    }
 from yuxi.utils.question_utils import normalize_questions
 
 # Lazy initialization for TavilySearch (only when API key is available)

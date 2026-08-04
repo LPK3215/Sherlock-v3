@@ -8,6 +8,8 @@ import pytest
 from yuxi.agents.skills.buildin import BUILTIN_SKILLS
 from yuxi.agents.middlewares.skills import expand_skill_closure
 from yuxi.agents.toolkits import legal
+from yuxi.agents.toolkits.buildin.tools import list_sherlock_capabilities
+from yuxi.agents.toolkits.service import get_tool_instances_by_category, resolve_configured_runtime_tools
 from yuxi.agents.toolkits.registry import get_all_tool_instances, get_extra_metadata
 
 
@@ -136,3 +138,73 @@ def test_runtime_skill_closure_switches_between_domains_without_cross_contaminat
     ]
     assert "legal-matter-analysis" not in student_closure
     assert "junior-math-learning" not in legal_closure
+
+
+def test_capability_query_is_registered_as_a_buildin_tool():
+    names = {item.name for item in get_tool_instances_by_category("buildin")}
+
+    assert "list_sherlock_capabilities" in names
+    assert get_extra_metadata("list_sherlock_capabilities").category == "buildin"
+
+
+@pytest.mark.asyncio
+async def test_capability_query_is_available_for_both_domain_contexts():
+    student_context = SimpleNamespace(
+        tools=[],
+        mcps=[],
+        skills=["junior-math-learning"],
+        _prompt_skills=["junior-math-learning", "knowledge-base"],
+        _readable_skills=["junior-math-learning", "knowledge-base"],
+        _runtime_skill_dependency_map={
+            "junior-math-learning": {"tools": ["save_wrong_question"]},
+            "knowledge-base": {"tools": ["query_kb"]},
+        },
+    )
+    legal_context = SimpleNamespace(
+        tools=[],
+        mcps=[],
+        skills=["legal-matter-analysis"],
+        _prompt_skills=[
+            "legal-matter-analysis",
+            "knowledge-base",
+            "legal-contract-analysis",
+            "legal-fact-organizer",
+        ],
+        _readable_skills=[
+            "legal-matter-analysis",
+            "knowledge-base",
+            "legal-contract-analysis",
+            "legal-fact-organizer",
+        ],
+        _runtime_skill_dependency_map={
+            "legal-matter-analysis": {"tools": ["save_legal_matter"]},
+            "knowledge-base": {"tools": ["query_kb"]},
+            "legal-contract-analysis": {"tools": ["ocr_parse_file"]},
+            "legal-fact-organizer": {"tools": ["ocr_parse_file"]},
+        },
+    )
+
+    student_result = list_sherlock_capabilities.func(runtime=SimpleNamespace(context=student_context))
+    legal_result = list_sherlock_capabilities.func(runtime=SimpleNamespace(context=legal_context))
+
+    registered = {item["slug"] for item in student_result["registered_capabilities"]}
+    assert {"junior-math-learning", "legal-matter-analysis"} <= registered
+    assert student_result["active_skills"] == ["junior-math-learning", "knowledge-base"]
+    assert legal_result["active_skills"] == [
+        "legal-matter-analysis",
+        "knowledge-base",
+        "legal-contract-analysis",
+        "legal-fact-organizer",
+    ]
+    assert "save_wrong_question" in student_result["active_tools"]
+    assert "save_legal_matter" in legal_result["active_tools"]
+    assert "save_legal_matter" not in student_result["active_tools"]
+
+
+@pytest.mark.asyncio
+async def test_capability_query_is_always_added_to_runtime_tools():
+    context = SimpleNamespace(tools=[], mcps=[], skills=[], _readable_skills=[], _runtime_skill_dependency_map={})
+
+    tools = await resolve_configured_runtime_tools(context)
+
+    assert "list_sherlock_capabilities" in {item.name for item in tools}
