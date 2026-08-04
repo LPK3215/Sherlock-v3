@@ -170,7 +170,11 @@ async function installSession(context) {
 async function connectCall() {
   await page.locator("button.start-call-action").click();
   await page.waitForFunction(
-    () => document.querySelector(".connection-badge")?.textContent?.includes("AI 已接通"),
+    () => {
+      const badge = document.querySelector(".connection-badge")?.textContent || "";
+      return badge.includes("AI 已接通") ||
+        (badge.includes("可以开始通话") && Boolean(document.querySelector('input[placeholder="发送消息"]')));
+    },
     undefined,
     { timeout: TIMEOUT_MS },
   );
