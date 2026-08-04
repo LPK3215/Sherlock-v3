@@ -260,7 +260,7 @@ class YuxiRealtimeLLMService(LLMService):
                 ):
                     if self._rtvi:
                         realtime_payload = _realtime_event_payload(event)
-                        logger.info("Sending realtime RTVI event type={}", realtime_payload.get("type"))
+                        logger.debug("Sending realtime RTVI event type={}", realtime_payload.get("type"))
                         await self._rtvi.send_server_message({"type": "yuxi-agent-event", "payload": realtime_payload})
                     for delta in _event_text_deltas(event):
                         await self._push_llm_text(delta)
