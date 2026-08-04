@@ -27,6 +27,8 @@
 
 ## Checklist
 
+本轮专项证据：官方 Playwright 容器中已通过摄像头、屏幕共享、文字、TTS、STT 与插话取消；审批恢复、Stage 4 控制项及移动响应式仍待复验。
+
 - [x] Yuxi 直连会话、Offer 与 ICE
 - [x] 用户端产品外壳与登录/Agent 入口
 - [x] 通话布局和真实媒体状态绑定

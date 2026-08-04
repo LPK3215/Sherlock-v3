@@ -38,7 +38,7 @@ from pipecat.workers.runner import WorkerRunner
 
 from yuxi.realtime.speech import create_stt_service, create_tts_service
 from yuxi.realtime.webrtc import bind_remote_media_sources, refresh_screen_video_track, request_video_keyframe
-from yuxi.services.agent_run_service import cancel_agent_run_view, create_agent_run_view
+from yuxi.services.agent_run_service import cancel_agent_run_view, create_agent_run_view, get_agent_run_view
 from yuxi.services.input_message_service import build_chat_input_message
 from yuxi.services.run_queue_service import list_run_stream_events
 from yuxi.storage.postgres.manager import pg_manager
@@ -115,6 +115,14 @@ class RealtimeAgentRun:
             return
         async with pg_manager.get_async_session_context() as db:
             await cancel_agent_run_view(run_id=run_id, current_uid=self.config.uid, db=db)
+        # Cancellation is cooperative in the worker.  Wait until the row is
+        # terminal so the next turn cannot race Yuxi's run_busy guard.
+        for _ in range(50):
+            async with pg_manager.get_async_session_context() as db:
+                run = (await get_agent_run_view(run_id=run_id, current_uid=self.config.uid, db=db))["run"]
+            if run.get("status") in {"completed", "failed", "cancelled", "interrupted"}:
+                return
+            await asyncio.sleep(0.1)
 
 
 class FrameBroker(FrameProcessor):
@@ -216,6 +224,11 @@ class YuxiRealtimeLLMService(LLMService):
 
     async def process_frame(self, frame, direction: FrameDirection):
         if isinstance(frame, InterruptionFrame):
+            # Pipecat's interruption only stops local audio generation.  The
+            # Yuxi AgentRun is a separate worker-backed execution and must be
+            # cancelled explicitly before the next user turn is created;
+            # otherwise Yuxi's single-active-run guard returns run_busy.
+            await self._agent_run.cancel()
             await self.push_frame(frame, direction)
             await super().process_frame(frame, direction)
             return
