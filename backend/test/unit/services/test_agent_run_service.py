@@ -1373,6 +1373,11 @@ async def test_create_chat_run_persists_validated_model_spec(monkeypatch: pytest
 
 @pytest.mark.asyncio
 async def test_create_chat_run_with_image_persists_multimodal_message_type(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        agent_run_service.model_cache,
+        "get_model_info",
+        lambda spec: SimpleNamespace(model_type="chat", input_modalities=["text", "image"]),
+    )
     db = _patch_agent_run_creation(monkeypatch)
 
     await agent_run_service.create_agent_run_view(

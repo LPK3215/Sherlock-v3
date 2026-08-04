@@ -299,7 +299,7 @@ class AgentRepository:
         """落库内置 Agent；仅迁移明确列出的旧模型，不覆盖管理员配置。"""
         agent = await self.get_by_slug(slug)
         if agent:
-            config_json = dict(agent.config_json or {})
+            config_json = dict(getattr(agent, "config_json", None) or {})
             current_context = dict(config_json.get("context") or {})
             if legacy_model_specs and current_context.get("model") in legacy_model_specs:
                 current_context["model"] = config_context["model"]

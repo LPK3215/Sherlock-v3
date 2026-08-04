@@ -7,6 +7,7 @@ import pytest
 
 from yuxi.agents.middlewares.skills import expand_skill_closure
 from yuxi.agents.skills.buildin import BUILTIN_SKILLS
+from yuxi.agents.mcp import service as mcp_service
 from yuxi.agents.toolkits import visual
 from yuxi.agents.toolkits.registry import get_all_tool_instances, get_extra_metadata
 from yuxi.agents.toolkits.service import resolve_configured_runtime_tools
@@ -104,7 +105,7 @@ def test_visual_skills_and_three_domain_closure_are_registered():
 
 @pytest.mark.asyncio
 async def test_runtime_tools_keep_visual_domain_gated(monkeypatch):
-    monkeypatch.setattr("yuxi.agents.mcp.service.get_enabled_mcp_tools", lambda _name: [])
+    monkeypatch.setattr(mcp_service, "get_enabled_mcp_tools", lambda _name: [])
     visual_context = SimpleNamespace(
         tools=[],
         mcps=[],

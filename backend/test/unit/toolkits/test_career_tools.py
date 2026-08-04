@@ -7,6 +7,7 @@ import pytest
 
 from yuxi.agents.middlewares.skills import expand_skill_closure
 from yuxi.agents.skills.buildin import BUILTIN_SKILLS
+from yuxi.agents.mcp import service as mcp_service
 from yuxi.agents.toolkits import career
 from yuxi.agents.toolkits.registry import get_all_tool_instances, get_extra_metadata
 from yuxi.agents.toolkits.service import resolve_configured_runtime_tools
@@ -116,7 +117,7 @@ def test_career_skills_are_registered_and_isolated_from_existing_domains():
 
 @pytest.mark.asyncio
 async def test_career_tools_are_gated_to_career_skill(monkeypatch):
-    monkeypatch.setattr("yuxi.agents.mcp.service.get_enabled_mcp_tools", lambda _name: [])
+    monkeypatch.setattr(mcp_service, "get_enabled_mcp_tools", lambda _name: [])
     career_context = SimpleNamespace(
         tools=[],
         mcps=[],
