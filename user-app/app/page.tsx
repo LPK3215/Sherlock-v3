@@ -17,6 +17,7 @@ export default function Home() {
   const [agents, setAgents] = useState<YuxiAgent[]>([]);
   const [agentSlug, setAgentSlug] = useState("");
   const [sessionReady, setSessionReady] = useState(false);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -84,6 +85,7 @@ export default function Home() {
 
   const startSession = useCallback(() => {
     localStorage.setItem(AGENT_KEY, agentSlug);
+    setCurrentThreadId(sessionStorage.getItem(`realtime_thread:${agentSlug}`));
     setSessionReady(true);
   }, [agentSlug]);
 
@@ -123,6 +125,7 @@ export default function Home() {
         thread_id: string | null;
       };
       requestData.thread_id = nextThreadId;
+      setCurrentThreadId(nextThreadId);
       sessionStorage.setItem(`realtime_thread:${agentSlug}`, nextThreadId);
     },
     [agentSlug, startBotParams],
@@ -131,16 +134,14 @@ export default function Home() {
   const handleStartResponse = useCallback(
     (response: unknown) => {
       if (response && typeof response === "object") {
-        const threadId = (response as { threadId?: unknown }).threadId;
+        const data = response as { threadId?: unknown; thread_id?: unknown };
+        const threadId = data.threadId ?? data.thread_id;
         if (typeof threadId === "string" && threadId) handleThreadChange(threadId);
       }
       return response;
     },
     [handleThreadChange],
   );
-
-  const realtimeThreadId =
-    (startBotParams.requestData as { thread_id?: string | null }).thread_id ?? null;
 
   if (!sessionReady) {
     return (
@@ -178,7 +179,7 @@ export default function Home() {
               onLeave={leaveSession}
               onThreadChange={handleThreadChange}
               apiBase="/yuxi-api"
-              threadId={realtimeThreadId}
+              threadId={currentThreadId}
             />
           )}
         </PipecatAppBase>
