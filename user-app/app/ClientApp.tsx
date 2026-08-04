@@ -157,6 +157,16 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
     if (typeof nextThreadId === "string" && nextThreadId) onThreadChange(nextThreadId);
   }, [onThreadChange, startResponse]);
 
+  useRTVIClientEvent(
+    RTVIEvent.BotStarted,
+    useCallback((response: unknown) => {
+      if (!response || typeof response !== "object") return;
+      const data = response as { threadId?: unknown; thread_id?: unknown };
+      const nextThreadId = data.threadId ?? data.thread_id;
+      if (typeof nextThreadId === "string" && nextThreadId) onThreadChange(nextThreadId);
+    }, [onThreadChange]),
+  );
+
   useEffect(() => {
     if (!threadId || !client) return;
     let cancelled = false;
