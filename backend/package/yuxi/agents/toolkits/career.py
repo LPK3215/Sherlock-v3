@@ -9,13 +9,7 @@ from pydantic import BaseModel, Field
 from yuxi.agents.toolkits.registry import tool
 from yuxi.repositories.career_repository import CareerRepository
 from yuxi.storage.postgres.manager import pg_manager
-
-
-def _runtime_uid(runtime: ToolRuntime) -> str:
-    uid = str(getattr(runtime.context, "uid", "") or "").strip()
-    if not uid:
-        raise ValueError("当前运行缺少用户身份")
-    return uid
+from yuxi.agents.toolkits.runtime import get_runtime_uid
 
 
 class SaveCareerRecordInput(BaseModel):
@@ -84,7 +78,7 @@ async def save_career_record(
         return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
 
     async with pg_manager.get_async_session_context() as db:
-        item = await CareerRepository(db).create_record(uid=_runtime_uid(runtime), values=values)
+        item = await CareerRepository(db).create_record(uid=get_runtime_uid(runtime), values=values)
     return {"saved": True, "career_record": item.to_dict()}
 
 
@@ -109,6 +103,6 @@ async def list_career_records(
 ) -> dict:
     async with pg_manager.get_async_session_context() as db:
         items = await CareerRepository(db).list_records(
-            uid=_runtime_uid(runtime), record_type=record_type, status=status, limit=limit
+            uid=get_runtime_uid(runtime), record_type=record_type, status=status, limit=limit
         )
     return {"count": len(items), "career_records": [item.to_dict() for item in items]}

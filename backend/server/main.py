@@ -24,6 +24,7 @@ from server.routers import router
 from server.utils.lifespan import lifespan
 from server.utils.common_utils import setup_logging
 from server.utils.access_log_middleware import AccessLogMiddleware
+from server.utils.client_ip import extract_client_ip
 
 # 设置日志配置
 setup_logging()
@@ -83,22 +84,13 @@ app.add_middleware(
 )
 
 
-def _extract_client_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
-
-
 class LoginRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         normalized_path = request.url.path.rstrip("/") or "/"
         request_signature = (normalized_path, request.method.upper())
 
         if request_signature in RATE_LIMIT_ENDPOINTS:
-            client_ip = _extract_client_ip(request)
+            client_ip = extract_client_ip(request)
             now = time.monotonic()
 
             async with _attempt_lock:

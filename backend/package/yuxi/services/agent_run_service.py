@@ -383,6 +383,8 @@ async def create_agent_run_view(
     meta = meta or {}
     if input_message is None and resume is None:
         raise HTTPException(status_code=422, detail="input_message 或 resume 不能为空")
+    if meta.get("source") == "realtime" and not str(meta.get("realtime_session_id") or "").strip():
+        raise HTTPException(status_code=422, detail="实时运行缺少 realtime_session_id")
 
     run_type = "resume" if resume is not None else "chat"
     run_created_by_id = created_by_run_id if run_type == "resume" else None

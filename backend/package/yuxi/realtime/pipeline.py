@@ -311,7 +311,9 @@ class YuxiRealtimeLLMService(LLMService):
                         )
                     )
                     if realtime_payload.get("type") == "approval.required":
-                        self._agent_run.interrupted_run_id = realtime_payload.get("run_id") or self._agent_run.active_run_id
+                        self._agent_run.interrupted_run_id = (
+                            realtime_payload.get("run_id") or self._agent_run.active_run_id
+                        )
                         await self.push_frame(
                             RTVIUICommandFrame(
                                 command="yuxi.approval.required",

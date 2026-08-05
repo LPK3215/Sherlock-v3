@@ -9,13 +9,7 @@ from pydantic import BaseModel, Field
 from yuxi.agents.toolkits.registry import tool
 from yuxi.repositories.learning_repository import LearningRepository
 from yuxi.storage.postgres.manager import pg_manager
-
-
-def _runtime_uid(runtime: ToolRuntime) -> str:
-    uid = str(getattr(runtime.context, "uid", "") or "").strip()
-    if not uid:
-        raise ValueError("当前运行缺少用户身份")
-    return uid
+from yuxi.agents.toolkits.runtime import get_runtime_uid
 
 
 class SaveWrongQuestionInput(BaseModel):
@@ -69,7 +63,7 @@ async def save_wrong_question(
     if answer != "confirm":
         return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
-        item = await LearningRepository(db).create_wrong_question(uid=_runtime_uid(runtime), values=values)
+        item = await LearningRepository(db).create_wrong_question(uid=get_runtime_uid(runtime), values=values)
     return {"saved": True, "wrong_question": item.to_dict()}
 
 
@@ -96,7 +90,7 @@ async def list_wrong_questions(
 ) -> dict:
     async with pg_manager.get_async_session_context() as db:
         items = await LearningRepository(db).list_wrong_questions(
-            uid=_runtime_uid(runtime),
+            uid=get_runtime_uid(runtime),
             subject=subject,
             knowledge_point=knowledge_point,
             review_status=review_status,
@@ -154,7 +148,7 @@ async def update_wrong_question(
         return {"updated": False, "cancelled": True, "reason": "用户未确认修改"}
     async with pg_manager.get_async_session_context() as db:
         item = await LearningRepository(db).update_wrong_question(
-            uid=_runtime_uid(runtime), question_id=question_id, values=values
+            uid=get_runtime_uid(runtime), question_id=question_id, values=values
         )
     if item is None:
         raise ValueError("错题不存在或不属于当前用户")
@@ -189,7 +183,9 @@ async def delete_wrong_question(question_id: int, runtime: ToolRuntime) -> dict:
     if answer != "confirm":
         return {"deleted": False, "cancelled": True, "reason": "用户未确认删除"}
     async with pg_manager.get_async_session_context() as db:
-        deleted = await LearningRepository(db).delete_wrong_question(uid=_runtime_uid(runtime), question_id=question_id)
+        deleted = await LearningRepository(db).delete_wrong_question(
+            uid=get_runtime_uid(runtime), question_id=question_id
+        )
     if not deleted:
         raise ValueError("错题不存在或不属于当前用户")
     return {"deleted": True, "question_id": question_id}

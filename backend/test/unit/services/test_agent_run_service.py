@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 
 import yuxi.services.agent_run_service as agent_run_service
 from yuxi.services.input_message_service import (
@@ -685,6 +686,22 @@ async def test_stream_agent_run_events_compact_fallback_end_keeps_request_id(mon
     data = _sse_data(chunks[0])
     assert data["request_id"] == "req-1"
     assert data["payload"] == {"status": "completed"}
+
+
+@pytest.mark.asyncio
+async def test_create_agent_run_rejects_realtime_without_session_id():
+    with pytest.raises(HTTPException) as exc_info:
+        await agent_run_service.create_agent_run_view(
+            input_message=_chat_input("hello"),
+            agent_slug="default",
+            thread_id="thread-1",
+            meta={"source": "realtime"},
+            current_uid="user-1",
+            db=None,
+        )
+
+    assert exc_info.value.status_code == 422
+    assert "realtime_session_id" in str(exc_info.value.detail)
 
 
 @pytest.mark.asyncio

@@ -96,7 +96,7 @@ async def start_realtime_session(
 
 
 @router.post("/sessions/{session_id}/offer")
-async def realtime_offer(session_id: str, payload: RealtimeOfferRequest):
+async def realtime_offer(session_id: str, payload: RealtimeOfferRequest, user=Depends(get_required_user)):
     try:
         return await realtime_session_manager.offer(
             session_id,
@@ -107,13 +107,16 @@ async def realtime_offer(session_id: str, payload: RealtimeOfferRequest):
                 restart_pc=payload.restart_pc,
                 request_data=payload.request_data,
             ),
+            uid=str(user.uid),
         )
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 @router.patch("/sessions/{session_id}/offer")
-async def realtime_ice_candidate(session_id: str, payload: RealtimeIceRequest):
+async def realtime_ice_candidate(session_id: str, payload: RealtimeIceRequest, user=Depends(get_required_user)):
     request = SmallWebRTCPatchRequest(
         pc_id=payload.pc_id,
         candidates=[
@@ -126,9 +129,11 @@ async def realtime_ice_candidate(session_id: str, payload: RealtimeIceRequest):
         ],
     )
     try:
-        await realtime_session_manager.add_ice_candidates(session_id, request)
+        await realtime_session_manager.add_ice_candidates(session_id, request, uid=str(user.uid))
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     return {"status": "success"}
 
 

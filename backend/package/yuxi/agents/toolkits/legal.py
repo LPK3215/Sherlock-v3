@@ -9,13 +9,7 @@ from pydantic import BaseModel, Field
 from yuxi.agents.toolkits.registry import tool
 from yuxi.repositories.legal_repository import LegalRepository
 from yuxi.storage.postgres.manager import pg_manager
-
-
-def _runtime_uid(runtime: ToolRuntime) -> str:
-    uid = str(getattr(runtime.context, "uid", "") or "").strip()
-    if not uid:
-        raise ValueError("当前运行缺少用户身份")
-    return uid
+from yuxi.agents.toolkits.runtime import get_runtime_uid
 
 
 class SaveLegalMatterInput(BaseModel):
@@ -66,7 +60,7 @@ async def save_legal_matter(
     if answer != "confirm":
         return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
-        item = await LegalRepository(db).create_matter(uid=_runtime_uid(runtime), values=values)
+        item = await LegalRepository(db).create_matter(uid=get_runtime_uid(runtime), values=values)
     return {"saved": True, "legal_matter": item.to_dict()}
 
 
@@ -91,7 +85,7 @@ async def list_legal_matters(
 ) -> dict:
     async with pg_manager.get_async_session_context() as db:
         items = await LegalRepository(db).list_matters(
-            uid=_runtime_uid(runtime), matter_type=matter_type, status=status, limit=limit
+            uid=get_runtime_uid(runtime), matter_type=matter_type, status=status, limit=limit
         )
     return {"count": len(items), "legal_matters": [item.to_dict() for item in items]}
 
@@ -151,7 +145,7 @@ async def update_legal_matter(
         return {"updated": False, "cancelled": True, "reason": "用户未确认修改"}
     async with pg_manager.get_async_session_context() as db:
         item = await LegalRepository(db).update_matter(
-            uid=_runtime_uid(runtime), matter_id=matter_id, values=values
+            uid=get_runtime_uid(runtime), matter_id=matter_id, values=values
         )
     if item is None:
         raise ValueError("法律事务不存在或不属于当前用户")
@@ -186,7 +180,7 @@ async def delete_legal_matter(matter_id: int, runtime: ToolRuntime) -> dict:
     if answer != "confirm":
         return {"deleted": False, "cancelled": True, "reason": "用户未确认删除"}
     async with pg_manager.get_async_session_context() as db:
-        deleted = await LegalRepository(db).delete_matter(uid=_runtime_uid(runtime), matter_id=matter_id)
+        deleted = await LegalRepository(db).delete_matter(uid=get_runtime_uid(runtime), matter_id=matter_id)
     if not deleted:
         raise ValueError("法律事务不存在或不属于当前用户")
     return {"deleted": True, "matter_id": matter_id}

@@ -32,10 +32,16 @@ class RealtimeSessionManager:
         self._sessions[session_id] = config
         return config
 
-    async def offer(self, session_id: str, request: SmallWebRTCRequest):
+    def _get_owned_session(self, session_id: str, uid: str) -> RealtimeSessionConfig:
         config = self._sessions.get(session_id)
         if not config:
             raise LookupError("realtime session does not exist")
+        if config.uid != uid:
+            raise PermissionError("realtime session does not belong to the current user")
+        return config
+
+    async def offer(self, session_id: str, request: SmallWebRTCRequest, *, uid: str):
+        config = self._get_owned_session(session_id, uid)
 
         async def start_pipeline(connection) -> None:
             previous = self._tasks.get(session_id)
@@ -47,9 +53,8 @@ class RealtimeSessionManager:
 
         return await self._handler.handle_web_request(request, start_pipeline)
 
-    async def add_ice_candidates(self, session_id: str, request: SmallWebRTCPatchRequest) -> None:
-        if session_id not in self._sessions:
-            raise LookupError("realtime session does not exist")
+    async def add_ice_candidates(self, session_id: str, request: SmallWebRTCPatchRequest, *, uid: str) -> None:
+        self._get_owned_session(session_id, uid)
         await self._handler.handle_patch_request(request)
 
     def _pipeline_finished(self, session_id: str, task: asyncio.Task) -> None:

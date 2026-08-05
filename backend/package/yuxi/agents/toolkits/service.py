@@ -19,8 +19,18 @@ def _extract_tool_info(tool_obj) -> dict:
 
     if hasattr(tool_obj, "args_schema") and tool_obj.args_schema:
         schema = tool_obj.args_schema
-        if hasattr(schema, "schema"):
-            schema = schema.schema()
+        if hasattr(schema, "model_json_schema") or hasattr(schema, "schema"):
+            try:
+                schema = (
+                    schema.model_json_schema()
+                    if hasattr(schema, "model_json_schema")
+                    else schema.schema()
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to generate tool schema for {tool_obj.name}: {exc}")
+                schema = {}
+        if not isinstance(schema, dict):
+            schema = {}
         for arg_name, arg_info in schema.get("properties", {}).items():
             info["args"].append(
                 {

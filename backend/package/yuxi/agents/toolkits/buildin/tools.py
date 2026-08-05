@@ -8,6 +8,7 @@ from langchain_core.messages import ToolMessage
 from langgraph.prebuilt.tool_node import ToolRuntime
 from langgraph.types import Command, interrupt
 from pydantic import BaseModel, Field
+from yuxi.utils.question_utils import normalize_questions
 
 from yuxi.agents.toolkits.registry import ToolExtraMetadata, _all_tool_instances, _extra_registry, tool
 from yuxi.utils import logger
@@ -65,8 +66,6 @@ def list_sherlock_capabilities(runtime: ToolRuntime) -> dict[str, object]:
         "active_tools": sorted(active_tools),
         "note": "已注册能力可以按用户意图启用;当前可调用范围仍受本次会话、权限、Skill 激活状态和工具配置限制。",
     }
-from yuxi.utils.question_utils import normalize_questions
-
 # Lazy initialization for TavilySearch (only when API key is available)
 _tavily_search_instance = None
 

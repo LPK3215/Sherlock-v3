@@ -50,6 +50,21 @@ def test_get_tool_metadata_includes_config_guide(monkeypatch):
     tool_service._metadata_cache.clear()
 
 
+def test_extract_tool_info_ignores_unserializable_injected_schema():
+    class BrokenSchema:
+        def model_json_schema(self):
+            raise ValueError("injected callable cannot be serialized")
+
+    fake_tool = SimpleNamespace(
+        name="runtime_tool",
+        description="runtime tool",
+        metadata={},
+        args_schema=BrokenSchema(),
+    )
+
+    assert tool_service._extract_tool_info(fake_tool)["args"] == []
+
+
 @pytest.mark.asyncio
 async def test_realtime_tools_are_only_available_in_realtime_context(monkeypatch):
     realtime_tool = SimpleNamespace(name="capture_live_camera")

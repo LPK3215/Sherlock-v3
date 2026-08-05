@@ -9,13 +9,7 @@ from pydantic import BaseModel, Field
 from yuxi.agents.toolkits.registry import tool
 from yuxi.repositories.visual_repository import VisualRepository
 from yuxi.storage.postgres.manager import pg_manager
-
-
-def _runtime_uid(runtime: ToolRuntime) -> str:
-    uid = str(getattr(runtime.context, "uid", "") or "").strip()
-    if not uid:
-        raise ValueError("当前运行缺少用户身份")
-    return uid
+from yuxi.agents.toolkits.runtime import get_runtime_uid
 
 
 class SaveVisualObservationInput(BaseModel):
@@ -81,7 +75,7 @@ async def save_visual_observation(
     if answer != "confirm":
         return {"saved": False, "cancelled": True, "reason": "用户未确认保存"}
     async with pg_manager.get_async_session_context() as db:
-        item = await VisualRepository(db).create_observation(uid=_runtime_uid(runtime), values=values)
+        item = await VisualRepository(db).create_observation(uid=get_runtime_uid(runtime), values=values)
     return {"saved": True, "visual_observation": item.to_dict()}
 
 
@@ -102,6 +96,6 @@ async def list_visual_observations(
 ) -> dict:
     async with pg_manager.get_async_session_context() as db:
         items = await VisualRepository(db).list_observations(
-            uid=_runtime_uid(runtime), subject=subject, limit=limit
+            uid=get_runtime_uid(runtime), subject=subject, limit=limit
         )
     return {"count": len(items), "visual_observations": [item.to_dict() for item in items]}

@@ -434,6 +434,96 @@ class PostgresManager(metaclass=SingletonMeta):
             "ALTER TABLE IF EXISTS agents ADD COLUMN IF NOT EXISTS is_subagent BOOLEAN NOT NULL DEFAULT FALSE",
             "ALTER TABLE IF EXISTS user_config ADD COLUMN IF NOT EXISTS enable_memory BOOLEAN NOT NULL DEFAULT FALSE",
             """
+            CREATE TABLE IF NOT EXISTS learning_wrong_questions (
+                id SERIAL PRIMARY KEY,
+                uid VARCHAR(64) NOT NULL,
+                question TEXT NOT NULL,
+                student_answer TEXT,
+                analysis TEXT,
+                grade VARCHAR(64),
+                subject VARCHAR(64) NOT NULL DEFAULT '数学',
+                knowledge_point VARCHAR(255),
+                review_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+                extra_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS legal_matters (
+                id SERIAL PRIMARY KEY,
+                uid VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                matter_type VARCHAR(64) NOT NULL DEFAULT 'general',
+                summary TEXT NOT NULL,
+                risk_summary TEXT,
+                next_actions TEXT,
+                status VARCHAR(32) NOT NULL DEFAULT 'active',
+                extra_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS visual_observations (
+                id SERIAL PRIMARY KEY,
+                uid VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                subject VARCHAR(255) NOT NULL,
+                user_question TEXT,
+                direct_observation TEXT NOT NULL,
+                candidate_identification TEXT,
+                research_summary TEXT,
+                confidence VARCHAR(32),
+                location VARCHAR(255),
+                observed_at TIMESTAMPTZ,
+                source_reference VARCHAR(1024),
+                user_note TEXT,
+                extra_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS career_records (
+                id SERIAL PRIMARY KEY,
+                uid VARCHAR(64) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                record_type VARCHAR(64) NOT NULL DEFAULT 'work_item',
+                summary TEXT NOT NULL,
+                action_items TEXT,
+                status VARCHAR(32) NOT NULL DEFAULT 'open',
+                due_date VARCHAR(64),
+                source_reference VARCHAR(1024),
+                user_note TEXT,
+                extra_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+            """,
+            "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_uid ON learning_wrong_questions(uid)",
+            "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_grade ON learning_wrong_questions(grade)",
+            "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_subject ON learning_wrong_questions(subject)",
+            (
+                "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_knowledge_point "
+                "ON learning_wrong_questions(knowledge_point)"
+            ),
+            (
+                "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_review_status "
+                "ON learning_wrong_questions(review_status)"
+            ),
+            "CREATE INDEX IF NOT EXISTS ix_learning_wrong_questions_created_at ON learning_wrong_questions(created_at)",
+            "CREATE INDEX IF NOT EXISTS ix_legal_matters_uid ON legal_matters(uid)",
+            "CREATE INDEX IF NOT EXISTS ix_legal_matters_matter_type ON legal_matters(matter_type)",
+            "CREATE INDEX IF NOT EXISTS ix_legal_matters_status ON legal_matters(status)",
+            "CREATE INDEX IF NOT EXISTS ix_legal_matters_created_at ON legal_matters(created_at)",
+            "CREATE INDEX IF NOT EXISTS ix_visual_observations_uid ON visual_observations(uid)",
+            "CREATE INDEX IF NOT EXISTS ix_visual_observations_created_at ON visual_observations(created_at)",
+            "CREATE INDEX IF NOT EXISTS ix_career_records_uid ON career_records(uid)",
+            "CREATE INDEX IF NOT EXISTS ix_career_records_record_type ON career_records(record_type)",
+            "CREATE INDEX IF NOT EXISTS ix_career_records_status ON career_records(status)",
+            "CREATE INDEX IF NOT EXISTS ix_career_records_created_at ON career_records(created_at)",
+            """
             UPDATE cli_auth_sessions
             SET api_key_id = NULL
             WHERE api_key_id IN (
