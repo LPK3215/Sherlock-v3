@@ -5,6 +5,7 @@
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=ffffff)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.7.1-blue.svg)](backend/package/pyproject.toml)
 [![Docs](https://img.shields.io/badge/docs-VitePress-646CFF)](https://lpk3215.github.io/Sherlock-v3/)
 [![GitHub](https://img.shields.io/badge/GitHub-Sherlock--v3-181717?logo=github)](https://github.com/LPK3215/Sherlock-v3)
 
@@ -57,6 +58,43 @@ docker compose up --build
 ```
 
 The administration console is available at `http://localhost:5173`; the user app is available at `http://localhost:3000`. See the [deployment documentation](https://lpk3215.github.io/Sherlock-v3/advanced/deployment) for details.
+
+## Project Structure
+
+```text
+Sherlock-v3/
+├── backend/
+│   ├── package/        # Python core package and dependency configuration
+│   ├── server/         # FastAPI, agents, and task services
+│   └── test/           # unit, integration, and e2e tests
+├── web/                # Vue administration console
+├── user-app/           # Next.js/React user application
+├── docker/             # images, data volumes, and sandbox provisioner
+├── docs/               # VitePress project documentation
+├── scripts/            # initialization, version, and evaluation scripts
+├── docker-compose.yml  # development service orchestration
+└── docker-compose.prod.yml
+```
+
+## Development Checks
+
+Run backend tests and frontend checks with the repository's Docker and package tooling:
+
+```bash
+# Full backend test suite
+docker compose exec -T api uv run --group test pytest test
+
+# Run tests by layer
+docker compose exec -T api uv run --group test pytest test/unit
+docker compose exec -T api uv run --group test pytest test/integration
+docker compose exec -T api uv run --group test pytest test/e2e -m e2e
+
+# Backend formatting and frontend checks
+make format
+pnpm --dir user-app run lint
+```
+
+See the [testing guide](docs/develop-guides/testing-guidelines.md) and [contribution guide](CONTRIBUTING.md) for the complete container-based verification workflow.
 
 ## Acknowledgements
 

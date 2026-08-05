@@ -5,6 +5,7 @@
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=ffffff)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.7.1-blue.svg)](backend/package/pyproject.toml)
 [![Docs](https://img.shields.io/badge/docs-VitePress-646CFF)](https://lpk3215.github.io/Sherlock-v3/)
 [![GitHub](https://img.shields.io/badge/GitHub-Sherlock--v3-181717?logo=github)](https://github.com/LPK3215/Sherlock-v3)
 
@@ -61,6 +62,43 @@ docker compose up --build
 **3. 访问平台**
 
 等待启动完成后,浏览器打开 `http://localhost:5173`;用户端默认位于 `http://localhost:3000`。具体配置与部署方式见[项目文档](https://lpk3215.github.io/Sherlock-v3/)。
+
+## 项目结构
+
+```text
+Sherlock-v3/
+├── backend/
+│   ├── package/        # Python 核心包与依赖配置
+│   ├── server/         # FastAPI、智能体和任务服务
+│   └── test/           # unit、integration、e2e 测试
+├── web/                # Vue 管理端
+├── user-app/           # Next.js/React 用户端
+├── docker/             # 镜像、数据库卷和沙盒 provisioner
+├── docs/               # VitePress 项目文档
+├── scripts/            # 初始化、版本和评估脚本
+├── docker-compose.yml  # 开发环境服务编排
+└── docker-compose.prod.yml
+```
+
+## 开发检查
+
+项目的后端测试和前端检查都应在 Docker/项目工具链中执行。常用命令如下:
+
+```bash
+# 后端全量测试
+docker compose exec -T api uv run --group test pytest test
+
+# 按测试层级执行
+docker compose exec -T api uv run --group test pytest test/unit
+docker compose exec -T api uv run --group test pytest test/integration
+docker compose exec -T api uv run --group test pytest test/e2e -m e2e
+
+# 后端格式化与前端检查
+make format
+pnpm --dir user-app run lint
+```
+
+更完整的测试约束和容器内验证流程见[测试指南](docs/develop-guides/testing-guidelines.md)与[贡献指南](CONTRIBUTING.md)。
 
 ## 致谢
 

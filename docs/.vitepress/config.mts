@@ -31,7 +31,7 @@ export default defineConfig({
       {
         text: '简介',
         items: [
-          { text: '什么是 Yuxi？', link: '/intro/project-overview' },
+          { text: '项目介绍', link: '/intro/project-overview' },
           { text: '快速开始', link: '/intro/quick-start' },
           { text: '命令行工具', link: '/intro/cli' },
           { text: '模型配置', link: '/intro/model-config' },

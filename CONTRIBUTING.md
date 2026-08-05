@@ -43,8 +43,9 @@ docker logs api-dev --tail 100
 
 ```bash
 make format
-make lint
-docker compose exec api uv run pytest
+docker compose exec -T api uv run pytest
+pnpm --dir web run lint
+pnpm --dir user-app run lint
 ```
 
 ## 问题反馈
