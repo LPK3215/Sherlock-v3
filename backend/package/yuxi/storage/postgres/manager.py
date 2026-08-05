@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from yuxi.storage.postgres.models_business import AGENT_RUN_TERMINAL_STATUSES
@@ -843,7 +844,8 @@ class PostgresManager(metaclass=SingletonMeta):
             await session.commit()
         except Exception as e:
             await session.rollback()
-            logger.error(f"PostgreSQL async operation failed: {e}")
+            if isinstance(e, SQLAlchemyError):
+                logger.error(f"PostgreSQL async operation failed: {e}")
             raise
         finally:
             await session.close()

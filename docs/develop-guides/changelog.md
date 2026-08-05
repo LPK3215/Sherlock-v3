@@ -8,6 +8,7 @@
 
 ### 修复与安全
 
+- 修复数据库会话上下文将认证、参数校验等业务异常误记为 PostgreSQL 故障日志的问题;数据库异常仍会回滚并记录错误,业务异常保持回滚并原样向上抛出。
 - 修复实时 WebRTC Offer/ICE 接口缺少登录与会话归属校验的问题,防止已知 session ID 被其他用户操作。
 - 修复登录限流与访问日志无条件信任 `X-Forwarded-For` 的问题,仅在显式设置 `YUXI_TRUST_PROXY_HEADERS=true` 时解析可信代理头。
 - 补齐四个用户领域记录表的运行时 schema 演进 DDL 与索引,并统一复用 toolkit 运行时 UID 校验。
