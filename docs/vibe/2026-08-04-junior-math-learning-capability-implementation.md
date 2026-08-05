@@ -2,19 +2,19 @@
 
 ## 目标
 
-在 Yuxi 现有 Agent、知识库、多模态实时会话、Skill 和 Tool 架构上,落地第一个可验证的夏洛克业务能力包。本阶段定位为通用学生拍题助手,验证从题目输入到自主分析、按需资料检索、错题保存和历史查询的最小闭环。
+在 Sherlock-v3 现有 Agent、知识库、多模态实时会话、Skill 和 Tool 架构上,落地第一个可验证的夏洛克业务能力包。本阶段定位为通用学生拍题助手,验证从题目输入到自主分析、按需资料检索、错题保存和历史查询的最小闭环。
 
 ## 已实现
 
 - 保留兼容 slug `junior-math-learning`,将内置 Skill 调整为通用学生拍题助手,覆盖多学科、多年级以及图片、摄像头、文档、语音和文字输入。
 - 明确模型优先使用自身视觉理解和推理能力,不因缺少教材或题库而拒绝解题。
 - 明确知识库和联网搜索只在需要资料依据、用户明确要求或事实需要核验时调用。
-- Skill 依赖现有 `knowledge-base` Skill,复用 `query_kb` 和 `open_kb_document` 等 Yuxi 原生知识库工具。
+- Skill 依赖现有 `knowledge-base` Skill,复用 `query_kb` 和 `open_kb_document` 等 Sherlock-v3 原生知识库工具。
 - 新增 `learning` 工具分类和四个原生 Tool:保存、查询、更新、删除错题。
 - 新增 `learning_wrong_questions` 业务表和 `LearningRepository`。
 - 所有错题查询、更新和删除均带当前用户 UID 条件,避免跨用户访问。
 - 更新和删除在 Skill 规则中要求用户明确确认。
-- 实时摄像头、共享屏幕、图片、文档、语音和文字继续复用现有 Yuxi 输入链路。
+- 实时摄像头、共享屏幕、图片、文档、语音和文字继续复用现有 Sherlock-v3 输入链路。
 
 ## 当前边界
 

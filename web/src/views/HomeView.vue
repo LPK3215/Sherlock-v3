@@ -38,7 +38,7 @@
         <div class="header-actions">
           <a
             class="github-link"
-            href="https://github.com/xerrors/Yuxi"
+            href="https://github.com/LPK3215/Sherlock-v3"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub"
@@ -86,7 +86,7 @@
               </button>
               <a
                 class="button-base secondary"
-                href="https://xerrors.github.io/Yuxi/"
+                href="https://lpk3215.github.io/Sherlock-v3/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -224,8 +224,8 @@ import {
 const router = useRouter()
 const userStore = useUserStore()
 const infoStore = useInfoStore()
-const repoUrl = 'https://github.com/xerrors/Yuxi'
-const faqUrl = 'https://xerrors.github.io/Yuxi/'
+const repoUrl = 'https://github.com/LPK3215/Sherlock-v3'
+const faqUrl = 'https://lpk3215.github.io/Sherlock-v3/'
 
 // 加载状态
 const isLoading = ref(true)
@@ -237,7 +237,7 @@ let badgeTimer = null
 let subtitleTimer = null
 let starsFetchController = null
 
-const GITHUB_REPO_API = 'https://api.github.com/repos/xerrors/Yuxi'
+const GITHUB_REPO_API = 'https://api.github.com/repos/LPK3215/Sherlock-v3'
 const GITHUB_STARS_TIMEOUT = 3000
 
 const formatStars = (count) => {

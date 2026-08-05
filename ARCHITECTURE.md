@@ -1,15 +1,15 @@
 # ARCHITECTURE.md
 
-本文档是 Yuxi 的代码地图，参考 matklad 的 `ARCHITECTURE.md` 建议维护：只描述相对稳定的系统边界、目录职责和跨切面约束，避免同步易变的实现细节。新贡献者如果不确定“某个能力应该改哪里”，先读这里，再用符号搜索定位具体类型、函数或路由。
+本文档是 Sherlock-v3 的代码地图，参考 matklad 的 `ARCHITECTURE.md` 建议维护：只描述相对稳定的系统边界、目录职责和跨切面约束，避免同步易变的实现细节。新贡献者如果不确定“某个能力应该改哪里”，先读这里，再用符号搜索定位具体类型、函数或路由。
 
 ## 鸟瞰
 
-Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平台。用户在 Vue 前端中配置智能体、知识库、工具、Skills、MCP 与 SubAgents；前端通过 `/api` 调用 FastAPI；后端服务层协调数据库、对象存储、向量库、图数据库、LangGraph 运行态和沙盒；长耗时智能体运行交给 worker 异步执行，并通过事件流回到前端。
+Sherlock-v3 是一个面向 RAG、知识图谱和多智能体工作流的知识库平台。用户在 Vue 前端中配置智能体、知识库、工具、Skills、MCP 与 SubAgents；前端通过 `/api` 调用 FastAPI；后端服务层协调数据库、对象存储、向量库、图数据库、LangGraph 运行态和沙盒；长耗时智能体运行交给 worker 异步执行，并通过事件流回到前端。
 
 开发与运行拓扑以 `docker-compose.yml` 为准。核心开发服务包括：
 
 - `web-dev`：Vue/Vite 前端，挂载 `web/src` 并热重载。
-- `user-app`：Next.js 实时用户端，直接通过同源代理调用 Yuxi API，不承载独立业务后端。
+- `user-app`：Next.js 实时用户端，直接通过同源代理调用 Sherlock-v3 API，不承载独立业务后端。
 - `api-dev`：FastAPI API 服务，挂载 `backend/server` 和 `backend/package` 并热重载。
 - `worker-dev`：ARQ 后台任务 worker，处理智能体运行等异步任务。
 - `sandbox-provisioner`：为智能体工具执行提供沙盒环境。
@@ -40,7 +40,7 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 
 ## 前端代码地图
 
-前端分为管理端 `web` 和实时用户端 `user-app`，二者共享同一个 Yuxi API。
+前端分为管理端 `web` 和实时用户端 `user-app`，二者共享同一个 Sherlock-v3 API。
 
 管理端是 Vue 3 + Vite 应用，业务入口集中在 `web/src`。
 
@@ -52,7 +52,7 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 - `composables` 放可组合的前端运行逻辑，例如流式消息处理、运行事件订阅、审批、人机输入和智能体线程状态。
 - `utils` 放前端通用工具和轻量转换逻辑；样式集中在 `assets/css`，颜色和基础规范优先复用 `base.css` 与现有 less 文件。
 
-`user-app` 是 Next.js + React 用户端，Pipecat 客户端负责浏览器媒体设备、SmallWebRTC、字幕与实时控制；`app/page.tsx` 负责 Yuxi 登录、Agent 选择和实时会话入口，`ClientApp.tsx` 负责通话状态、文字/语音/视频/屏幕、审批与事件交互。它只调用 `/api/auth`、`/api/agent` 和 `/api/realtime`，不启动或依赖独立 Gateway。
+`user-app` 是 Next.js + React 用户端，Pipecat 客户端负责浏览器媒体设备、SmallWebRTC、字幕与实时控制；`app/page.tsx` 负责 Sherlock-v3 登录、Agent 选择和实时会话入口，`ClientApp.tsx` 负责通话状态、文字/语音/视频/屏幕、审批与事件交互。它只调用 `/api/auth`、`/api/agent` 和 `/api/realtime`，不启动或依赖独立 Gateway。
 
 ## 运行链路
 
@@ -66,13 +66,13 @@ Yuxi 是一个面向 RAG、知识图谱和多智能体工作流的知识库平�
 6. 运行事件写入 Redis，最终状态和业务记录写入 Postgres；文件和产物落到 `saves`、MinIO 或沙盒用户数据目录。
 7. 前端通过 SSE/轮询消费运行事件，渲染消息、工具调用、引用来源、产物卡片和文件预览。
 
-实时通话由 `/api/realtime` 创建媒体会话并完成 WebRTC 协商；STT 或文字输入直接创建同一套 AgentRun，worker 仍按标准队列执行 Agent，回复事件由实时 Pipeline 读取并交给 TTS。Agent 按需查看摄像头或屏幕时，通过 Yuxi 内部实时帧接口读取 API 进程持有的媒体会话。
+实时通话由 `/api/realtime` 创建媒体会话并完成 WebRTC 协商；STT 或文字输入直接创建同一套 AgentRun，worker 仍按标准队列执行 Agent，回复事件由实时 Pipeline 读取并交给 TTS。Agent 按需查看摄像头或屏幕时，通过 Sherlock-v3 内部实时帧接口读取 API 进程持有的媒体会话。
 
 ## 架构不变量
 
 - Docker Compose 是开发环境的事实来源。开发时优先检查容器、日志和热重载，不要默认要求本地裸跑服务。
 - HTTP 路由层应保持薄；领域流程放在 `yuxi.services`，持久化查询放在 `yuxi.repositories`。
-- `web` 与 `user-app` 可以独立部署，但业务接口、认证、AgentRun 和实时媒体都必须归属同一个 Yuxi 后端。
+- `web` 与 `user-app` 可以独立部署，但业务接口、认证、AgentRun 和实时媒体都必须归属同一个 Sherlock-v3 后端。
 - 前端 API 调用应集中在 `web/src/apis`，组件不要散落拼接后端 URL。
 - 智能体能力通过 context、middleware、toolkits、backends 组合；知识库通过工具访问，不要把知识库、MCP、Skills 或沙盒逻辑硬编码进单个页面或路由。
 - LITE 模式必须允许跳过知识库、图谱、评估等重依赖能力；新增相关接口或初始化逻辑时要尊重这个边界。

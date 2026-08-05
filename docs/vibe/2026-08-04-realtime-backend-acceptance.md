@@ -2,9 +2,9 @@
 
 ## 范围
 
-本记录只验收 Yuxi 后端中的实时业务扩展,不重复验收 Yuxi 原有管理、知识库和普通聊天基础功能。
+本记录只验收 Sherlock-v3 后端中的实时业务扩展,不重复验收 Sherlock-v3 原有管理、知识库和普通聊天基础功能。
 
-架构结论:实时模块位于 `backend/package/yuxi/realtime`,与 Yuxi FastAPI、AgentRun、模型、Tools、Skills、MCP、权限和持久化共用一个后端进程。
+架构结论:实时模块位于 `backend/package/yuxi/realtime`,与 Sherlock-v3 FastAPI、AgentRun、模型、Tools、Skills、MCP、权限和持久化共用一个后端进程。
 
 ## 验收结果
 

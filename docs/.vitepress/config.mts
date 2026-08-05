@@ -5,9 +5,9 @@ import markdownItTaskCheckbox from 'markdown-it-task-checkbox'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   lang: 'zh-CN',
-  title: "Yuxi",
-  description: "语析",
-  base: '/Yuxi/',
+  title: "Sherlock-v3",
+  description: "面向真实场景的多模态智能体平台",
+  base: '/Sherlock-v3/',
   ignoreDeadLinks: [
     /localhost/,
     /CONTRIBUTING$/,
@@ -77,16 +77,16 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/xerrors/Yuxi' }
+      { icon: 'github', link: 'https://github.com/LPK3215/Sherlock-v3' }
     ],
 
     footer: {
       message: '本项目基于 MIT License 开源，欢迎使用和贡献。',
-      copyright: 'Copyright © 2025-present Yuxi'
+      copyright: 'Copyright © 2025-present Sherlock-v3'
     },
 
     editLink: {
-      pattern: 'https://github.com/xerrors/Yuxi/edit/main/docs/:path',
+      pattern: 'https://github.com/LPK3215/Sherlock-v3/edit/business-mvp/docs/:path',
       text: '在 GitHub 上编辑此页'
     },
 

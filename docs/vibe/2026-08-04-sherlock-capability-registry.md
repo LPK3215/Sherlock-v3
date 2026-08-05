@@ -24,14 +24,14 @@
 | 状态 | 含义 |
 | --- | --- |
 | 已实现 | 代码、注册、依赖和基础测试已经存在,可以进入运行时验证 |
-| 已复用 | 不需要新增领域代码,使用 Yuxi 现有入口或通用工具 |
+| 已复用 | 不需要新增领域代码,使用 Sherlock-v3 现有入口或通用工具 |
 | 规划中 | 已确定产品需要,但尚未实现或尚未完成真实场景验收 |
 | 条件启用 | 只有配置对应知识库、MCP、模型或外部服务后才可用 |
 | 暂不需要 | 当前场景不需要该类资源,不创建空工具或空数据表 |
 
 ## 4. 平台通用能力
 
-这些能力属于夏洛克和 Yuxi 基座,不重复复制到每个领域:
+这些能力属于夏洛克和 Sherlock-v3 基座,不重复复制到每个领域:
 
 | 能力 | 作用 | 状态 | 领域使用方式 |
 | --- | --- | --- | --- |
@@ -67,10 +67,10 @@
 | 题目理解 | 图片、摄像头、屏幕或文档中的题目讲解 | 图片、视频帧、文档、文字 | 学生拍题助手:识别题目、确认理解、分步讲解 | 图片/文档解析、通用模型视觉理解 | 可选知识库 | 不需要 | 读取当前用户输入 | 已实现/已复用 |
 | 题目理解 | 语音描述不会做的步骤 | 语音转写、上下文 | 学生拍题助手:结合上下文追问 | STT、通用对话 | 可选知识库 | 不需要 | 读取当前会话 | 已实现/已复用 |
 | 解题辅导 | 检查答案并解释错误原因 | 题目、答案、用户解题过程 | 学生拍题助手:分析思路、指出错误、给出下一步 | 通用推理,必要时知识库检索 | 可选知识库 | 不需要 | 只读分析 | 已实现/已复用 |
-| 错题整理 | 用户要求保存错题 | 题目、答案、错误原因、学科、知识点 | 学生拍题助手:整理字段、请求确认、保存 | `save_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后写入 | 已实现/已验证 |
+| 错题整理 | 用户要求保存错题 | 题目、答案、错误原因、学科、知识点 | 学生拍题助手:整理字段、请求确认、保存 | `save_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Sherlock-v3 interrupt 确认后写入 | 已实现/已验证 |
 | 错题历史 | 查询自己的错题 | 学科、知识点、复习状态、数量 | 学生拍题助手:查询并解释复习建议 | `list_wrong_questions` | 不需要 | `learning_wrong_questions` | 仅当前用户 UID | 已实现 |
-| 错题维护 | 修改复习状态或讲解 | 记录 ID、修改内容 | 学生拍题助手:确认后更新 | `update_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后更新 | 已实现/已验证 |
-| 错题维护 | 删除错题 | 记录 ID | 学生拍题助手:确认后删除 | `delete_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Yuxi interrupt 确认后删除 | 已实现/已验证 |
+| 错题维护 | 修改复习状态或讲解 | 记录 ID、修改内容 | 学生拍题助手:确认后更新 | `update_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Sherlock-v3 interrupt 确认后更新 | 已实现/已验证 |
+| 错题维护 | 删除错题 | 记录 ID | 学生拍题助手:确认后删除 | `delete_wrong_question` | 不需要 | `learning_wrong_questions` | 通过 Sherlock-v3 interrupt 确认后删除 | 已实现/已验证 |
 | 资料问答 | 根据用户上传的课本、试卷或讲义回答 | 文档、图片、问题 | 学生拍题助手 + knowledge-base Skill | `search_knowledge_base` 等现有知识库工具 | 用户配置知识库 | 由知识库系统管理 | 只访问用户有权限的知识库 | 条件启用 |
 | 学习画像 | 保存年级、目标和稳定偏好 | 用户明确提供的信息 | 待建学生画像流程 | 待设计画像读写 Tool | 不需要 | 待建学生画像表 | 写入前确认,支持查看和删除 | 规划中 |
 | 学习计划 | 制定、查询和更新学习任务 | 目标、时间、学科 | 待建学习计划 Skill | 待设计计划 CRUD Tool | 可选知识库 | 待建学习计划表 | 新增、修改、删除前确认 | 规划中 |
@@ -114,7 +114,7 @@
 | 法规依据 | 查询某个法律问题的公开依据 | 问题、地区、时间、用户事实 | 法规检索 Skill:澄清范围、检索、引用、说明版本 | 官方网页/API 检索、知识库检索、来源引用 | 官方法规知识库或授权 API | 通常不需要 | 外部请求和来源可追溯 | 条件启用 |
 | 事实整理 | 整理事件经过和证据清单 | 对话、文档、图片、录音转写 | 事实整理 Skill:按时间线区分事实和推测 | 时间线生成、文件读取 | 用户资料 | 不需要 | 不自动判断事实真伪 | 已实现/已复用 |
 | 文书辅助 | 根据用户事实生成沟通稿或材料提纲 | 用户事实、模板、目标 | 文书辅助 Skill:先确认用途和收件对象 | 模板读取、文档生成 | 用户模板、公开样例 | 不需要 | 发送或提交前必须确认 | 规划中 |
-| 案件记录 | 用户要求保存案件摘要和后续事项 | 用户确认的摘要、标签、时间 | 法律事务总 Skill:展示待保存字段、确认后写入 | `save_legal_matter`、`list_legal_matters`、`update_legal_matter`、`delete_legal_matter` | 不需要 | `legal_matters` | 写入、修改、删除均通过 Yuxi interrupt 确认 | 已实现/已验证 |
+| 案件记录 | 用户要求保存案件摘要和后续事项 | 用户确认的摘要、标签、时间 | 法律事务总 Skill:展示待保存字段、确认后写入 | `save_legal_matter`、`list_legal_matters`、`update_legal_matter`、`delete_legal_matter` | 不需要 | `legal_matters` | 写入、修改、删除均通过 Sherlock-v3 interrupt 确认 | 已实现/已验证 |
 
 ### 6.3 法律领域依赖清单
 
@@ -122,7 +122,7 @@
 | --- | --- | --- |
 | 法律事务总 Skill | 负责识别法律任务边界、组合子流程和风险提示 | 已实现 |
 | 合同分析与事实整理 Skill | 按场景拆分,避免一个 Skill 承担全部法律工作 | 已实现 |
-| 文件读取和 OCR | 复用 Yuxi 文档、图片和 OCR 能力 | 已复用 |
+| 文件读取和 OCR | 复用 Sherlock-v3 文档、图片和 OCR 能力 | 已复用 |
 | 官方法规检索 | 连接稳定、可追溯的官方来源;不默认伪造一个数据库 | 条件启用 |
 | 法律知识库 | 按地区、法域、版本、来源和生效状态管理 | 条件启用 |
 | 案件记录数据库 | 保存用户确认的法律事务摘要,按 UID 隔离 | 已实现 |
@@ -149,7 +149,7 @@
 | 当前观察 | 看懂图片、摄像头或屏幕中的内容 | `visual-observation` | 模型视觉能力、现有实时帧入口 | 不需要 | 不需要 | 读取当前用户输入 | 已实现/已复用 |
 | 候选识别 | 识别植物、动物、物品、商品或设备 | `visual-identification` | 当前多模态输入 | 可选 | 不需要 | 只读分析,不承诺专业鉴定 | 已实现/已复用 |
 | 资料核验 | 用户要求来源或结果不确定 | `visual-research` | `query_kb`、`open_kb_document`、`search_file` | 用户可访问知识库 | 通常不需要 | 仅访问授权资料 | 条件启用 |
-| 观察历史 | 用户要求保存或查询观察摘要 | `visual-observation` | `save_visual_observation`、`list_visual_observations` | 不需要 | `visual_observations` | 保存通过 Yuxi interrupt 确认,查询仅当前 UID | 已实现/已验证 |
+| 观察历史 | 用户要求保存或查询观察摘要 | `visual-observation` | `save_visual_observation`、`list_visual_observations` | 不需要 | `visual_observations` | 保存通过 Sherlock-v3 interrupt 确认,查询仅当前 UID | 已实现/已验证 |
 
 ### 7.3 三个 Skill 与边界
 
@@ -180,7 +180,7 @@
 | 工作整理 | 从对话、语音、图片或屏幕内容整理事项 | `career-work` | 通用多模态输入 | 不需要 | 不需要 | 当前会话只读分析 | 已实现/已复用 |
 | 职业文档 | 简历、求职材料、会议纪要分析和改写建议 | `career-document` | 文档读取、OCR、通用模型能力 | 可选知识库 | 不需要 | 不虚构经历,只读分析 | 已实现/已复用 |
 | 职业规划 | 将目标拆成阶段、行动项和复盘点 | `career-planning` | 通用推理,可选知识库检索 | 用户可访问知识库 | 不需要 | 计划不自动写入 | 已实现/已复用 |
-| 工作记录 | 用户确认后保存并查询摘要和行动项 | `career-work` | `save_career_record`、`list_career_records` | 不需要 | `career_records` | 保存前通过 Yuxi interrupt 明确确认,查询仅当前 UID | 已实现/已验收 |
+| 工作记录 | 用户确认后保存并查询摘要和行动项 | `career-work` | `save_career_record`、`list_career_records` | 不需要 | `career_records` | 保存前通过 Sherlock-v3 interrupt 明确确认,查询仅当前 UID | 已实现/已验收 |
 
 ### 8.3 三个 Skill 与边界
 
@@ -196,7 +196,7 @@
 | --- | --- | --- |
 | 职业文档、会议内容和工作问题的场景边界 | `career-document`、`career-planning` 依赖 `career-work`;输入继续复用文本、语音、图片、屏幕和文档入口 | 通过 |
 | Skill 和 Tool 运行时门控 | `test_career_tools.py` 验证职场 Skill 展开后暴露两个职业工具,视觉 Skill 不获得职业工具 | 通过 |
-| 保存前确认 | `save_career_record` 通过 Yuxi `interrupt` 发起 `career_record_confirmation`;取消分支不创建记录,恢复并选择确认后才落库 | 通过 |
+| 保存前确认 | `save_career_record` 通过 Sherlock-v3 `interrupt` 发起 `career_record_confirmation`;取消分支不创建记录,恢复并选择确认后才落库 | 通过 |
 | 历史记录与权限边界 | `test_career_repository.py` 验证真实 SQLAlchemy 会话中的创建、UID 隔离、类型/状态筛选、排序和 limit | 通过 |
 | 运行数据库 | 2026-08-04 在 Compose PostgreSQL 中执行临时 UID 的创建、查询、隔离和清理验收 | 通过 |
 | 前端工具状态事件 | 复用通用 `tool_call`、`tool_call_delta`、`tool-started`、`tool-finished` 事件链路;职业工具名称由注册表和 ToolCall 载荷传递,不新增领域专用 UI | 通过代码链路和事件归一化测试 |
@@ -243,7 +243,7 @@
 | Tool 调用与事件 | 实时 AgentRun 可以执行文件读写 Tool,并产生工具开始/完成等运行事件 | 通过,真实 E2E |
 | checkpoint 与历史 | 实时 Run 的对话、运行元数据和历史记录能够落库并在后续查询中保留 | 通过,真实 E2E |
 | 工作区记忆 | 运行可以读取工作区 `MEMORY.md`,跨 Run 保留文件内容 | 通过,真实 E2E |
-| 副作用确认 | 保存、更新、删除类领域 Tool 继续使用 Yuxi interrupt 确认规则 | 通过,学生/法律/视觉/职场回归测试 |
+| 副作用确认 | 保存、更新、删除类领域 Tool 继续使用 Sherlock-v3 interrupt 确认规则 | 通过,学生/法律/视觉/职场回归测试 |
 | 数据边界 | 领域业务记录按用户 UID 隔离;知识库、MCP、外部 API 仅在配置后条件启用 | 通过,Repository 和运行时配置测试 |
 
 本轮 Docker 验证结果为 `930 passed, 2 skipped`,图片入口集成测试为 `2 passed`,实时 AgentRun 能力 E2E 为 `1 passed`,实时帧输入模型 schema 检查通过。验证范围是当前 Compose 环境及其测试替身、配置好的数据库和运行链路;真实模型对任意自然语言的领域识别、外部搜索服务、STT/TTS、WebRTC 设备和未配置的第三方 MCP 仍需在对应部署配置下单独验收。
