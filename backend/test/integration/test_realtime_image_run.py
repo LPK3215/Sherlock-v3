@@ -42,7 +42,8 @@ async def _create_token() -> str:
     conn = await asyncpg.connect(_postgres_dsn())
     try:
         user_id = await conn.fetchval(
-            "SELECT id FROM users WHERE role = 'superadmin' AND is_deleted = 0 AND department_id IS NOT NULL ORDER BY id LIMIT 1"
+            "SELECT id FROM users WHERE role = 'superadmin' AND is_deleted = 0 "
+            "AND department_id IS NOT NULL ORDER BY id LIMIT 1"
         )
     finally:
         await conn.close()
@@ -90,7 +91,7 @@ async def test_non_vision_model_rejects_image_with_422(token: str):
                 "agent_slug": slug,
                 "thread_id": thread_id,
                 "image_content": TINY_JPEG_BASE64,
-                "meta": {"source": "realtime"},
+                "meta": {"source": "realtime", "realtime_session_id": f"test-realtime-{thread_id}"},
             },
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -100,7 +101,9 @@ async def test_non_vision_model_rejects_image_with_422(token: str):
             await client.post(f"/api/agent/runs/{run_id}/cancel", json={}, headers={"Authorization": f"Bearer {token}"})
             pytest.skip(f"Agent '{slug}' model supports images — default agent is vision-capable")
 
-        assert run_resp.status_code == 422, f"Expected 422 for non-vision model, got {run_resp.status_code}: {run_resp.text}"
+        assert run_resp.status_code == 422, (
+            f"Expected 422 for non-vision model, got {run_resp.status_code}: {run_resp.text}"
+        )
         detail = run_resp.text
         assert "不支持图片" in detail or "image" in detail.lower(), f"Unexpected 422 detail: {detail}"
 
@@ -141,7 +144,11 @@ async def test_image_run_preserves_metadata_or_rejects(token: str):
                     "agent_slug": slug,
                     "thread_id": thread_id,
                     "image_content": TINY_JPEG_BASE64,
-                    "meta": {"source": "realtime", "image_meta": image_meta},
+                    "meta": {
+                        "source": "realtime",
+                        "realtime_session_id": f"test-realtime-{thread_id}",
+                        "image_meta": image_meta,
+                    },
                 },
                 headers={"Authorization": f"Bearer {token}"},
             )
