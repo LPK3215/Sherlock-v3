@@ -6,6 +6,10 @@
 
 ## 待发布
 
+### 模型与适配
+
+- 新增 MiniCPM Cloud 内置模型供应商（OpenAI 兼容协议，`api.modelbest.cn/v1`），注册 `MiniCPM-O-4.5-9B` 视觉模型；实时助手默认模型从 `modelscope:Qwen/Qwen3-VL-8B-Thinking` 切换为 `minicpm:MiniCPM-O-4.5-9B`，旧模型自动迁移。
+
 ### 修复与安全
 
 - 更新中英文 README 的版本徽章、项目结构和开发检查命令,并同步贡献指南与文档导航的当前仓库约定。

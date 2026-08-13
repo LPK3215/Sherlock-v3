@@ -10,7 +10,14 @@ QWEN3_VL_REALTIME_MODEL = {
     "input_modalities": ["text", "image"],
 }
 
-REQUIRED_BUILTIN_MODELS = {"modelscope": [QWEN3_VL_REALTIME_MODEL]}
+MINICPM_O45_REALTIME_MODEL = {
+    "id": "MiniCPM-O-4.5-9B",
+    "type": "chat",
+    "display_name": "MiniCPM-O-4.5-9B",
+    "input_modalities": ["text", "image"],
+}
+
+REQUIRED_BUILTIN_MODELS = {"modelscope": [QWEN3_VL_REALTIME_MODEL], "minicpm": [MINICPM_O45_REALTIME_MODEL]}
 
 
 BUILTIN_PROVIDERS: list[dict[str, Any]] = [
@@ -174,6 +181,16 @@ BUILTIN_PROVIDERS: list[dict[str, Any]] = [
         "capabilities": ["chat"],
         "models_endpoint": "https://api-inference.modelscope.cn/v1/models",
         "enabled_models": [QWEN3_VL_REALTIME_MODEL],
+        "is_enabled": True,
+    },
+    {
+        "provider_id": "minicpm",
+        "display_name": "MiniCPM Cloud",
+        "base_url": "https://api.modelbest.cn/v1",
+        "api_key_env": "MINICPM_CLOUD_API_KEY",
+        "capabilities": ["chat"],
+        "models_endpoint": "https://api.modelbest.cn/v1/models",
+        "enabled_models": [MINICPM_O45_REALTIME_MODEL],
         "is_enabled": True,
     },
     {
