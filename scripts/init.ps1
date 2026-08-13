@@ -1,5 +1,5 @@
-# Yuxi Initialization Script for PowerShell
-# This script helps set up the environment for the Yuxi project
+# Sherlock Initialization Script for PowerShell
+# This script helps set up the environment for the Sherlock project
 # Note: API keys will be visible during input - use with care
 
 function New-RandomHex($ByteCount) {
@@ -64,15 +64,15 @@ function Ensure-JwtEnv {
         Set-EnvValue "JWT_SECRET_KEY" $JWT_SECRET_KEY
     }
 
-    if (-not (Test-EnvValue "YUXI_INSTANCE_ID")) {
-        Write-Host "YUXI_INSTANCE_ID is missing in .env." -ForegroundColor Yellow
-        $YUXI_INSTANCE_ID = Read-Host "Please enter your YUXI_INSTANCE_ID (press Enter to auto-generate)"
-        if ([string]::IsNullOrEmpty($YUXI_INSTANCE_ID)) {
-            $YUXI_INSTANCE_ID = "instance-$(New-RandomHex 8)"
-            Write-Host "Generated YUXI_INSTANCE_ID and saved it to .env." -ForegroundColor Green
+    if (-not (Test-EnvValue "SHERLOCK_INSTANCE_ID")) {
+        Write-Host "SHERLOCK_INSTANCE_ID is missing in .env." -ForegroundColor Yellow
+        $SHERLOCK_INSTANCE_ID = Read-Host "Please enter your SHERLOCK_INSTANCE_ID (press Enter to auto-generate)"
+        if ([string]::IsNullOrEmpty($SHERLOCK_INSTANCE_ID)) {
+            $SHERLOCK_INSTANCE_ID = "instance-$(New-RandomHex 8)"
+            Write-Host "Generated SHERLOCK_INSTANCE_ID and saved it to .env." -ForegroundColor Green
         }
 
-        Set-EnvValue "YUXI_INSTANCE_ID" $YUXI_INSTANCE_ID
+        Set-EnvValue "SHERLOCK_INSTANCE_ID" $SHERLOCK_INSTANCE_ID
     }
 }
 
@@ -92,13 +92,13 @@ function Ensure-SandboxEnv {
 }
 
 function Ensure-RealtimeEnv {
-    if (Test-EnvValue "YUXI_REALTIME_INTERNAL_TOKEN") {
+    if (Test-EnvValue "SHERLOCK_REALTIME_INTERNAL_TOKEN") {
         return
     }
 
-    $YUXI_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
-    Set-EnvValue "YUXI_REALTIME_INTERNAL_TOKEN" $YUXI_REALTIME_INTERNAL_TOKEN
-    Write-Host "Generated YUXI_REALTIME_INTERNAL_TOKEN and saved it to .env." -ForegroundColor Green
+    $SHERLOCK_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
+    Set-EnvValue "SHERLOCK_REALTIME_INTERNAL_TOKEN" $SHERLOCK_REALTIME_INTERNAL_TOKEN
+    Write-Host "Generated SHERLOCK_REALTIME_INTERNAL_TOKEN and saved it to .env." -ForegroundColor Green
 }
 
 function Test-SkipExistingImage($ImageTag) {
@@ -111,7 +111,7 @@ function Test-SkipExistingImage($ImageTag) {
     return $true
 }
 
-Write-Host "🚀 Initializing Yuxi project..." -ForegroundColor Cyan
+Write-Host "🚀 Initializing Sherlock project..." -ForegroundColor Cyan
 Write-Host "==================================" -ForegroundColor Cyan
 
 # Check if .env file exists
@@ -153,10 +153,10 @@ if (Test-Path ".env") {
         Write-Host "Generated JWT_SECRET_KEY and saved it to .env." -ForegroundColor Green
     }
 
-    $YUXI_INSTANCE_ID = Read-Host "Please enter your YUXI_INSTANCE_ID (press Enter to auto-generate)"
-    if ([string]::IsNullOrEmpty($YUXI_INSTANCE_ID)) {
-        $YUXI_INSTANCE_ID = "instance-$(New-RandomHex 8)"
-        Write-Host "Generated YUXI_INSTANCE_ID and saved it to .env." -ForegroundColor Green
+    $SHERLOCK_INSTANCE_ID = Read-Host "Please enter your SHERLOCK_INSTANCE_ID (press Enter to auto-generate)"
+    if ([string]::IsNullOrEmpty($SHERLOCK_INSTANCE_ID)) {
+        $SHERLOCK_INSTANCE_ID = "instance-$(New-RandomHex 8)"
+        Write-Host "Generated SHERLOCK_INSTANCE_ID and saved it to .env." -ForegroundColor Green
     }
 
     $SANDBOX_PROVISIONER_TOKEN = Read-Host "Please enter your SANDBOX_PROVISIONER_TOKEN (press Enter to auto-generate)"
@@ -165,7 +165,7 @@ if (Test-Path ".env") {
         Write-Host "Generated SANDBOX_PROVISIONER_TOKEN and saved it to .env." -ForegroundColor Green
     }
 
-    $YUXI_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
+    $SHERLOCK_REALTIME_INTERNAL_TOKEN = New-RandomHex 32
 
     # Create .env file
     $envContent = @"
@@ -183,9 +183,9 @@ SILICONFLOW_API_KEY=$apiKey
 
 # JWT security settings
 JWT_SECRET_KEY=$JWT_SECRET_KEY
-YUXI_INSTANCE_ID=$YUXI_INSTANCE_ID
+SHERLOCK_INSTANCE_ID=$SHERLOCK_INSTANCE_ID
 SANDBOX_PROVISIONER_TOKEN=$SANDBOX_PROVISIONER_TOKEN
-YUXI_REALTIME_INTERNAL_TOKEN=$YUXI_REALTIME_INTERNAL_TOKEN
+SHERLOCK_REALTIME_INTERNAL_TOKEN=$SHERLOCK_REALTIME_INTERNAL_TOKEN
 "@
 
     $envContent | Out-File -FilePath ".env" -Encoding UTF8
@@ -195,9 +195,9 @@ YUXI_REALTIME_INTERNAL_TOKEN=$YUXI_REALTIME_INTERNAL_TOKEN
     Remove-Variable -Name "apiKey" -ErrorAction SilentlyContinue
     Remove-Variable -Name "TAVILY_API_KEY" -ErrorAction SilentlyContinue
     Remove-Variable -Name "JWT_SECRET_KEY" -ErrorAction SilentlyContinue
-    Remove-Variable -Name "YUXI_INSTANCE_ID" -ErrorAction SilentlyContinue
+    Remove-Variable -Name "SHERLOCK_INSTANCE_ID" -ErrorAction SilentlyContinue
     Remove-Variable -Name "SANDBOX_PROVISIONER_TOKEN" -ErrorAction SilentlyContinue
-    Remove-Variable -Name "YUXI_REALTIME_INTERNAL_TOKEN" -ErrorAction SilentlyContinue
+    Remove-Variable -Name "SHERLOCK_REALTIME_INTERNAL_TOKEN" -ErrorAction SilentlyContinue
 }
 
 Write-Host ""

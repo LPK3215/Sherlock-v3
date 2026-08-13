@@ -50,7 +50,7 @@ PYTHON_TASK_ITEMS = [
     {
         "id": "py-task-006",
         "input": (
-            "请用 Python 完成任务并给出最终答案：给定 s = 'Yuxi Agent Evaluation'，"
+            "请用 Python 完成任务并给出最终答案：给定 s = 'Sherlock Agent Evaluation'，"
             "忽略大小写统计元音字母 a/e/i/o/u 的总数。请只输出最终整数。"
         ),
         "expected_output": "10",
@@ -95,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Upload a Python task dataset to Langfuse.")
     parser.add_argument(
         "--dataset-name",
-        default=f"yuxi-python-tasks-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}",
+        default=f"sherlock-python-tasks-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}",
         help="Langfuse dataset name. Defaults to a timestamped name.",
     )
     return parser.parse_args()
@@ -106,7 +106,7 @@ def main() -> None:
     client = Langfuse()
     client.create_dataset(
         name=args.dataset_name,
-        description="Yuxi agent evaluation dataset: deterministic Python programming tasks.",
+        description="Sherlock agent evaluation dataset: deterministic Python programming tasks.",
         metadata={
             "source": "scripts/eval/upload_langfuse_python_tasks_dataset.py",
             "task_type": "python_programming",

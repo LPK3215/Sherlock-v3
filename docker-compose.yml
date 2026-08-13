@@ -32,7 +32,7 @@ x-api-worker-env: &api-worker-env
   # Agent run
   RUN_CANCEL_KEY_TTL_SECONDS: ${RUN_CANCEL_KEY_TTL_SECONDS:-1800}
   RUN_EVENTS_STREAM_TTL_SECONDS: ${RUN_EVENTS_STREAM_TTL_SECONDS:-7200}
-    SHERLOCK_API_INTERNAL_URL: ${SHERLOCK_API_INTERNAL_URL:-http://api:5050}
+  SHERLOCK_API_INTERNAL_URL: ${SHERLOCK_API_INTERNAL_URL:-http://api:5050}
   SHERLOCK_REALTIME_INTERNAL_TOKEN: ${SHERLOCK_REALTIME_INTERNAL_TOKEN:?Set SHERLOCK_REALTIME_INTERNAL_TOKEN in .env for realtime frame capture.}
   SHERLOCK_CORS_ORIGINS: ${SHERLOCK_CORS_ORIGINS:-}
   # 其他环境变量
@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-        image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
+    image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
     working_dir: /app
     volumes:
       - ./backend/server:/app/server

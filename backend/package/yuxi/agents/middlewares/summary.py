@@ -293,8 +293,8 @@ def sanitize_messages_for_summary(
     return sanitized
 
 
-class YuxiSummarizationMiddleware(SummarizationMiddleware):
-    """DeepAgents summarization middleware with Yuxi-specific tool-call sanitization."""
+class SherlockSummarizationMiddleware(SummarizationMiddleware):
+    """DeepAgents summarization middleware with Sherlock-specific tool-call sanitization."""
 
     def __init__(
         self,
@@ -771,7 +771,7 @@ def create_summary_middleware(
     }
     if summary_prompt and summary_prompt.strip():
         middleware_kwargs["summary_prompt"] = summary_prompt
-    middleware = YuxiSummarizationMiddleware(**middleware_kwargs)
+    middleware = SherlockSummarizationMiddleware(**middleware_kwargs)
     middleware._history_path_prefix = VIRTUAL_PATH_CONVERSATION_HISTORY
     middleware._large_tool_results_prefix = VIRTUAL_PATH_LARGE_TOOL_RESULTS
     return middleware

@@ -277,7 +277,7 @@ def _compact_run_event_envelope(envelope: dict) -> dict | None:
     payload = envelope.get("payload")
     if event_type == "metadata":
         return None
-    if event_type == "custom" and isinstance(payload, dict) and payload.get("name") == "yuxi.agent_state":
+    if event_type == "custom" and isinstance(payload, dict) and payload.get("name") == "sherlock.agent_state":
         state = payload.get("agent_state")
         chunk = payload.get("chunk") if isinstance(payload.get("chunk"), dict) else {}
         if _is_empty_agent_state(state) or _is_empty_agent_state(chunk.get("agent_state")):

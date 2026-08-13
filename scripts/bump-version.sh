@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Yuxi 版本号升级脚本
+# Sherlock 版本号升级脚本
 # =============================================================================
 # 用法: ./scripts/bump-version.sh [--dev] <新版本号>
 # 示例: ./scripts/bump-version.sh 0.6.2
@@ -31,7 +31,7 @@ set -euo pipefail
 # 3. 脚本运行后必须检查:
 #    - git diff，确认只有预期版本文件变化。
 #    - backend/package/pyproject.toml、backend/pyproject.toml、web/package.json、
-#      docker-compose*.yml、backend/*uv.lock 中的 Yuxi 版本一致。
+#      docker-compose*.yml、backend/*uv.lock 中的 Sherlock 版本一致。
 #    - dev 模式下 README.md、README.en.md、docs/intro/quick-start.md 和文档首页
 #      不应被更新。
 #
@@ -108,7 +108,7 @@ if [ "$DEV_MODE" = false ]; then
     echo "  - README.md"
     echo "  - README.en.md"
     echo "  - docs/intro/quick-start.md"
-    echo "  - docs/.vitepress/theme/components/YuxiHome.vue"
+    echo "  - docs/.vitepress/theme/components/SherlockHome.vue"
 fi
 echo ""
 read -rp "确认继续? [y/N] " confirm
@@ -142,11 +142,11 @@ perl -pi -e "s/\"version\": \"[^\"]+\"/\"version\": \"${NEW_VERSION}\"/" \
 # 4. 更新 Docker Compose 镜像标签默认值
 # -----------------------------------------------------------------------------
 echo "→ 更新 docker-compose.yml"
-perl -pi -e "s/\\\$\\{YUXI_VERSION:-[^}]+\\}/\\\${YUXI_VERSION:-${NEW_VERSION}}/g" \
+perl -pi -e "s/\\\$\\{SHERLOCK_VERSION:-[^}]+\\}/\\\${SHERLOCK_VERSION:-${NEW_VERSION}}/g" \
     "${PROJECT_ROOT}/docker-compose.yml"
 
 echo "→ 更新 docker-compose.prod.yml"
-perl -pi -e "s/\\\$\\{YUXI_VERSION:-[^}]+\\}/\\\${YUXI_VERSION:-${NEW_VERSION}}/g" \
+perl -pi -e "s/\\\$\\{SHERLOCK_VERSION:-[^}]+\\}/\\\${SHERLOCK_VERSION:-${NEW_VERSION}}/g" \
     "${PROJECT_ROOT}/docker-compose.prod.yml"
 
 # -----------------------------------------------------------------------------
@@ -182,9 +182,9 @@ if [ "$DEV_MODE" = false ]; then
     perl -pi -e "s/(git clone --branch v)[0-9]+\\.[0-9]+\\.[0-9]+(\\.[a-zA-Z0-9]+)?/\${1}${NEW_VERSION}/g" \
         "${PROJECT_ROOT}/docs/intro/quick-start.md"
 
-    echo "→ 更新 docs/.vitepress/theme/components/YuxiHome.vue"
+    echo "→ 更新 docs/.vitepress/theme/components/SherlockHome.vue"
     perl -pi -e "s/(git clone --branch v)[0-9]+\\.[0-9]+\\.[0-9]+(\\.[a-zA-Z0-9]+)?/\${1}${NEW_VERSION}/g" \
-        "${PROJECT_ROOT}/docs/.vitepress/theme/components/YuxiHome.vue"
+        "${PROJECT_ROOT}/docs/.vitepress/theme/components/SherlockHome.vue"
 else
     echo "→ dev 模式，跳过 README.md、README.en.md、docs/intro/quick-start.md 和文档首页的分支版本更新"
 fi
@@ -206,10 +206,10 @@ echo "  web/package.json:"
 grep -E '"version"' "${PROJECT_ROOT}/web/package.json" | head -1 | sed 's/^/    /'
 
 echo "  docker-compose.yml (api):"
-grep -E "image: yuxi-api:" "${PROJECT_ROOT}/docker-compose.yml" | head -1 | sed 's/^/    /'
+grep -E "image: sherlock-api:" "${PROJECT_ROOT}/docker-compose.yml" | head -1 | sed 's/^/    /'
 
 echo "  docker-compose.prod.yml (web):"
-grep -E "image: yuxi-web:" "${PROJECT_ROOT}/docker-compose.prod.yml" | head -1 | sed 's/^/    /'
+grep -E "image: sherlock-web:" "${PROJECT_ROOT}/docker-compose.prod.yml" | head -1 | sed 's/^/    /'
 
 echo ""
 echo "后续步骤:"

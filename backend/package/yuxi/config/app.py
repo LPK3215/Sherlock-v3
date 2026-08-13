@@ -32,7 +32,7 @@ class Config(BaseModel):
     """应用配置类。
 
     `save_dir` 只在启动时决定配置文件位置，运行时不可修改。管理员保存配置时先写
-    `base.toml`，再把可运行时同步的字段写入 Redis 快照（`yuxi:runtime_config`）。
+    `base.toml`，再把可运行时同步的字段写入 Redis 快照（`sherlock:runtime_config`）。
     其他进程通过 `start_runtime_sync()` 启动的后台线程周期性拉取该快照刷新内存值。
     """
 

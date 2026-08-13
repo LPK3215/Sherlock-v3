@@ -222,7 +222,7 @@ def _map_chunk_to_run_event(chunk: dict) -> tuple[str, dict]:
     if status == "loading":
         return "messages", {"chunk": chunk}
     if status == "agent_state":
-        return "custom", {"name": "yuxi.agent_state", "chunk": chunk, "agent_state": chunk.get("agent_state") or {}}
+        return "custom", {"name": "sherlock.agent_state", "chunk": chunk, "agent_state": chunk.get("agent_state") or {}}
     if status in {"ask_user_question_required", "human_approval_required", "interrupted"}:
         reason = "human_approval" if status == "human_approval_required" else status
         return "interrupt", {"reason": reason, "chunk": chunk}

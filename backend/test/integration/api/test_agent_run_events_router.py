@@ -87,7 +87,7 @@ async def test_run_events_verbose_false_returns_compact_payload(test_client, sta
             run_id,
             "custom",
             {
-                "name": "yuxi.agent_state",
+                "name": "sherlock.agent_state",
                 "chunk": {
                     "request_id": request_id,
                     "response": None,

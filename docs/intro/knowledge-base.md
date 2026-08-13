@@ -107,7 +107,7 @@ Neo4j 连接信息可以在 `.env` 中配置：
 
 ## API 使用
 
-程序化上传应先将文件上传到 MinIO，再创建文档记录；CLI 可使用 `yuxi kb upload` 完成这条链路。接口如下：
+程序化上传应先将文件上传到 MinIO，再创建文档记录；CLI 可使用 `sherlock kb upload` 完成这条链路。接口如下：
 
 ```bash
 # 1. 上传文件

@@ -10,7 +10,7 @@ Sherlock-v3 的智能体评估用于回答一个具体问题：某个 Agent 在�
 
 - Langfuse 负责 dataset、experiment、score、对比和可视化。
 - Sherlock-v3 后端负责创建正常 conversation 和 AgentRun，并复用 worker 执行链路。
-- `yuxi` CLI 只负责读取 Langfuse dataset、运行 experiment、调用 Sherlock-v3 eval API，不负责创建或上传 dataset。
+- `sherlock` CLI 只负责读取 Langfuse dataset、运行 experiment、调用 Sherlock-v3 eval API，不负责创建或上传 dataset。
 
 ## 前置条件
 
@@ -22,19 +22,19 @@ LANGFUSE_SECRET_KEY=...
 LANGFUSE_BASE_URL=https://cloud.langfuse.com
 ```
 
-2. 本机 CLI 环境也能读取同一组 Langfuse 环境变量。`yuxi agent eval` 需要直接调用 Langfuse SDK 读取 dataset 和创建 experiment。
+2. 本机 CLI 环境也能读取同一组 Langfuse 环境变量。`sherlock agent eval` 需要直接调用 Langfuse SDK 读取 dataset 和创建 experiment。
 
 3. 已经登录 Sherlock-v3 CLI：
 
 ```bash
-yuxi remote add local http://localhost:5173
-yuxi login --browser
+sherlock remote add local http://localhost:5173
+sherlock login --browser
 ```
 
-评估命令必须使用当前 remote 的登录态，不支持在 `yuxi agent eval` 上直接传 token。CI 环境也必须先执行登录步骤，例如：
+评估命令必须使用当前 remote 的登录态，不支持在 `sherlock agent eval` 上直接传 token。CI 环境也必须先执行登录步骤，例如：
 
 ```bash
-yuxi login --api-key "$YUXI_API_KEY"
+sherlock login --api-key "$SHERLOCK_API_KEY"
 ```
 
 4. 要评估的 Agent 已经存在，并且当前 CLI 登录用户有权限访问该 Agent。命令使用的是 Agent slug，例如 `default-chatbot`。
@@ -56,8 +56,8 @@ Dataset item 的 `input` 推荐使用下面任一字段承载任务文本：
 上传 dataset 后，用 dataset name 运行：
 
 ```bash
-yuxi agent eval \
-  --dataset-name yuxi-python-tasks-20260619-demo \
+sherlock agent eval \
+  --dataset-name sherlock-python-tasks-20260619-demo \
   --agent-slug default-chatbot \
   --experiment-name default-chatbot-python-tasks-20260619 \
   --max-concurrency 1 \

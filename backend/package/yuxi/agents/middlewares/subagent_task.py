@@ -89,7 +89,7 @@ ASYNC_THREAD_ID_ARG = "可选。要继续的后台子智能体线程 ID，来自
 SUBAGENT_RUN_ID_ARG = "子智能体运行 ID，由 subagent_start 返回。"
 
 
-async def create_subagent_task_middleware(parent_context) -> YuxiSubAgentMiddleware | None:
+async def create_subagent_task_middleware(parent_context) -> SherlockSubAgentMiddleware | None:
     """根据父智能体上下文加载可用子智能体，并在存在可调用项时创建 task 中间件。"""
     selected_slugs = [
         str(slug).strip() for slug in (getattr(parent_context, "subagents", None) or []) if str(slug).strip()
@@ -118,10 +118,10 @@ async def create_subagent_task_middleware(parent_context) -> YuxiSubAgentMiddlew
 
     if not subagents:
         return None
-    return YuxiSubAgentMiddleware(parent_context=parent_context, subagents=subagents)
+    return SherlockSubAgentMiddleware(parent_context=parent_context, subagents=subagents)
 
 
-class YuxiSubAgentMiddleware(AgentMiddleware[Any, ContextT, ResponseT]):
+class SherlockSubAgentMiddleware(AgentMiddleware[Any, ContextT, ResponseT]):
     def __init__(self, *, parent_context, subagents: list[Agent]) -> None:
         super().__init__()
         self.parent_context = parent_context

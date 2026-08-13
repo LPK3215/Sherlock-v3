@@ -9,7 +9,7 @@ from yuxi.utils.auth_utils import AuthUtils
 
 
 async def main():
-    dsn = os.getenv("POSTGRES_URL", "postgresql+asyncpg://postgres:postgres@postgres:5432/yuxi").replace("+asyncpg", "")
+    dsn = os.getenv("POSTGRES_URL", "postgresql+asyncpg://postgres:postgres@postgres:5432/sherlock").replace("+asyncpg", "")
     conn = await asyncpg.connect(dsn)
     user_id = await conn.fetchval(
         "SELECT id FROM users WHERE role = 'superadmin' AND is_deleted = 0 AND department_id IS NOT NULL ORDER BY id LIMIT 1"

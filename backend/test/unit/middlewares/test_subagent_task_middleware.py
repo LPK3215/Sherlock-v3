@@ -10,7 +10,7 @@ import yuxi.services.subagent_run_service as subagent_run_service
 from langgraph.prebuilt.tool_node import ToolRuntime
 from langgraph.types import Command
 from yuxi.agents.buildin.chatbot.state import merge_subagent_runs
-from yuxi.agents.middlewares.subagent_task import YuxiSubAgentMiddleware
+from yuxi.agents.middlewares.subagent_task import SherlockSubAgentMiddleware
 from yuxi.repositories.agent_repository import SUB_AGENT_BACKEND_ID
 from yuxi.services.input_message_service import AgentRunInputMessage
 from yuxi.utils.hash_utils import subagent_child_thread_id
@@ -59,11 +59,11 @@ def _patch_subagent_run_service(monkeypatch, service_class) -> None:
     )
 
 
-def _async_tool_middleware(*, model: str | None = None) -> YuxiSubAgentMiddleware:
+def _async_tool_middleware(*, model: str | None = None) -> SherlockSubAgentMiddleware:
     parent_context = SimpleNamespace(thread_id="parent-thread", uid="user-1", run_id="parent-run")
     if model:
         parent_context.model = model
-    return YuxiSubAgentMiddleware(
+    return SherlockSubAgentMiddleware(
         parent_context=parent_context,
         subagents=[
             SimpleNamespace(
@@ -206,7 +206,7 @@ async def test_create_task_middleware_loads_all_visible_subagents_when_empty(mon
         SimpleNamespace(thread_id="parent-thread", uid="user-1", subagents=[]),
     )
 
-    assert isinstance(middleware, YuxiSubAgentMiddleware)
+    assert isinstance(middleware, SherlockSubAgentMiddleware)
     assert {tool.name for tool in middleware.tools} == {
         "task",
         "subagent_start",
@@ -218,7 +218,7 @@ async def test_create_task_middleware_loads_all_visible_subagents_when_empty(mon
 
 @pytest.mark.asyncio
 async def test_task_tool_rejects_unconfigured_subagent() -> None:
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(thread_id="parent-thread", uid="user-1", model=""),
         subagents=[
             SimpleNamespace(
@@ -251,7 +251,7 @@ async def test_task_tool_invokes_subagent_with_child_scope(monkeypatch) -> None:
     captured = {}
     _patch_task_start_and_await(monkeypatch, captured, thread_id="child-thread")
 
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(
             thread_id="child-runtime-thread",
             parent_thread_id="parent-thread",
@@ -296,7 +296,7 @@ async def test_task_tool_inherits_parent_model_when_subagent_model_empty(monkeyp
     captured = {}
     _patch_task_start_and_await(monkeypatch, captured)
 
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(
             thread_id="parent-thread",
             uid="user-1",
@@ -328,7 +328,7 @@ async def test_task_tool_records_failed_subagent_run(monkeypatch) -> None:
     captured = {}
     _patch_task_start_and_await(monkeypatch, captured, status="failed", output="", error_message="child boom")
 
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(thread_id="parent-thread", uid="user-1", run_id="parent-run", model=""),
         subagents=[
             SimpleNamespace(
@@ -358,7 +358,7 @@ async def test_task_tool_reports_running_subagent_after_wait_timeout(monkeypatch
     captured = {}
     _patch_task_start_and_await(monkeypatch, captured, status="running", output="", wait_timeout=True)
 
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(thread_id="parent-thread", uid="user-1", run_id="parent-run", model=""),
         subagents=[
             SimpleNamespace(
@@ -391,7 +391,7 @@ async def test_task_tool_continues_existing_subagent_thread(monkeypatch) -> None
     captured = {}
     _patch_task_start_and_await(monkeypatch, captured, output="continued done", thread_id="child-thread")
 
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(thread_id="parent-thread", uid="user-1", run_id="parent-run", model=""),
         subagents=[
             SimpleNamespace(
@@ -430,7 +430,7 @@ async def test_task_tool_rejects_invalid_continuation_thread(monkeypatch) -> Non
 
     _patch_session(monkeypatch)
     _patch_subagent_run_service(monkeypatch, _SubagentRunService)
-    middleware = YuxiSubAgentMiddleware(
+    middleware = SherlockSubAgentMiddleware(
         parent_context=SimpleNamespace(thread_id="parent-thread", uid="user-1", run_id="parent-run"),
         subagents=[
             SimpleNamespace(
@@ -633,7 +633,7 @@ async def test_subagent_cancel_and_await_use_parent_run_scope(monkeypatch) -> No
         return {"status": "completed", "output": "awaited result"}
 
     _patch_session(monkeypatch)
-    monkeypatch.setattr(YuxiSubAgentMiddleware, "_get_verified_subagent_run", fake_get_verified_subagent_run)
+    monkeypatch.setattr(SherlockSubAgentMiddleware, "_get_verified_subagent_run", fake_get_verified_subagent_run)
     monkeypatch.setattr(agent_run_service, "request_cancel_agent_run", fake_request_cancel_agent_run)
     monkeypatch.setattr(agent_run_service, "await_agent_run_result", fake_await_agent_run_result)
 
@@ -683,7 +683,7 @@ async def test_subagent_await_reports_timeout_when_run_is_still_active(monkeypat
         )
 
     _patch_session(monkeypatch)
-    monkeypatch.setattr(YuxiSubAgentMiddleware, "_get_verified_subagent_run", fake_get_verified_subagent_run)
+    monkeypatch.setattr(SherlockSubAgentMiddleware, "_get_verified_subagent_run", fake_get_verified_subagent_run)
     monkeypatch.setattr(agent_run_service, "await_agent_run_result", fake_await_agent_run_result)
 
     result = await {item.name: item for item in _async_tool_middleware().tools}["subagent_await"].coroutine(

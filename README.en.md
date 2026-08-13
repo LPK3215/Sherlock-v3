@@ -15,9 +15,9 @@
 
 ## Project Foundation and Open-Source Notice
 
-Sherlock-v3 is an independent project developed on top of the open-source Yuxi project. It reuses selected agent, knowledge-base, and platform capabilities, while adding real-time voice and visual interaction, domain workflows, and business data models. Copyright and license notices for Yuxi and other third-party dependencies are retained as required; the project's centralized license information is in [LICENSE](LICENSE).
+Sherlock-v3 is an independently developed multimodal agent platform integrating RAG retrieval, knowledge graphs, LangGraph agent orchestration, and real-time voice and visual interaction. Copyright and license notices for third-party dependencies are retained as required; the project's centralized license information is in [LICENSE](LICENSE).
 
-Apart from this section and the license file, project documentation does not repeat the upstream attribution. Runtime names such as the `yuxi` package, environment variables, and API fields are compatibility contracts and are not the product brand.
+Apart from the license file, project documentation does not repeat third-party attributions.
 
 ## Introduction
 

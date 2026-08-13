@@ -522,7 +522,7 @@ async def test_stream_agent_run_events_compacts_verbose_false(monkeypatch: pytes
                     "thread_id": "thread-1",
                     "event": "custom",
                     "payload": {
-                        "name": "yuxi.agent_state",
+                        "name": "sherlock.agent_state",
                         "chunk": {
                             "request_id": "req-1",
                             "response": None,
@@ -1496,11 +1496,11 @@ def test_compact_stream_chunk_retains_compression_field():
         "response": None,
         "thread_id": "thread-1",
         "status": "context_compression",
-        "compression": {"type": "yuxi.context_compression", "status": "started"},
+        "compression": {"type": "sherlock.context_compression", "status": "started"},
         "meta": {"uid": "user-1"},
     }
 
     compact = agent_run_service._compact_stream_chunk(chunk)
 
     assert compact["status"] == "context_compression"
-    assert compact["compression"] == {"type": "yuxi.context_compression", "status": "started"}
+    assert compact["compression"] == {"type": "sherlock.context_compression", "status": "started"}

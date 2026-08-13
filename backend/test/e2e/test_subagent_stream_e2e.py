@@ -150,7 +150,7 @@ async def _consume_run_stream(
             event_counts[event] = event_counts.get(event, 0) + 1
             if event == "messages":
                 message_chunks.extend(_collect_message_chunks(payload))
-            if event == "custom" and payload.get("name") == "yuxi.agent_state":
+            if event == "custom" and payload.get("name") == "sherlock.agent_state":
                 agent_state = payload.get("agent_state")
                 if isinstance(agent_state, dict):
                     latest_agent_state = agent_state

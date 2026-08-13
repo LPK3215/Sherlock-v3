@@ -24,15 +24,15 @@
 | `create_agent_filesystem_middleware` | 接入沙盒文件系统、用户工作区、线程 uploads/outputs 与只读 Skills 路由，并在工具结果过大时把内容写入 `outputs/large_tool_results` |
 | `save_attachments_to_fs` / `AttachmentMiddleware` | 从 LangGraph state 的 `uploads` 读取附件路径，把可读路径注入系统提示，提示模型按需使用 `read_file` |
 | `SkillsMiddleware` | 注入可见 Skill 的提示段，监听读取 `SKILL.md` 后的 Skill 激活，并按依赖追加工具和 MCP 工具；知识库工具由内置 `knowledge-base` Skill 按需加载 |
-| `YuxiSubAgentMiddleware` | 仅主 Agent 在存在可见子智能体时挂载，提供 `task` 工具调用真实子 Agent graph |
-| `YuxiSummarizationMiddleware` | 基于 DeepAgents `SummarizationMiddleware` 做长上下文压缩，并清洗被摘要历史里的工具结果 |
+| `SherlockSubAgentMiddleware` | 仅主 Agent 在存在可见子智能体时挂载，提供 `task` 工具调用真实子 Agent graph |
+| `SherlockSummarizationMiddleware` | 基于 DeepAgents `SummarizationMiddleware` 做长上下文压缩，并清洗被摘要历史里的工具结果 |
 | `TodoListMiddleware` | 提供待办状态，让前端状态面板可展示 Agent 运行进度 |
 | `PatchToolCallsMiddleware` | 修正部分工具调用消息形态，提升工具调用兼容性 |
 | `ModelRetryMiddleware` | 在模型调用失败时按配置重试 |
 | `ImageInputCompatibilityMiddleware` | 仅为 OpenAI Chat Completions 兼容链路桥接 `read_file` 返回的图片；模型明确拒绝图片输入时自动改为 `ocr_parse_file` |
 | `TokenUsageMiddleware` | 在 LangGraph state 写入本轮 token 使用快照，供前端状态面板查看 |
 
-`SubAgentBackend` 使用同一组核心能力，但不会挂载 `YuxiSubAgentMiddleware`，并额外过滤 `present_artifacts`、`ask_user_question`、`install_skill` 等不适合子智能体直接使用的工具。
+`SubAgentBackend` 使用同一组核心能力，但不会挂载 `SherlockSubAgentMiddleware`，并额外过滤 `present_artifacts`、`ask_user_question`、`install_skill` 等不适合子智能体直接使用的工具。
 
 ## 知识库工具
 
@@ -59,13 +59,13 @@
 
 ## 子智能体任务
 
-主 Agent 如果配置了可见子智能体，会挂载 `YuxiSubAgentMiddleware` 并获得 `task` 工具。这个工具不会调用旧版独立 SubAgents 表，而是查找 `agents.is_subagent=true` 且后端为 `SubAgentBackend` 的真实 Agent 配置，然后启动对应子 Agent graph。
+主 Agent 如果配置了可见子智能体，会挂载 `SherlockSubAgentMiddleware` 并获得 `task` 工具。这个工具不会调用旧版独立 SubAgents 表，而是查找 `agents.is_subagent=true` 且后端为 `SubAgentBackend` 的真实 Agent 配置，然后启动对应子 Agent graph。
 
 子智能体执行时会获得独立 child thread、独立 checkpoint 和 `agent_runs(run_type=subagent)` 记录；工具结果会返回 child thread ID，后续可以把该 ID 传回 `task` 继续同一个子任务。子智能体自身不会再挂载下一层 `task` 中间件，避免形成嵌套子智能体链路。
 
 ## Summary 上下文压缩
 
-长对话压缩由 Sherlock-v3 封装的 `YuxiSummarizationMiddleware` 负责。它基于 DeepAgents 的 `SummarizationMiddleware`，但针对 Sherlock-v3 的知识库检索和工具调用结果做了额外处理。
+长对话压缩由 Sherlock-v3 封装的 `SherlockSummarizationMiddleware` 负责。它基于 DeepAgents 的 `SummarizationMiddleware`，但针对 Sherlock-v3 的知识库检索和工具调用结果做了额外处理。
 
 触发条件来自 Agent Context：
 

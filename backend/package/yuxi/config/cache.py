@@ -11,7 +11,7 @@ from typing import Any
 from yuxi.storage.redis import RedisConfig, sync_redis_client
 from yuxi.utils.logging_config import logger
 
-RUNTIME_CONFIG_REDIS_KEY = "yuxi:runtime_config"
+RUNTIME_CONFIG_REDIS_KEY = "sherlock:runtime_config"
 RUNTIME_CONFIG_SYNC_INTERVAL_SECONDS = 5.0
 _RUNTIME_CONFIG_REDIS_TIMEOUT_SECONDS = 0.2
 

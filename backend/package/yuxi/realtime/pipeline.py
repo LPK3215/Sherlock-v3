@@ -500,7 +500,7 @@ def _realtime_event_payload(event: dict) -> dict[str, Any]:
         elif reason in {"human_approval", "ask_user_question_required", "human_approval_required"}:
             high_level_type = "approval.required"
         else:
-            high_level_type = "yuxi.interrupt"
+            high_level_type = "sherlock.interrupt"
         detail: dict[str, Any] = {"reason": reason}
         if isinstance(chunk, dict):
             questions = chunk.get("questions")
@@ -529,7 +529,7 @@ def _realtime_event_payload(event: dict) -> dict[str, Any]:
         high_level_type = "run.completed"
         detail = payload
     else:
-        high_level_type = f"yuxi.{event_type}"
+        high_level_type = f"sherlock.{event_type}"
         detail = payload
 
     return {

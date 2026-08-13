@@ -18,6 +18,7 @@
 - 全量重命名环境变量（`YUXI_*` → `SHERLOCK_*`）、Docker 镜像名（`yuxi-api/web/sandbox-provisioner` → `sherlock-*`）、volume 路径（`docker/volumes/yuxi` → `docker/volumes/sherlock`）、Postgres 默认库名（`yuxi` → `sherlock`）。
 - 重命名 JWT audience/issuer 前缀（`yuxi-know` → `sherlock-know`）、上下文压缩事件类型（`yuxi.context_compression` → `sherlock.context_compression`）、内部变量名（`DEFAULT_YUXI_SUMMARY_PROMPT` → `DEFAULT_SHERLOCK_SUMMARY_PROMPT`）、URL 白名单环境变量（`YUXI_URL_WHITELIST` → `SHERLOCK_URL_WHITELIST`）。
 - Sandbox provisioner 容器标签（`yuxi-sandbox` → `sherlock-sandbox`）、K8s namespace/PVC 默认值（`yuxi-know` → `sherlock-know`）、FastAPI title 均同步更新。
+- 二次深度清理残留引用：重命名中间件类（`YuxiSummarizationMiddleware` → `SherlockSummarizationMiddleware`、`YuxiSubAgentMiddleware` → `SherlockSubAgentMiddleware`）、SSE 事件名（`yuxi.agent_state` → `sherlock.agent_state`）、RTVI 高级事件前缀（`yuxi.{event_type}` → `sherlock.{event_type}`）、Redis 配置快照 key（`yuxi:runtime_config` → `sherlock:runtime_config`）、初始化脚本环境变量（`YUXI_INSTANCE_ID`/`YUXI_REALTIME_INTERNAL_TOKEN` → `SHERLOCK_*`）、版本脚本模板引用（`YUXI_VERSION`/`YuxiHome.vue` → `SHERLOCK_VERSION`/`SherlockHome.vue`）、CLI 文档命令（`yuxi` → `sherlock`）、LICENSE/AUTHORS 版权归属、eval 脚本数据集名和默认密码。
 
 ### 修复与安全
 

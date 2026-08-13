@@ -9,7 +9,7 @@ from langchain.agents.middleware.types import ModelRequest, ModelResponse
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, get_buffer_string
 
 from yuxi.agents.models import load_chat_model
-from yuxi.agents.middlewares.summary import YuxiSummarizationMiddleware
+from yuxi.agents.middlewares.summary import SherlockSummarizationMiddleware
 from yuxi.models.providers.cache import ModelInfo
 from yuxi.models.providers.builtin import BUILTIN_PROVIDERS
 from yuxi.utils.paths import VIRTUAL_PATH_CONVERSATION_HISTORY, VIRTUAL_PATH_LARGE_TOOL_RESULTS
@@ -119,7 +119,7 @@ async def test_l1_compacted_messages_call_real_chat_model(monkeypatch: pytest.Mo
         ToolMessage(content=large_result, tool_call_id="call-1", name="query_kb"),
         HumanMessage(content="请只回答 OK。"),
     ]
-    middleware = YuxiSummarizationMiddleware(
+    middleware = SherlockSummarizationMiddleware(
         model=real_model,
         backend=backend,
         trigger=("tokens", 500),
