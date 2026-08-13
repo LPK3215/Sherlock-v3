@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ClientApp } from "./ClientApp";
 import { normalizeApprovalQuestions, type ApprovalQuestion } from "./ApprovalPrompt";
-import { SessionGate, type YuxiAgent } from "./SessionGate";
+import { SessionGate, type SherlockAgent } from "./SessionGate";
 
 import "@pipecat-ai/voice-ui-kit/styles.scoped";
 
@@ -15,7 +15,7 @@ const AGENT_KEY = "realtime_agent_slug";
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [token, setToken] = useState("");
-  const [agents, setAgents] = useState<YuxiAgent[]>([]);
+  const [agents, setAgents] = useState<SherlockAgent[]>([]);
   const [agentSlug, setAgentSlug] = useState("");
   const [sessionReady, setSessionReady] = useState(false);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
@@ -24,11 +24,11 @@ export default function Home() {
   const [error, setError] = useState("");
 
   const loadAgents = useCallback(async (accessToken: string) => {
-    const response = await fetch("/yuxi-api/agent", {
+    const response = await fetch("/sherlock-api/agent", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!response.ok) throw new Error(await responseMessage(response));
-    const payload = (await response.json()) as { agents?: YuxiAgent[] };
+    const payload = (await response.json()) as { agents?: SherlockAgent[] };
     const visibleAgents = Array.isArray(payload.agents) ? payload.agents : [];
     if (visibleAgents.length === 0) throw new Error("当前账号没有可用的 Agent");
     setAgents(visibleAgents);
@@ -67,14 +67,14 @@ export default function Home() {
       setError("");
       try {
         const form = new URLSearchParams({ username: loginId, password });
-        const response = await fetch("/yuxi-api/auth/token", {
+        const response = await fetch("/sherlock-api/auth/token", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: form,
         });
         if (!response.ok) throw new Error(await responseMessage(response));
         const payload = (await response.json()) as { access_token?: string };
-        if (!payload.access_token) throw new Error("Yuxi 登录响应缺少 access_token");
+        if (!payload.access_token) throw new Error("Sherlock 登录响应缺少 access_token");
         localStorage.setItem(TOKEN_KEY, payload.access_token);
         setToken(payload.access_token);
         await loadAgents(payload.access_token);
@@ -102,7 +102,7 @@ export default function Home() {
     const checkApproval = async () => {
       const threadId = currentThreadId || sessionStorage.getItem(`realtime_thread:${agentSlug}`);
       if (!threadId) return;
-      const response = await fetch(`/yuxi-api/agent/thread/${threadId}/active_run`, {
+      const response = await fetch(`/sherlock-api/agent/thread/${threadId}/active_run`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok || cancelled) return;
@@ -128,7 +128,7 @@ export default function Home() {
 
   const startBotParams = useMemo(
     () => ({
-      endpoint: "/yuxi-api/realtime/start",
+      endpoint: "/sherlock-api/realtime/start",
       headers: new Headers({
         Authorization: `Bearer ${token}`,
       }),
@@ -192,7 +192,7 @@ export default function Home() {
           startBotParams={startBotParams}
           startBotResponseTransformer={handleStartResponse}
           transportOptions={{
-            offerUrlTemplate: "/yuxi-api/realtime/sessions/:sessionId/offer",
+            offerUrlTemplate: "/sherlock-api/realtime/sessions/:sessionId/offer",
           }}
         >
           {({ handleConnect, handleDisconnect, rawStartBotResponse }) => (
@@ -204,7 +204,7 @@ export default function Home() {
               isMobile={isMobile}
               onLeave={leaveSession}
               onThreadChange={handleThreadChange}
-              apiBase="/yuxi-api"
+              apiBase="/sherlock-api"
               threadId={currentThreadId}
               startResponse={rawStartBotResponse}
               accessToken={token}

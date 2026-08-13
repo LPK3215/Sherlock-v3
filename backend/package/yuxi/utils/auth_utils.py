@@ -12,13 +12,13 @@ from yuxi.utils.datetime_utils import utc_now
 
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION = 7 * 24 * 60 * 60
-JWT_AUDIENCE = "yuxi-know-api"
-PUBLIC_DEFAULT_JWT_SECRET_KEY = "yuxi_know_secure_key"
+JWT_AUDIENCE = "sherlock-know-api"
+PUBLIC_DEFAULT_JWT_SECRET_KEY = "sherlock_know_secure_key"
 PASSWORD_HASHER = PasswordHasher()
 
 
 def _is_production_env() -> bool:
-    return os.environ.get("YUXI_ENV", "development").strip().lower() in {"prod", "production"}
+    return os.environ.get("SHERLOCK_ENV", "development").strip().lower() in {"prod", "production"}
 
 
 def _get_or_create_dev_env(name: str, value_factory) -> str:
@@ -42,8 +42,8 @@ def _get_jwt_secret_key() -> str:
 
 
 def _get_jwt_issuer() -> str:
-    instance_id = _get_or_create_dev_env("YUXI_INSTANCE_ID", lambda: f"instance-{secrets.token_hex(8)}")
-    return f"yuxi-know:{instance_id}"
+    instance_id = _get_or_create_dev_env("SHERLOCK_INSTANCE_ID", lambda: f"instance-{secrets.token_hex(8)}")
+    return f"sherlock-know:{instance_id}"
 
 
 class AuthUtils:

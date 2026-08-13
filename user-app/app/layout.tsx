@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sherlock 实时多模态助手",
-  description: "基于 Yuxi 的 Sherlock 实时语音与视频 Agent 用户端",
+  description: "基于 Sherlock 的实时语音与视频 Agent 用户端",
 };
 
 export default function RootLayout({

@@ -2,17 +2,17 @@ x-api-worker-env: &api-worker-env
   HOST_IP: ${HOST_IP:-}
   LITE_MODE: ${LITE_MODE:-}
   RUNNING_IN_DOCKER: "true"
-  YUXI_ENV: production
+  SHERLOCK_ENV: production
   PYTHONPATH: /app/package
   JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env.prod}
-  YUXI_INSTANCE_ID: ${YUXI_INSTANCE_ID:?Set YUXI_INSTANCE_ID in .env.prod}
-  POSTGRES_URL: ${POSTGRES_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}@postgres:5432/${POSTGRES_DB:-yuxi}}
+  SHERLOCK_INSTANCE_ID: ${SHERLOCK_INSTANCE_ID:?Set SHERLOCK_INSTANCE_ID in .env.prod}
+  POSTGRES_URL: ${POSTGRES_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}@postgres:5432/${POSTGRES_DB:-sherlock}}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
   RUN_CANCEL_KEY_TTL_SECONDS: ${RUN_CANCEL_KEY_TTL_SECONDS:-1800}
   RUN_EVENTS_STREAM_TTL_SECONDS: ${RUN_EVENTS_STREAM_TTL_SECONDS:-7200}
-  YUXI_API_INTERNAL_URL: ${YUXI_API_INTERNAL_URL:-http://api:5050}
-  YUXI_REALTIME_INTERNAL_TOKEN: ${YUXI_REALTIME_INTERNAL_TOKEN:?Set YUXI_REALTIME_INTERNAL_TOKEN in .env.prod}
-  YUXI_CORS_ORIGINS: ${YUXI_CORS_ORIGINS:-}
+    SHERLOCK_API_INTERNAL_URL: ${SHERLOCK_API_INTERNAL_URL:-http://api:5050}
+  SHERLOCK_REALTIME_INTERNAL_TOKEN: ${SHERLOCK_REALTIME_INTERNAL_TOKEN:?Set SHERLOCK_REALTIME_INTERNAL_TOKEN in .env.prod}
+  SHERLOCK_CORS_ORIGINS: ${SHERLOCK_CORS_ORIGINS:-}
   NEO4J_URI: ${NEO4J_URI:-bolt://graph:7687}
   NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
   NEO4J_PASSWORD: ${NEO4J_PASSWORD:?Set NEO4J_PASSWORD in .env.prod}
@@ -37,13 +37,13 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    image: yuxi-api:${YUXI_VERSION:-0.7.1}
+    image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
     container_name: api-prod
     working_dir: /app
     networks:
       - app-network
     volumes:
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/volumes/models:/app/models
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -75,13 +75,13 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    image: yuxi-api:${YUXI_VERSION:-0.7.1}
+    image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
     container_name: worker-prod
     working_dir: /app
     networks:
       - app-network
     volumes:
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/volumes/models:/app/models
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -107,7 +107,7 @@ services:
       dockerfile: Dockerfile
     container_name: sandbox-provisioner
     volumes:
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/sandbox_provisioner/sandbox.env:/app/sandbox.env:ro
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -131,15 +131,15 @@ services:
       - HTTPS_PROXY=${SANDBOX_HTTPS_PROXY:-}
       - NO_PROXY=localhost,127.0.0.1,host.docker.internal
       # Docker backend only
-      - DOCKER_NETWORK_PREFIX=${SANDBOX_DOCKER_NETWORK_PREFIX:-yuxi-know-sandbox}
+      - DOCKER_NETWORK_PREFIX=${SANDBOX_DOCKER_NETWORK_PREFIX:-sherlock-know-sandbox}
       - DOCKER_THREADS_HOST_PATH=${SANDBOX_DOCKER_THREADS_HOST_PATH:-}
-      - DOCKER_SANDBOX_PREFIX=${SANDBOX_DOCKER_SANDBOX_PREFIX:-yuxi-sandbox}
+      - DOCKER_SANDBOX_PREFIX=${SANDBOX_DOCKER_SANDBOX_PREFIX:-sherlock-sandbox}
       # Kubernetes backend only
-      - K8S_NAMESPACE=${SANDBOX_K8S_NAMESPACE:-yuxi-know}
+      - K8S_NAMESPACE=${SANDBOX_K8S_NAMESPACE:-sherlock-know}
       - NODE_HOST=${SANDBOX_NODE_HOST:-host.docker.internal}
       - KUBECONFIG_PATH=${KUBECONFIG_PATH:-}
-      - THREAD_PVC=${THREAD_PVC:-yuxi-thread}
-      - SKILLS_PVC=${SKILLS_PVC:-yuxi-skills}
+      - THREAD_PVC=${THREAD_PVC:-sherlock-thread}
+      - SKILLS_PVC=${SKILLS_PVC:-sherlock-skills}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health').read()"]
       interval: 10s
@@ -153,7 +153,7 @@ services:
       context: .
       dockerfile: docker/web.Dockerfile
       target: production
-    image: yuxi-web:${YUXI_VERSION:-0.7.1}
+    image: sherlock-web:${SHERLOCK_VERSION:-0.7.1}
     container_name: web-prod
     ports:
       - "80:80"
@@ -261,12 +261,12 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
-      - POSTGRES_DB=${POSTGRES_DB:-yuxi}
+      - POSTGRES_DB=${POSTGRES_DB:-sherlock}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - ./docker/volumes/postgresql:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-yuxi} || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sherlock} || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 30

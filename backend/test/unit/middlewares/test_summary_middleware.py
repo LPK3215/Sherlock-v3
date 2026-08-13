@@ -142,7 +142,7 @@ def compression_events(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
 
 
 @pytest.mark.unit
-def test_create_summary_middleware_uses_deepagents_with_yuxi_outputs_root() -> None:
+def test_create_summary_middleware_uses_deepagents_with_sherlock_outputs_root() -> None:
     middleware = create_summary_middleware(
         model=_DummyModel(),
         trigger=("tokens", 90_000),
@@ -707,7 +707,7 @@ async def test_awrap_model_call_emits_started_and_completed_when_summary_trigger
     assert isinstance(result, ExtendedModelResponse)
     statuses = [event["status"] for event in compression_events]
     assert statuses == ["started", "completed"]
-    assert all(event["type"] == "yuxi.context_compression" for event in compression_events)
+    assert all(event["type"] == "sherlock.context_compression" for event in compression_events)
     completed = compression_events[-1]
     assert isinstance(completed.get("cutoff_index"), int)
     assert completed.get("file_path") is not None

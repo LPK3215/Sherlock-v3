@@ -50,7 +50,7 @@ Docker 和 Kubernetes 不是互斥关系。Docker 解决的是“把一个进程
 
 ## 五、Docker 本机后端是如何工作的
 
-当 `SANDBOX_PROVISIONER_BACKEND=docker` 时，`sandbox-provisioner` 会进入 `LocalContainerProvisionerBackend`。它会检查 Docker 是否可用，解析自身容器里 `/app/saves` 这个挂载点在宿主机上的真实路径，并据此推导出线程数据目录。随后它为每组文件线程与 skills 线程准备一个稳定的 `sandbox_id`，把容器命名为类似 `yuxi-sandbox-<id>` 的形式，并在 Docker 网络中启动真正的沙盒镜像。
+当 `SANDBOX_PROVISIONER_BACKEND=docker` 时，`sandbox-provisioner` 会进入 `LocalContainerProvisionerBackend`。它会检查 Docker 是否可用，解析自身容器里 `/app/saves` 这个挂载点在宿主机上的真实路径，并据此推导出线程数据目录。随后它为每组文件线程与 skills 线程准备一个稳定的 `sandbox_id`，把容器命名为类似 `sherlock-sandbox-<id>` 的形式，并在 Docker 网络中启动真正的沙盒镜像。
 
 这个沙盒镜像默认来自 `SANDBOX_IMAGE`，容器内部监听的端口默认是 `8080`。provisioner 会为每个动态沙盒创建独立的 Docker bridge 网络，只把 provisioner 和该沙盒接入其中；沙盒之间不能互访，也不能访问承载 PostgreSQL、Redis、Neo4j、MinIO 等服务的 `app-network`。沙盒端口不发布到宿主机，provisioner 通过对应的独立网络访问真实容器，再以需要 Bearer token 的代理地址向 API/worker 提供文件和命令接口。API/worker 不直接持有沙盒容器地址。
 
@@ -101,10 +101,10 @@ services:
   sandbox-provisioner:
     environment:
       - PROVISIONER_BACKEND=kubernetes
-      - K8S_NAMESPACE=yuxi-know
+      - K8S_NAMESPACE=sherlock-know
       - KUBECONFIG_PATH=/root/.kube/config
-      - THREAD_PVC=yuxi-thread
-      - SKILLS_PVC=yuxi-skills
+      - THREAD_PVC=sherlock-thread
+      - SKILLS_PVC=sherlock-skills
       - NODE_HOST=203.0.113.10
     volumes:
       - ~/.kube/config:/root/.kube/config:ro
@@ -174,7 +174,7 @@ SANDBOX_PROVISIONER_URL=http://sandbox-provisioner:8002
 SANDBOX_PROVISIONER_TOKEN=<至少 32 个随机字符>
 SANDBOX_PROVISIONER_BACKEND=docker
 SANDBOX_VIRTUAL_PATH_PREFIX=/home/gem/user-data
-SANDBOX_DOCKER_NETWORK_PREFIX=yuxi-know-sandbox
+SANDBOX_DOCKER_NETWORK_PREFIX=sherlock-know-sandbox
 ```
 
 然后用常规方式启动即可：
@@ -229,19 +229,19 @@ sandbox-provisioner 的环境变量传递分**两层**，需要分别理解：
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| `DOCKER_NETWORK_PREFIX` | 每沙盒独立网络的名称前缀 | `yuxi-know-sandbox` |
-| `DOCKER_SANDBOX_PREFIX` | 沙盒容器名前缀 | `yuxi-sandbox` |
+| `DOCKER_NETWORK_PREFIX` | 每沙盒独立网络的名称前缀 | `sherlock-know-sandbox` |
+| `DOCKER_SANDBOX_PREFIX` | 沙盒容器名前缀 | `sherlock-sandbox` |
 | `DOCKER_THREADS_HOST_PATH` | 线程数据宿主机路径 | 自动推断 |
 
 **Kubernetes 后端专用：**
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| `K8S_NAMESPACE` | Kubernetes namespace | `yuxi-know` |
+| `K8S_NAMESPACE` | Kubernetes namespace | `sherlock-know` |
 | `NODE_HOST` | Kubernetes 节点地址 | `host.docker.internal` |
 | `KUBECONFIG_PATH` | kubeconfig 文件路径 | 空（使用 incluster 配置） |
-| `THREAD_PVC` | 线程数据持久化卷 | `yuxi-thread` |
-| `SKILLS_PVC` | 技能目录持久化卷（预留） | `yuxi-skills` |
+| `THREAD_PVC` | 线程数据持久化卷 | `sherlock-thread` |
+| `SKILLS_PVC` | 技能目录持久化卷（预留） | `sherlock-skills` |
 
 ### 环境变量传递链
 
@@ -282,7 +282,7 @@ sandbox-provisioner:
 也就是说，`sandbox.env` 配置的是沙盒容器内部可见的环境变量，而不是 provisioner 本身的配置。当前该文件内容为：
 
 ```env
-CHECK_YUXI_SANDBOX_ENV_EXISTS=True
+CHECK_SHERLOCK_SANDBOX_ENV_EXISTS=True
 ```
 
 如果需要给所有沙盒容器注入额外的环境变量（如代理配置、认证信息等），可以添加到 `sandbox.env` 文件中。
@@ -305,6 +305,6 @@ CHECK_YUXI_SANDBOX_ENV_EXISTS=True
 
 如果怀疑是 provisioner 级问题，先看 `http://localhost:8002/health`，确认 backend 类型和 idle timeout 是否符合预期。默认 Docker 部署下这里应看到 `backend=docker`。接着看 `docker logs sandbox-provisioner --tail 200`，因为这里能直接看到创建容器、复用旧实例、健康检查失败和 idle reaper 删除的日志。
 
-如果怀疑是 Docker 地址不可达，先确认每个动态沙箱只连接自己的 `yuxi-know-sandbox-<id>` 网络，provisioner 同时连接该网络，而 API/worker 只在 `app-network`。provisioner 日志中的目标地址应是动态容器名，API/worker 拿到的地址应是 `/api/sandboxes/<id>/proxy`；代理请求必须携带 `SANDBOX_PROVISIONER_TOKEN`。如果怀疑是 Kubernetes 地址不可达，重点检查 `NODE_HOST` 和 NodePort 是否从 provisioner 可达。
+如果怀疑是 Docker 地址不可达，先确认每个动态沙箱只连接自己的 `sherlock-know-sandbox-<id>` 网络，provisioner 同时连接该网络，而 API/worker 只在 `app-network`。provisioner 日志中的目标地址应是动态容器名，API/worker 拿到的地址应是 `/api/sandboxes/<id>/proxy`；代理请求必须携带 `SANDBOX_PROVISIONER_TOKEN`。如果怀疑是 Kubernetes 地址不可达，重点检查 `NODE_HOST` 和 NodePort 是否从 provisioner 可达。
 
 如果怀疑是文件看得到但模型读不到，或者模型写了但 viewer 看不到，优先把问题拆成两层：一层是宿主机路径是否存在于 `saves/...` 下，另一层是该路径是否真的被当前线程沙盒挂载并暴露到了 `/home/gem/user-data` 或 `/home/gem/skills`。只要先分清“宿主机侧文件语义”和“沙盒侧运行时挂载语义”，定位问题通常会快很多。

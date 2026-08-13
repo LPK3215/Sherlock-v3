@@ -44,9 +44,9 @@ def _docker_backend(module, tmp_path, run_container):
     backend = object.__new__(module.LocalContainerProvisionerBackend)
     backend._lock = threading.Lock()
     backend._container_port = 8080
-    backend._network_prefix = "yuxi-know-sandbox"
+    backend._network_prefix = "sherlock-know-sandbox"
     backend._sandbox_image = "sandbox-image"
-    backend._container_prefix = "yuxi-sandbox"
+    backend._container_prefix = "sherlock-sandbox"
     backend._sandbox_env = {}
     backend._health_timeout_seconds = 1
     backend._threads_host_path = str(tmp_path)
@@ -349,7 +349,7 @@ def test_docker_backend_uses_private_network_without_published_port(monkeypatch,
     captured = []
 
     class FakeContainer:
-        name = "yuxi-sandbox-sandbox-1"
+        name = "sherlock-sandbox-sandbox-1"
         status = "running"
         attrs = {"State": {"Status": "running"}}
 
@@ -368,9 +368,9 @@ def test_docker_backend_uses_private_network_without_published_port(monkeypatch,
 
     record = backend.create("sandbox-1", "thread-1", "user-1")
 
-    assert record.sandbox_url == "http://yuxi-sandbox-sandbox-1:8080"
+    assert record.sandbox_url == "http://sherlock-sandbox-sandbox-1:8080"
     assert captured[0][0] == "sandbox-image"
-    assert captured[0][1]["network"] == "yuxi-know-sandbox-sandbox-1"
+    assert captured[0][1]["network"] == "sherlock-know-sandbox-sandbox-1"
     assert "ports" not in captured[0][1]
 
 
@@ -381,7 +381,7 @@ def test_docker_backend_cleans_up_container_and_network_when_health_check_fails(
     deleted_networks = []
 
     class FakeContainer:
-        name = "yuxi-sandbox-sandbox-1"
+        name = "sherlock-sandbox-sandbox-1"
         status = "running"
         attrs = {"State": {"Status": "running"}}
         removed = False
@@ -441,13 +441,13 @@ def test_docker_backend_assigns_each_sandbox_a_distinct_network(monkeypatch):
     monkeypatch.setenv("PROVISIONER_BACKEND", "memory")
     module = _load_module()
     backend = object.__new__(module.LocalContainerProvisionerBackend)
-    backend._network_prefix = "yuxi-know-sandbox"
+    backend._network_prefix = "sherlock-know-sandbox"
 
     first_network = backend._network_name("sandbox-1")
     second_network = backend._network_name("sandbox-2")
 
-    assert first_network == "yuxi-know-sandbox-sandbox-1"
-    assert second_network == "yuxi-know-sandbox-sandbox-2"
+    assert first_network == "sherlock-know-sandbox-sandbox-1"
+    assert second_network == "sherlock-know-sandbox-sandbox-2"
     assert first_network != second_network
     assert backend._is_on_expected_network(
         SimpleNamespace(attrs={"NetworkSettings": {"Networks": {first_network: {}}}}),
@@ -466,9 +466,9 @@ def test_docker_backend_reconnects_provisioner_before_reusing_sandbox(monkeypatc
     connected = []
 
     class FakeNetwork:
-        name = "yuxi-know-sandbox-sandbox-1"
+        name = "sherlock-know-sandbox-sandbox-1"
         attrs = {
-            "Labels": {"managed-by": "yuxi-sandbox-provisioner", "sandbox-id": "sandbox-1"},
+            "Labels": {"managed-by": "sherlock-sandbox-provisioner", "sandbox-id": "sandbox-1"},
             "Containers": {},
         }
 
@@ -479,7 +479,7 @@ def test_docker_backend_reconnects_provisioner_before_reusing_sandbox(monkeypatc
             connected.append((container.id, aliases))
 
     class FakeContainer:
-        name = "yuxi-sandbox-sandbox-1"
+        name = "sherlock-sandbox-sandbox-1"
         status = "running"
         attrs = {"State": {"Status": "running"}}
 
@@ -498,7 +498,7 @@ def test_docker_backend_reconnects_provisioner_before_reusing_sandbox(monkeypatc
 
     record = backend.create("sandbox-1", "thread-1", "user-1")
 
-    assert record.sandbox_url == "http://yuxi-sandbox-sandbox-1:8080"
+    assert record.sandbox_url == "http://sherlock-sandbox-sandbox-1:8080"
     assert connected == [("provisioner-id", ["sandbox-provisioner"])]
 
 
@@ -510,7 +510,7 @@ def test_docker_backend_does_not_remove_unowned_network(monkeypatch, tmp_path):
     removed = []
 
     class FakeNetwork:
-        name = "yuxi-know-sandbox-sandbox-1"
+        name = "sherlock-know-sandbox-sandbox-1"
         attrs = {
             "Labels": {"managed-by": "operator", "sandbox-id": "sandbox-1"},
             "Containers": {"provisioner-id": {}},

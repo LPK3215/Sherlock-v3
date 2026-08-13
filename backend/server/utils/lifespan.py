@@ -108,16 +108,12 @@ async def lifespan(app: FastAPI):
     await tasker.start()
     logger.info(f"""
 
-░██     ░██                       ░██
- ░██   ░██
-  ░██ ░██   ░██    ░██ ░██    ░██ ░██
-   ░████    ░██    ░██  ░██  ░██  ░██
-    ░██     ░██    ░██   ░█████   ░██
-    ░██     ░██   ░███  ░██  ░██  ░██
-    ░██      ░█████░██ ░██    ░██ ░██  v{get_version()}
+    ╔═╗ ╦  ╦ ╔═╗ ╦  ╔═╗   ╔╦╗╔═╗╔╗╔╔═╗╔╦╗
+    ║   ║  ║ ╚═╗ ║  ║     ║ ║ ║║║║╚═╗ ║
+    ╚═╝ ╚═╝ ╚═╝ ╩═╝╚═╝   ╩ ╚═╝╝╚╝╚═╝ ╩  v{get_version()}
 
     """)
-    logger.info("Yuxi backend startup complete")
+    logger.info("Sherlock backend startup complete")
     yield
     from yuxi.realtime import realtime_session_manager
 

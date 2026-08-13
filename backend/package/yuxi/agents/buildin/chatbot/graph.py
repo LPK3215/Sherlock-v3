@@ -10,7 +10,7 @@ from yuxi.agents.context import (
     DEFAULT_SUMMARY_THRESHOLD_K,
     DEFAULT_SUMMARY_TOOL_RESULT_TOKEN_LIMIT,
     DEFAULT_TOOL_RESULT_EVICTION_K_TOKENS,
-    DEFAULT_YUXI_SUMMARY_PROMPT,
+    DEFAULT_SHERLOCK_SUMMARY_PROMPT,
     prepare_agent_runtime_context,
 )
 from yuxi.agents.middlewares import (
@@ -34,7 +34,7 @@ async def _build_middlewares(context):
     # 主 Agent 上下文优化：默认 100k tokens 触发压缩，压缩后保留最近 10 条消息
     summary_trigger_tokens = getattr(context, "summary_threshold", DEFAULT_SUMMARY_THRESHOLD_K) * 1024
     summary_keep_messages = getattr(context, "summary_keep_messages", DEFAULT_SUMMARY_KEEP_MESSAGES)
-    summary_prompt = getattr(context, "summary_prompt", None) or DEFAULT_YUXI_SUMMARY_PROMPT
+    summary_prompt = getattr(context, "summary_prompt", None) or DEFAULT_SHERLOCK_SUMMARY_PROMPT
     summary_tool_result_token_limit = getattr(
         context,
         "summary_tool_result_token_limit",

@@ -27,7 +27,7 @@ async def health_check():
 async def discovery():
     """系统能力发现接口（公开接口）"""
     return {
-        "name": "Yuxi",
+        "name": "Sherlock",
         "version": get_version(),
         "api_prefix": "/api",
         "capabilities": {
@@ -137,7 +137,7 @@ async def load_info_config():
     """加载信息配置文件"""
     try:
         # 配置文件路径
-        brand_file_path = os.environ.get("YUXI_BRAND_FILE_PATH", "package/yuxi/config/static/info.local.yaml")
+        brand_file_path = os.environ.get("SHERLOCK_BRAND_FILE_PATH", "package/yuxi/config/static/info.local.yaml")
         config_path = Path(brand_file_path)
 
         # 检查文件是否存在
@@ -150,7 +150,7 @@ async def load_info_config():
             content = await file.read()
 
         # 注入版本号占位符
-        content = content.replace("{{YUXI_VERSION}}", get_version())
+        content = content.replace("{{SHERLOCK_VERSION}}", get_version())
 
         config = yaml.safe_load(content)
 

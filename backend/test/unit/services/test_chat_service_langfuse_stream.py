@@ -200,7 +200,7 @@ async def test_stream_agent_chat_commits_before_stream_and_persists_langfuse_con
         lambda **kwargs: SimpleNamespace(
             callbacks=["handler-1"],
             metadata={"langfuse_user_id": kwargs["current_user"].uid, "langfuse_session_id": kwargs["thread_id"]},
-            tags=["yuxi", "chat"],
+            tags=["sherlock", "chat"],
             trace_id="trace-seeded",
         ),
     )
@@ -238,7 +238,7 @@ async def test_stream_agent_chat_commits_before_stream_and_persists_langfuse_con
     assert calls["stream_kwargs"] == {
         "callbacks": ["handler-1"],
         "metadata": {"langfuse_user_id": "user-1", "langfuse_session_id": "thread-1"},
-        "tags": ["yuxi", "chat"],
+        "tags": ["sherlock", "chat"],
     }
     assert calls["saved_state"]["trace_info"] == {
         "langfuse_trace_id": "trace-runtime",
@@ -253,7 +253,7 @@ async def test_stream_agent_chat_commits_before_stream_and_persists_langfuse_con
 
 
 @pytest.mark.asyncio
-async def test_stream_agent_chat_maps_raw_protocol_events_to_yuxi_stream_events(monkeypatch: pytest.MonkeyPatch):
+async def test_stream_agent_chat_maps_raw_protocol_events_to_sherlock_stream_events(monkeypatch: pytest.MonkeyPatch):
     class FakeGraph:
         async def aget_state(self, _config):
             return SimpleNamespace(values={"messages": [], "files": {}, "artifacts": []})
@@ -475,12 +475,12 @@ async def test_stream_agent_chat_maps_custom_compression_event_to_context_compre
         context_schema = _FakeContext
 
         async def stream_messages_with_state(self, messages, input_context=None, **kwargs):
-            yield "custom", {"type": "yuxi.context_compression", "status": "started"}
+            yield "custom", {"type": "sherlock.context_compression", "status": "started"}
             yield "messages", (AIMessageChunk(content="hi"), {"node": "llm"})
             yield (
                 "custom",
                 {
-                    "type": "yuxi.context_compression",
+                    "type": "sherlock.context_compression",
                     "status": "completed",
                     "cutoff_index": 5,
                     "file_path": "/conv/x.md",

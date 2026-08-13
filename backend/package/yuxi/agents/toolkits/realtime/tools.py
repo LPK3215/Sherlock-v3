@@ -57,16 +57,16 @@ async def _capture_live_frame(
     if not session_id or not uid:
         return _tool_error(tool_call_id, "当前运行不属于有效的实时会话")
 
-    yuxi_api_url = os.getenv("YUXI_API_INTERNAL_URL", "http://api:5050").rstrip("/")
-    token = os.getenv("YUXI_REALTIME_INTERNAL_TOKEN")
+    sherlock_api_url = os.getenv("SHERLOCK_API_INTERNAL_URL", "http://api:5050").rstrip("/")
+    token = os.getenv("SHERLOCK_REALTIME_INTERNAL_TOKEN")
     if not token:
         return _tool_error(tool_call_id, "实时媒体服务未配置内部凭证")
 
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
             response = await client.post(
-                f"{yuxi_api_url}/api/realtime/internal/sessions/{session_id}/frames/capture",
-                headers={"Authorization": f"Bearer {token}", "X-Yuxi-Uid": uid},
+                f"{sherlock_api_url}/api/realtime/internal/sessions/{session_id}/frames/capture",
+                headers={"Authorization": f"Bearer {token}", "X-Sherlock-Uid": uid},
                 json={"source": source, "wait_fresh_ms": 3000},
             )
         response.raise_for_status()

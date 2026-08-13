@@ -9,7 +9,7 @@ Sherlock-v3 支持以OIDC接入第三方登录认证，方便企业用户集成�
 - 客户端密钥（Client Secret）
 - ISSUER URL
 
-填入回调地址（Redirect URI）：https://<your_yuxi_host>/api/auth/oidc/callback
+填入回调地址（Redirect URI）：https://<your_sherlock_host>/api/auth/oidc/callback
 
 ### 2. 配置Sherlock-v3
 在Sherlock-v3的.env文件中添加以下配置项：
@@ -31,7 +31,7 @@ Sherlock-v3 支持以OIDC接入第三方登录认证，方便企业用户集成�
 # OIDC_CLIENT_SECRET=
 
 # OIDC 回调 URL (可选，默认自动构建为 /api/auth/oidc/callback, 不建议自定义)
-# 填写完整的地址：https://<your_yuxi_host>/api/auth/oidc/callback
+# 填写完整的地址：https://<your_sherlock_host>/api/auth/oidc/callback
 # 需要确保此 URL 在 OIDC Provider 中已注册
 # OIDC_REDIRECT_URI=
 

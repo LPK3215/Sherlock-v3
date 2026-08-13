@@ -253,7 +253,7 @@ def _stream_message_id(
     return message_ids.setdefault(key, str(uuid.uuid4()))
 
 
-def _message_chunk_yuxi_events(
+def _message_chunk_sherlock_events(
     msg_dict: dict[str, Any],
     *,
     message_id: str,
@@ -303,7 +303,7 @@ def _message_chunk_yuxi_events(
     return events
 
 
-def _protocol_event_yuxi_event(
+def _protocol_event_sherlock_event(
     event: dict[str, Any],
     *,
     message_id: str | None,
@@ -340,7 +340,7 @@ def _protocol_event_yuxi_event(
 
 
 def _context_compression_payload(payload: Any) -> dict | None:
-    if isinstance(payload, dict) and payload.get("type") == "yuxi.context_compression":
+    if isinstance(payload, dict) and payload.get("type") == "sherlock.context_compression":
         return payload
     return None
 
@@ -351,7 +351,7 @@ def _stream_event_response(event: dict[str, Any]) -> str:
     return str(event.get("content") or "")
 
 
-def _message_payload_yuxi_events(
+def _message_payload_sherlock_events(
     msg: Any,
     *,
     metadata: dict[str, Any],
@@ -363,7 +363,7 @@ def _message_payload_yuxi_events(
     if isinstance(msg, dict) and isinstance(msg.get("event"), str):
         preferred_message_id = str(msg["id"]) if msg.get("event") == "message-start" and msg.get("id") else None
         message_id = _stream_message_id(protocol_message_ids, message_key, preferred_message_id)
-        stream_event = _protocol_event_yuxi_event(
+        stream_event = _protocol_event_sherlock_event(
             msg,
             message_id=message_id,
             thread_id=thread_id,
@@ -379,7 +379,7 @@ def _message_payload_yuxi_events(
         msg_dict = {"content": str(msg)}
 
     message_id = str(msg_dict.get("id") or _stream_message_id(protocol_message_ids, message_key))
-    return _message_chunk_yuxi_events(
+    return _message_chunk_sherlock_events(
         msg_dict,
         message_id=message_id,
         thread_id=thread_id,
@@ -967,7 +967,7 @@ async def stream_agent_chat(
                 continue
 
             is_subagent_chunk = bool(chunk_thread_id and chunk_thread_id != thread_id)
-            stream_events = _message_payload_yuxi_events(
+            stream_events = _message_payload_sherlock_events(
                 msg,
                 metadata=metadata,
                 namespace=namespace,
@@ -1229,7 +1229,7 @@ async def stream_agent_resume(
             if chunk_thread_id == thread_id:
                 trace_info = get_trace_info(langfuse_run)
 
-            stream_events = _message_payload_yuxi_events(
+            stream_events = _message_payload_sherlock_events(
                 msg,
                 metadata=metadata,
                 namespace=namespace,

@@ -226,13 +226,13 @@ function handleServerMessage(raw) {
     if (eventPayload?.type === 'user-transcription' && eventPayload?.text) addMessage('user', eventPayload.text)
     const detail = eventPayload?.detail || eventPayload?.payload?.detail
     const questions = detail?.questions || detail?.interrupt_info?.questions
-    if ((eventPayload?.type === 'approval.required' || eventPayload?.type === 'yuxi.approval.required') && Array.isArray(questions)) approvalQuestions.value = questions
+    if ((eventPayload?.type === 'approval.required' || eventPayload?.type === 'sherlock.approval.required') && Array.isArray(questions)) approvalQuestions.value = questions
   } catch { /* ignore non-JSON transport frames */ }
 }
 
 function submitApproval() {
   if (!dataChannel) return
-  sendRtviMessage('yuxi.approval.answer', approvalAnswers.value)
+  sendRtviMessage('sherlock.approval.answer', approvalAnswers.value)
   approvalQuestions.value = []
   approvalAnswers.value = {}
 }
@@ -256,14 +256,14 @@ async function toggleScreen() {
     if (screenSender && cameraTrack) await screenSender.replaceTrack(null)
     screenTrack = null
     screenOn.value = false
-    sendRtviMessage('yuxi.media.attach', { source: 'none' })
+    sendRtviMessage('sherlock.media.attach', { source: 'none' })
     return
   }
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
     screenTrack = stream.getVideoTracks()[0] || null
     if (screenSender && screenTrack) await screenSender.replaceTrack(screenTrack)
-    sendRtviMessage('yuxi.media.attach', { source: 'screen' })
+    sendRtviMessage('sherlock.media.attach', { source: 'screen' })
     screenOn.value = true
   } catch (reason) {
     error.value = reason?.message || '屏幕共享失败'

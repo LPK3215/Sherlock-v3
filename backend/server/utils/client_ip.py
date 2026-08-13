@@ -8,7 +8,7 @@ from fastapi import Request
 
 
 def _trust_proxy_headers() -> bool:
-    return (os.getenv("YUXI_TRUST_PROXY_HEADERS") or "").strip().lower() in {"1", "true", "yes", "on"}
+    return (os.getenv("SHERLOCK_TRUST_PROXY_HEADERS") or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def extract_client_ip(request: Request) -> str:

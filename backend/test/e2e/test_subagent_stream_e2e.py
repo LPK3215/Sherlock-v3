@@ -211,7 +211,7 @@ async def test_subagent_stream_records_run_and_shares_output_files(
     assert uid, me
 
     suffix = uuid.uuid4().hex[:8]
-    marker = f"YUXI_SUBAGENT_STREAM_E2E_{suffix}"
+    marker = f"SHERLOCK_SUBAGENT_STREAM_E2E_{suffix}"
     sub_slug = f"e2e-subagent-{suffix}"
     main_slug = f"e2e-main-{suffix}"
     output_path = "/home/gem/user-data/outputs/subagents.txt"

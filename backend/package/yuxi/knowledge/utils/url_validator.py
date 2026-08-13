@@ -4,12 +4,12 @@ import os
 from urllib.parse import urlparse
 
 # Environment variable name for URL whitelist
-YUXI_URL_WHITELIST_ENV = "YUXI_URL_WHITELIST"
+SHERLOCK_URL_WHITELIST_ENV = "SHERLOCK_URL_WHITELIST"
 
 
 def _get_whitelist() -> list[str]:
     """Get the URL whitelist from environment variables."""
-    whitelist_str = os.environ.get(YUXI_URL_WHITELIST_ENV, "")
+    whitelist_str = os.environ.get(SHERLOCK_URL_WHITELIST_ENV, "")
     if not whitelist_str:
         return []
     # Split by comma and clean up whitespace

@@ -378,9 +378,9 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
         const entries = Object.entries((payloadValue as object) ?? {}) as Diagnostic[];
         setDiagnostics(entries);
       }
-      if (message.type === "yuxi-agent-event") {
+      if (message.type === "sherlock-agent-event") {
         const payload = eventPayload as Record<string, unknown>;
-        const eventType = typeof payload?.type === "string" ? payload.type : "yuxi.event";
+        const eventType = typeof payload?.type === "string" ? payload.type : "sherlock.event";
         setAgentEvents((current) => [
           ...current.slice(-499),
           { id: createMessageId(), timestamp: new Date(), type: eventType, data: payload },
@@ -418,7 +418,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
   useRTVIClientEvent(
     RTVIEvent.UICommand,
     useCallback((data: { command?: string; payload?: unknown }) => {
-      if (data.command !== "yuxi.approval.required") return;
+      if (data.command !== "sherlock.approval.required") return;
       const payload = data.payload as Record<string, unknown> | undefined;
       const detail = payload?.detail as Record<string, unknown> | undefined;
       const questions = normalizeApprovalQuestions(detail?.questions);
@@ -550,7 +550,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       } catch (err: unknown) {
         if (attachedMediaSource) {
           try {
-            client.sendClientMessage("yuxi.media.attach", { source: null });
+            client.sendClientMessage("sherlock.media.attach", { source: null });
             setMediaSource(null);
           } catch {
             /* keep the original send failure as the user-facing error */
@@ -595,7 +595,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       setMediaSourceUpdating(true);
       setError("");
       try {
-        client.sendClientMessage("yuxi.media.attach", { source });
+        client.sendClientMessage("sherlock.media.attach", { source });
         setMediaSource(source);
       } catch (err: unknown) {
         setError((err as Error)?.message ?? "图片附加设置失败");
@@ -628,7 +628,7 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       setApprovalProcessing(true);
       setAssistantActivity("thinking");
       try {
-        client.sendClientMessage("yuxi.approval.answer", answer);
+        client.sendClientMessage("sherlock.approval.answer", answer);
       } catch (err: unknown) {
         setApprovalProcessing(false);
         setAssistantActivity("idle");

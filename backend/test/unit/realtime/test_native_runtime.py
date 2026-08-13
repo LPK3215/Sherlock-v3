@@ -14,7 +14,7 @@ from yuxi.repositories.agent_repository import (
 
 
 @pytest.mark.asyncio
-async def test_realtime_turn_uses_yuxi_agent_run_and_internal_events(monkeypatch: pytest.MonkeyPatch):
+async def test_realtime_turn_uses_sherlock_agent_run_and_internal_events(monkeypatch: pytest.MonkeyPatch):
     captured = {}
 
     @asynccontextmanager
@@ -57,7 +57,7 @@ async def test_realtime_turn_uses_yuxi_agent_run_and_internal_events(monkeypatch
     assert captured["meta"]["realtime_session_id"] == "session-1"
 
 
-def test_yuxi_message_delta_is_forwarded_to_tts():
+def test_sherlock_message_delta_is_forwarded_to_tts():
     event = {
         "payload": {
             "schema_version": 1,

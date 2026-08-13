@@ -2,9 +2,9 @@ x-api-worker-env: &api-worker-env
   HOST_IP: ${HOST_IP:-}
   LITE_MODE: ${LITE_MODE:-false}
   RUNNING_IN_DOCKER: "true"
-  YUXI_ENV: development
+  SHERLOCK_ENV: development
   # DBs and other services
-  POSTGRES_URL: ${POSTGRES_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-yuxi}}
+  POSTGRES_URL: ${POSTGRES_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-sherlock}}
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
   NEO4J_URI: ${NEO4J_URI:-bolt://graph:7687}
   NEO4J_USERNAME: ${NEO4J_USERNAME:-neo4j}
@@ -17,7 +17,7 @@ x-api-worker-env: &api-worker-env
   MINERU_API_URI: ${MINERU_API_URI:-http://mineru-api:30001}
   PADDLEX_URI: ${PADDLEX_URI:-http://paddlex:8080}
   # Sandbox related
-  YUXI_DOCKER_API_BASE: ${YUXI_DOCKER_API_BASE:-http://localhost}
+  SHERLOCK_DOCKER_API_BASE: ${SHERLOCK_DOCKER_API_BASE:-http://localhost}
   SANDBOX_PROVIDER: ${SANDBOX_PROVIDER:-provisioner}
   SANDBOX_PROVISIONER_URL: ${SANDBOX_PROVISIONER_URL:-http://sandbox-provisioner:8002}
   SANDBOX_PROVISIONER_TOKEN: ${SANDBOX_PROVISIONER_TOKEN:?Set SANDBOX_PROVISIONER_TOKEN in .env [v0.7.1+], or rerun `bash scripts/init.sh`.}
@@ -32,9 +32,9 @@ x-api-worker-env: &api-worker-env
   # Agent run
   RUN_CANCEL_KEY_TTL_SECONDS: ${RUN_CANCEL_KEY_TTL_SECONDS:-1800}
   RUN_EVENTS_STREAM_TTL_SECONDS: ${RUN_EVENTS_STREAM_TTL_SECONDS:-7200}
-  YUXI_API_INTERNAL_URL: ${YUXI_API_INTERNAL_URL:-http://api:5050}
-  YUXI_REALTIME_INTERNAL_TOKEN: ${YUXI_REALTIME_INTERNAL_TOKEN:?Set YUXI_REALTIME_INTERNAL_TOKEN in .env for realtime frame capture.}
-  YUXI_CORS_ORIGINS: ${YUXI_CORS_ORIGINS:-}
+    SHERLOCK_API_INTERNAL_URL: ${SHERLOCK_API_INTERNAL_URL:-http://api:5050}
+  SHERLOCK_REALTIME_INTERNAL_TOKEN: ${SHERLOCK_REALTIME_INTERNAL_TOKEN:?Set SHERLOCK_REALTIME_INTERNAL_TOKEN in .env for realtime frame capture.}
+  SHERLOCK_CORS_ORIGINS: ${SHERLOCK_CORS_ORIGINS:-}
   # 其他环境变量
   NO_PROXY: localhost,127.0.0.1,api,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
   no_proxy: localhost,127.0.0.1,api,milvus,graph,minio,milvus-etcd-dev,etcd,mineru,paddlex,sandbox-provisioner,api.siliconflow.cn
@@ -44,12 +44,12 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    image: yuxi-api:${YUXI_VERSION:-0.7.1}
+        image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
     working_dir: /app
     volumes:
       - ./backend/server:/app/server
       - ./backend/package:/app/package
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/volumes/models:/app/models
       - ./backend/test:/app/test
       - ./backend/scripts:/app/scripts
@@ -91,12 +91,12 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    image: yuxi-api:${YUXI_VERSION:-0.7.1}
+    image: sherlock-api:${SHERLOCK_VERSION:-0.7.1}
     working_dir: /app
     volumes:
       - ./backend/server:/app/server
       - ./backend/package:/app/package
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/volumes/models:/app/models
       - ./backend/test:/app/test
       - ./backend/scripts:/app/scripts
@@ -130,9 +130,9 @@ services:
     build:
       context: ./docker/sandbox_provisioner
       dockerfile: Dockerfile
-    image: yuxi-sandbox-provisioner:${YUXI_VERSION:-0.7.1}
+    image: sherlock-sandbox-provisioner:${SHERLOCK_VERSION:-0.7.1}
     volumes:
-      - ./docker/volumes/yuxi:/app/saves
+      - ./docker/volumes/sherlock:/app/saves
       - ./docker/sandbox_provisioner/app.py:/app/app.py:ro
       - ./docker/sandbox_provisioner/sandbox.env:/app/sandbox.env:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -159,15 +159,15 @@ services:
       - HTTPS_PROXY=${SANDBOX_HTTPS_PROXY:-}
       - NO_PROXY=localhost,127.0.0.1,host.docker.internal
       # Docker backend only
-      - DOCKER_NETWORK_PREFIX=${SANDBOX_DOCKER_NETWORK_PREFIX:-yuxi-know-sandbox}
+      - DOCKER_NETWORK_PREFIX=${SANDBOX_DOCKER_NETWORK_PREFIX:-sherlock-know-sandbox}
       - DOCKER_THREADS_HOST_PATH=${SANDBOX_DOCKER_THREADS_HOST_PATH:-}
-      - DOCKER_SANDBOX_PREFIX=${SANDBOX_DOCKER_SANDBOX_PREFIX:-yuxi-sandbox}
+      - DOCKER_SANDBOX_PREFIX=${SANDBOX_DOCKER_SANDBOX_PREFIX:-sherlock-sandbox}
       # Kubernetes backend only
-      - K8S_NAMESPACE=${SANDBOX_K8S_NAMESPACE:-yuxi-know}
+      - K8S_NAMESPACE=${SANDBOX_K8S_NAMESPACE:-sherlock-know}
       - NODE_HOST=${SANDBOX_NODE_HOST:-host.docker.internal}
       - KUBECONFIG_PATH=${KUBECONFIG_PATH:-}
-      - THREAD_PVC=${THREAD_PVC:-yuxi-thread}
-      - SKILLS_PVC=${SKILLS_PVC:-yuxi-skills}
+      - THREAD_PVC=${THREAD_PVC:-sherlock-thread}
+      - SKILLS_PVC=${SKILLS_PVC:-sherlock-skills}
     command: >
       sh -lc "python -c 'import docker' >/dev/null 2>&1 || pip install --no-cache-dir 'docker>=7.1.0';
       uvicorn app:app --host 0.0.0.0 --port 8002"
@@ -184,7 +184,7 @@ services:
       context: .
       dockerfile: docker/web.Dockerfile
       target: development
-    image: yuxi-web:${YUXI_VERSION:-0.7.1}
+    image: sherlock-web:${SHERLOCK_VERSION:-0.7.1}
     volumes:
       - ./web/src:/app/src
       - ./web/public:/app/public
@@ -208,7 +208,7 @@ services:
     build:
       context: ./user-app
       dockerfile: Dockerfile
-    image: sherlock-user-app:${YUXI_VERSION:-0.7.1}
+    image: sherlock-user-app:${SHERLOCK_VERSION:-0.7.1}
     volumes:
       - ./user-app/app:/app/app
       - ./user-app/public:/app/public
@@ -222,7 +222,7 @@ services:
       - app-network
     environment:
       - NODE_ENV=development
-      - YUXI_SERVER_URL=http://api:5050
+      - SHERLOCK_SERVER_URL=http://api:5050
     command: pnpm dev --hostname 0.0.0.0
     restart: unless-stopped
 
@@ -328,12 +328,12 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-yuxi}
+      - POSTGRES_DB=${POSTGRES_DB:-sherlock}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - ./docker/volumes/postgresql:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-yuxi} || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sherlock} || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 30

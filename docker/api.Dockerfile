@@ -48,7 +48,7 @@ COPY backend/pyproject.toml /app/pyproject.toml
 COPY backend/.python-version /app/.python-version
 COPY backend/uv.lock /app/uv.lock
 
-# 先复制 package 目录，因为 pyproject.toml 中 yuxi = { path = "package", editable = true }
+# 先复制 package 目录，因为 pyproject.toml 中 yuxi 包以 editable 模式安装
 COPY backend/package /app/package
 
 # 如果网络还是不好，可以在后面添加 --index-url https://pypi.tuna.tsinghua.edu.cn/simple

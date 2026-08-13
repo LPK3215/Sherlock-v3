@@ -119,7 +119,7 @@ def main() -> None:
             id=item["id"],
             input={"input": item["input"]},
             expected_output=item["expected_output"],
-            metadata={"category": "python_programming", "source": "yuxi_eval_smoke"},
+            metadata={"category": "python_programming", "source": "sherlock_eval_smoke"},
         )
     client.flush()
     print(args.dataset_name)

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
-os.environ.setdefault("SAVE_DIR", os.path.join(os.environ.get("CLAUDE_JOB_DIR", tempfile.gettempdir()), "yuxi-test-saves"))
+os.environ.setdefault("SAVE_DIR", os.path.join(os.environ.get("CLAUDE_JOB_DIR", tempfile.gettempdir()), "sherlock-test-saves"))
 
 from yuxi.services import conversation_service as service
 

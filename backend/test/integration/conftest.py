@@ -31,7 +31,7 @@ ADMIN_PASSWORD = os.getenv("TEST_PASSWORD")
 
 _ADMIN_TOKEN_CACHE: str | None = None
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
-SANDBOX_CONTAINER_PREFIX = os.getenv("YUXI_SANDBOX_CONTAINER_PREFIX", "yuxi-sandbox")
+SANDBOX_CONTAINER_PREFIX = os.getenv("SHERLOCK_SANDBOX_CONTAINER_PREFIX", "sherlock-sandbox")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -172,10 +172,10 @@ def _docker_api_request(method: str, path: str) -> list[dict] | dict:
         "curl",
         "-sS",
         "--unix-socket",
-        os.getenv("YUXI_DOCKER_API_SOCKET", "/var/run/docker.sock"),
+        os.getenv("SHERLOCK_DOCKER_API_SOCKET", "/var/run/docker.sock"),
         "-X",
         method,
-        f"{os.getenv('YUXI_DOCKER_API_BASE', 'http://localhost').rstrip('/')}{path}",
+        f"{os.getenv('SHERLOCK_DOCKER_API_BASE', 'http://localhost').rstrip('/')}{path}",
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=15, check=False)
     if result.returncode != 0:

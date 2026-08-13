@@ -1,4 +1,4 @@
-"""Yuxi native realtime session and WebRTC endpoints."""
+"""Sherlock native realtime session and WebRTC endpoints."""
 
 from __future__ import annotations
 
@@ -142,18 +142,18 @@ async def capture_frame(
     session_id: str,
     payload: CaptureFrameRequest,
     authorization: str | None = Header(default=None),
-    x_yuxi_uid: str | None = Header(default=None),
+    x_sherlock_uid: str | None = Header(default=None),
 ):
-    expected_token = os.getenv("YUXI_REALTIME_INTERNAL_TOKEN")
+    expected_token = os.getenv("SHERLOCK_REALTIME_INTERNAL_TOKEN")
     supplied_token = authorization.removeprefix("Bearer ").strip() if authorization else ""
     if not expected_token or not secrets.compare_digest(supplied_token, expected_token):
-        raise HTTPException(status_code=401, detail="invalid Yuxi internal credential")
+        raise HTTPException(status_code=401, detail="invalid Sherlock internal credential")
     if payload.source not in {"camera", "screen"}:
         raise HTTPException(status_code=422, detail="source must be camera or screen")
     try:
         return await capture_realtime_frame(
             session_id,
-            str(x_yuxi_uid or ""),
+            str(x_sherlock_uid or ""),
             payload.source,
             payload.wait_fresh_ms,
         )

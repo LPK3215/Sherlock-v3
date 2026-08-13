@@ -12,7 +12,7 @@ pnpm install
 pnpm dev
 ```
 
-打开 `http://localhost:3000`。`next.config.ts` 将 `/yuxi-api/*` 同源转发到
-`YUXI_SERVER_URL`，实时会话与 WebRTC 信令均由 Sherlock-v3 后端提供。
+打开 `http://localhost:3000`。`next.config.ts` 将 `/sherlock-api/*` 同源转发到
+`SHERLOCK_SERVER_URL`，实时会话与 WebRTC 信令均由 Sherlock-v3 后端提供。
 
 也可以在仓库根目录运行 `docker compose up -d user-app`。屏幕共享仅在桌面浏览器显示。

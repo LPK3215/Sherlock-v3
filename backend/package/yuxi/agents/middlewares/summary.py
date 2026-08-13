@@ -34,14 +34,14 @@ _DEFAULT_SUMMARY_TOOL_RESULT_LIMIT_TOKENS = 300
 _DEFAULT_L1_L2_TRIGGER_RATIO = 0.4
 _DEFAULT_TOOL_ARG_MAX_LENGTH = 2000
 _TRUNCATED_TOOL_ARG_TEXT = "...(argument truncated for context view)"
-_TOOL_RESULT_SAVED_MARKER = "yuxi_tool_result_saved"
-_SUMMARY_BACKEND: ContextVar[Any | None] = ContextVar("yuxi_summary_backend", default=None)
+_TOOL_RESULT_SAVED_MARKER = "sherlock_tool_result_saved"
+_SUMMARY_BACKEND: ContextVar[Any | None] = ContextVar("sherlock_summary_backend", default=None)
 _SUMMARY_SANITIZED_MESSAGES: ContextVar[dict[tuple[int, ...], list[AnyMessage]] | None] = ContextVar(
-    "yuxi_summary_sanitized_messages",
+    "sherlock_summary_sanitized_messages",
     default=None,
 )
 _SUMMARY_COMPRESSION_STATE: ContextVar[dict[str, bool] | None] = ContextVar(
-    "yuxi_summary_compression_state",
+    "sherlock_summary_compression_state",
     default=None,
 )
 
@@ -51,7 +51,7 @@ def _emit_compression(status: str, **extra: Any) -> None:
         writer = get_stream_writer()
     except RuntimeError:
         return
-    writer({"type": "yuxi.context_compression", "status": status, **extra})
+    writer({"type": "sherlock.context_compression", "status": status, **extra})
 
 
 def _emit_compression_started_once() -> None:

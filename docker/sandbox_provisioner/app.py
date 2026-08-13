@@ -200,7 +200,7 @@ class LocalContainerProvisionerBackend:
         if not self._network_prefix:
             raise RuntimeError("DOCKER_NETWORK_PREFIX is required for the docker backend")
         self._threads_host_path = os.getenv("DOCKER_THREADS_HOST_PATH")
-        self._container_prefix = os.getenv("DOCKER_SANDBOX_PREFIX", "yuxi-sandbox")
+        self._container_prefix = os.getenv("DOCKER_SANDBOX_PREFIX", "sherlock-sandbox")
         self._health_timeout_seconds = int(os.getenv("SANDBOX_HEALTH_TIMEOUT_SECONDS", "300"))
         self._sandbox_env = load_sandbox_env()
 
@@ -351,7 +351,7 @@ class LocalContainerProvisionerBackend:
     @staticmethod
     def _has_expected_network_ownership(network, sandbox_id: str) -> bool:
         labels = network.attrs.get("Labels") or {}
-        return labels.get("managed-by") == "yuxi-sandbox-provisioner" and labels.get("sandbox-id") == sandbox_id
+        return labels.get("managed-by") == "sherlock-sandbox-provisioner" and labels.get("sandbox-id") == sandbox_id
 
     def _ensure_network(self, sandbox_id: str) -> str:
         from docker.errors import NotFound
@@ -364,7 +364,7 @@ class LocalContainerProvisionerBackend:
                 network_name,
                 driver="bridge",
                 labels={
-                    "managed-by": "yuxi-sandbox-provisioner",
+                    "managed-by": "sherlock-sandbox-provisioner",
                     "sandbox-id": sandbox_id,
                 },
             )
@@ -493,13 +493,13 @@ class LocalContainerProvisionerBackend:
                 "name": container_name,
                 "detach": True,
                 "labels": {
-                    "app": "yuxi-sandbox",
+                    "app": "sherlock-sandbox",
                     "sandbox-id": sandbox_id,
                     "thread-id": safe_thread_id,
                     "file-thread-id": safe_file_thread_id,
                     "skills-thread-id": safe_skills_thread_id,
                     "uid": safe_uid,
-                    "managed-by": "yuxi-sandbox-provisioner",
+                    "managed-by": "sherlock-sandbox-provisioner",
                 },
                 "volumes": {
                     str(shared_workspace): {"bind": "/home/gem/user-data/workspace", "mode": "rw"},
@@ -580,7 +580,7 @@ class LocalContainerProvisionerBackend:
 
     def list(self) -> list[SandboxRecord]:
         containers = self._client.containers.list(
-            all=True, filters={"label": ["app=yuxi-sandbox", "managed-by=yuxi-sandbox-provisioner"]}
+            all=True, filters={"label": ["app=sherlock-sandbox", "managed-by=sherlock-sandbox-provisioner"]}
         )
         records: list[SandboxRecord] = []
         for container in containers:
@@ -605,13 +605,13 @@ class KubernetesProvisionerBackend:
         from kubernetes import client, config
 
         self._lock = threading.Lock()
-        self._namespace = os.getenv("K8S_NAMESPACE", "yuxi-know")
+        self._namespace = os.getenv("K8S_NAMESPACE", "sherlock-know")
         self._sandbox_image = os.getenv(
             "SANDBOX_IMAGE",
             "enterprise-public-cn-beijing.cr.volces.com/vefaas-public/all-in-one-sandbox:latest",
         )
-        self._skill_pvc = os.getenv("SKILLS_PVC", "yuxi-skills")
-        self._thread_pvc = os.getenv("THREAD_PVC", "yuxi-thread")
+        self._skill_pvc = os.getenv("SKILLS_PVC", "sherlock-skills")
+        self._thread_pvc = os.getenv("THREAD_PVC", "sherlock-thread")
         self._node_host = os.getenv("NODE_HOST", "host.docker.internal")
         self._container_port = int(os.getenv("SANDBOX_CONTAINER_PORT", "8080"))
         self._sandbox_env = load_sandbox_env()
@@ -654,7 +654,7 @@ class KubernetesProvisionerBackend:
         return self._client.V1Pod(
             metadata=self._client.V1ObjectMeta(
                 name=pod_name,
-                labels={"app": "yuxi-sandbox", "sandbox-id": sandbox_id},
+                labels={"app": "sherlock-sandbox", "sandbox-id": sandbox_id},
                 annotations={
                     "thread-id": thread_id,
                     "file-thread-id": file_thread_id,
@@ -741,7 +741,7 @@ class KubernetesProvisionerBackend:
         return self._client.V1Service(
             metadata=self._client.V1ObjectMeta(
                 name=service_name,
-                labels={"app": "yuxi-sandbox", "sandbox-id": sandbox_id},
+                labels={"app": "sherlock-sandbox", "sandbox-id": sandbox_id},
             ),
             spec=self._client.V1ServiceSpec(
                 type="NodePort",
@@ -932,7 +932,7 @@ class KubernetesProvisionerBackend:
         try:
             pod_list = self._core_api.list_namespaced_pod(
                 namespace=self._namespace,
-                label_selector="app=yuxi-sandbox",
+                label_selector="app=sherlock-sandbox",
             )
         except ApiException:
             return []
@@ -1069,7 +1069,7 @@ async def lifespan(app: FastAPI):
             await app.state.http_client.aclose()
 
 
-app = FastAPI(title="Yuxi Sandbox Provisioner", lifespan=lifespan)
+app = FastAPI(title="Sherlock Sandbox Provisioner", lifespan=lifespan)
 
 
 def sandbox_response(record: SandboxRecord) -> SandboxResponse:

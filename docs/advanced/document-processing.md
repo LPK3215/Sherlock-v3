@@ -31,12 +31,12 @@ Sherlock-v3 将上传文件先保存为原文件，再解析为 Markdown 并按�
 
 知识库支持先从 URL 抓取页面内容，再作为文件进入现有上传、解析与入库链路：
 
-1. 配置 `YUXI_URL_WHITELIST` 环境变量启用白名单机制
+1. 配置 `SHERLOCK_URL_WHITELIST` 环境变量启用白名单机制
 2. 系统自动将 HTML 转换为 Markdown
 3. 内置去重机制，避免重复抓取
 
 ::: tip URL 白名单配置
-示例：`YUXI_URL_WHITELIST=github.com,*.wikipedia.org,docs.python.org`
+示例：`SHERLOCK_URL_WHITELIST=github.com,*.wikipedia.org,docs.python.org`
 :::
 
 ## OCR 方案选择

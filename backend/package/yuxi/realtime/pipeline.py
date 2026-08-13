@@ -307,7 +307,7 @@ class YuxiRealtimeLLMService(LLMService):
                     realtime_payload = _realtime_event_payload(event)
                     await self.push_frame(
                         RTVIServerMessageFrame(
-                            data={"type": "yuxi-agent-event", "payload": realtime_payload}
+                            data={"type": "sherlock-agent-event", "payload": realtime_payload}
                         )
                     )
                     if realtime_payload.get("type") == "approval.required":
@@ -316,7 +316,7 @@ class YuxiRealtimeLLMService(LLMService):
                         )
                         await self.push_frame(
                             RTVIUICommandFrame(
-                                command="yuxi.approval.required",
+                                command="sherlock.approval.required",
                                 payload=realtime_payload,
                             )
                         )
@@ -384,10 +384,10 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
 
     @worker.rtvi.event_handler("on_client_message")
     async def on_client_message(rtvi, message):
-        if message.type == "yuxi.media.attach":
+        if message.type == "sherlock.media.attach":
             source = message.data.get("source") if isinstance(message.data, dict) else None
             llm._media_source = source if source in {"none", "camera", "screen"} else None
-        elif message.type == "yuxi.approval.answer":
+        elif message.type == "sherlock.approval.answer":
             answer = message.data
             # RTVI versions differ on whether the client payload is exposed
             # directly or retains the outer ``d`` envelope.
@@ -399,7 +399,7 @@ async def run_realtime_pipeline(connection, config: RealtimeSessionConfig) -> No
                     async for event in agent_run.resume_turn(answer):
                         realtime_payload = _realtime_event_payload(event)
                         await llm.push_frame(
-                            RTVIServerMessageFrame(data={"type": "yuxi-agent-event", "payload": realtime_payload})
+                            RTVIServerMessageFrame(data={"type": "sherlock-agent-event", "payload": realtime_payload})
                         )
                         for delta in _event_text_deltas(event):
                             await llm._push_llm_text(delta)
@@ -485,7 +485,7 @@ def _realtime_event_payload(event: dict) -> dict[str, Any]:
             "detail": event.get("payload") or {},
         }
 
-    event_type = str(event.get("event_type") or "yuxi.event")
+    event_type = str(event.get("event_type") or "sherlock.event")
     envelope = event.get("payload") if isinstance(event.get("payload"), dict) else {}
     payload = envelope.get("payload") if isinstance(envelope.get("payload"), dict) else {}
     run_id = envelope.get("run_id") or event.get("run_id")

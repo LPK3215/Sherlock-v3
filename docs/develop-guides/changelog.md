@@ -10,6 +10,15 @@
 
 - 新增 MiniCPM Cloud 内置模型供应商（OpenAI 兼容协议，`api.modelbest.cn/v1`），注册 `MiniCPM-O-4.5-9B` 视觉模型；实时助手默认模型从 `modelscope:Qwen/Qwen3-VL-8B-Thinking` 切换为 `minicpm:MiniCPM-O-4.5-9B`，旧模型自动迁移。
 
+### 品牌清理
+
+- 清理所有用户可见的 Yuxi/江南语析 框架名称引用，统一为 Sherlock 品牌：品牌配置模板、登录页 fallback、CLI 授权页、系统发现接口、启动日志、知识库类型标签、用户端 App 描述与登录文案。
+- 同步重命名 RTVI 协议标识符（`yuxi.*` → `sherlock.*`）、HTTP 头（`X-Yuxi-Preview-Type` → `X-Sherlock-Preview-Type`）、用户端 API 代理路径（`/yuxi-api/` → `/sherlock-api/`）、localStorage key 和 CSS data 属性。
+- 替换管理端 favicon 为 Sherlock 放大镜图标，HTML title 从“语析”改为“Sherlock”，后端启动 banner 改为 SHERLOCK ASCII art。
+- 全量重命名环境变量（`YUXI_*` → `SHERLOCK_*`）、Docker 镜像名（`yuxi-api/web/sandbox-provisioner` → `sherlock-*`）、volume 路径（`docker/volumes/yuxi` → `docker/volumes/sherlock`）、Postgres 默认库名（`yuxi` → `sherlock`）。
+- 重命名 JWT audience/issuer 前缀（`yuxi-know` → `sherlock-know`）、上下文压缩事件类型（`yuxi.context_compression` → `sherlock.context_compression`）、内部变量名（`DEFAULT_YUXI_SUMMARY_PROMPT` → `DEFAULT_SHERLOCK_SUMMARY_PROMPT`）、URL 白名单环境变量（`YUXI_URL_WHITELIST` → `SHERLOCK_URL_WHITELIST`）。
+- Sandbox provisioner 容器标签（`yuxi-sandbox` → `sherlock-sandbox`）、K8s namespace/PVC 默认值（`yuxi-know` → `sherlock-know`）、FastAPI title 均同步更新。
+
 ### 修复与安全
 
 - 更新中英文 README 的版本徽章、项目结构和开发检查命令,并同步贡献指南与文档导航的当前仓库约定。

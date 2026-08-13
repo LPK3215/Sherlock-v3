@@ -3,14 +3,14 @@
 import { ArrowRight, Bot, LockKeyhole, LogIn, LogOut, Sparkles, UserRound } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-export interface YuxiAgent {
+export interface SherlockAgent {
   slug: string;
   name: string;
   description?: string | null;
 }
 
 interface Props {
-  agents: YuxiAgent[];
+  agents: SherlockAgent[];
   agentSlug: string;
   authenticated: boolean;
   error: string;
@@ -60,7 +60,7 @@ export function SessionGate({
       <section className="session-intro">
         <span className="session-kicker">SHERLOCK LIVE</span>
         <h1>与你的 AI Agent<br />自然交流</h1>
-        <p>一套 Yuxi 后端，直接支持文字、语音、视频与屏幕内容。</p>
+        <p>一套 Sherlock 后端，直接支持文字、语音、视频与屏幕内容。</p>
         <div className="session-capabilities" aria-label="支持的对话方式">
           <span>语音</span><span>视频</span><span>文字</span><span>屏幕</span>
         </div>
@@ -71,7 +71,7 @@ export function SessionGate({
           <form onSubmit={submitLogin}>
             <div className="session-heading">
               <LogIn />
-              <div><h2>登录</h2><p>使用 Yuxi 账号继续</p></div>
+              <div><h2>登录</h2><p>使用 Sherlock 账号继续</p></div>
             </div>
             <label>
               <span>账号</span>
