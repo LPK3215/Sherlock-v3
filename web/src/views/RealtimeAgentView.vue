@@ -204,7 +204,6 @@ async function toggleCall() {
 function sendText() {
   const text = draft.value.trim()
   if (!text || !dataChannel || dataChannel.readyState !== 'open') return
-  sendRtviMessage('interrupt', {})
   addMessage('user', text)
   sendRtviMessage('send-text', { content: text, options: { run_immediately: true, audio_response: true } })
   draft.value = ''
@@ -214,11 +213,15 @@ function sendRtviMessage(type, data) {
   if (!dataChannel || dataChannel.readyState !== 'open') return false
   dataChannel.send(JSON.stringify({
     label: 'rtvi-ai',
-    type: 'client-message',
+    type,
     id: `client-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    data: { t: type, d: data }
+    data
   }))
   return true
+}
+
+function sendClientMessage(name, data) {
+  return sendRtviMessage('client-message', { t: name, d: data })
 }
 
 function handleServerMessage(raw) {
@@ -239,7 +242,7 @@ function handleServerMessage(raw) {
 
 function submitApproval() {
   if (!dataChannel) return
-  sendRtviMessage('sherlock.approval.answer', approvalAnswers.value)
+  sendClientMessage('sherlock.approval.answer', approvalAnswers.value)
   approvalQuestions.value = []
   approvalAnswers.value = {}
 }
@@ -263,14 +266,14 @@ async function toggleScreen() {
     if (screenSender && cameraTrack) await screenSender.replaceTrack(null)
     screenTrack = null
     screenOn.value = false
-    sendRtviMessage('sherlock.media.attach', { source: 'none' })
+    sendClientMessage('sherlock.media.attach', { source: 'none' })
     return
   }
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
     screenTrack = stream.getVideoTracks()[0] || null
     if (screenSender && screenTrack) await screenSender.replaceTrack(screenTrack)
-    sendRtviMessage('sherlock.media.attach', { source: 'screen' })
+    sendClientMessage('sherlock.media.attach', { source: 'screen' })
     screenOn.value = true
   } catch (reason) {
     error.value = reason?.message || '屏幕共享失败'
