@@ -454,6 +454,14 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
     setMediaSourceUpdating(false);
     seenTranscriptsRef.current.clear();
     try {
+      if (connect) {
+        await connect();
+      }
+    } catch (e: unknown) {
+      setError((e as Error)?.message ?? "连接失败");
+      return;
+    }
+    try {
       mic.enableMic(true);
     } catch {
       /* continue even without mic */
@@ -462,13 +470,6 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       cam.enableCam(true);
     } catch {
       /* continue even without camera */
-    }
-    if (connect) {
-      try {
-        await connect();
-      } catch (e: unknown) {
-        setError((e as Error)?.message ?? "连接失败");
-      }
     }
   }, [cam, mic, connect]);
 
