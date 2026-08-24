@@ -85,6 +85,7 @@ let pendingCandidates = []
 let cameraTrack = null
 let screenTrack = null
 let screenSender = null
+let userHangup = false
 
 const agentSlug = computed(() => String(route.query.agent_id || route.query.agent_slug || ''))
 const threadId = computed(() => String(route.query.thread_id || ''))
@@ -97,6 +98,7 @@ async function toggleCall() {
   if (connected.value) return disconnect()
   connecting.value = true
   error.value = ''
+  userHangup = false
   try {
     const start = await fetch('/api/realtime/start', {
       method: 'POST',
@@ -135,8 +137,8 @@ async function toggleCall() {
       status.value = state === 'connected' ? 'AI 已接通' : state || '连接中'
       if (['failed', 'disconnected', 'closed'].includes(state)) {
         connected.value = false
-        if (state !== 'closed') {
-          error.value = '实时连接已断开,正在重连'
+        if (state !== 'closed' && !userHangup) {
+          error.value = '实时连接已断开，正在重连'
           if (!reconnecting.value) {
             reconnecting.value = true
             reconnectTimer = window.setTimeout(() => {
@@ -210,7 +212,12 @@ function sendText() {
 
 function sendRtviMessage(type, data) {
   if (!dataChannel || dataChannel.readyState !== 'open') return false
-  dataChannel.send(JSON.stringify({ label: 'rtvi-ai', type: 'client-message', data: { t: type, d: data } }))
+  dataChannel.send(JSON.stringify({
+    label: 'rtvi-ai',
+    type: 'client-message',
+    id: `client-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    data: { t: type, d: data }
+  }))
   return true
 }
 
@@ -271,6 +278,7 @@ async function toggleScreen() {
 }
 
 function disconnect() {
+  userHangup = true
   peer?.getSenders().forEach(sender => sender.track?.stop())
   screenTrack = null
   cameraTrack = null

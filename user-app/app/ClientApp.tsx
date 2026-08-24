@@ -462,12 +462,12 @@ export function ClientApp({ agentName, connect, disconnect, isMobile, onLeave, o
       return;
     }
     try {
-      mic.enableMic(true);
+      await Promise.resolve(mic.enableMic(true));
     } catch {
       /* continue even without mic */
     }
     try {
-      cam.enableCam(true);
+      await Promise.resolve(cam.enableCam(true));
     } catch {
       /* continue even without camera */
     }
