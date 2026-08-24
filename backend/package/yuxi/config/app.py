@@ -40,11 +40,11 @@ class Config(BaseModel):
     enable_content_guard: bool = Field(default=False, description="是否启用内容审查")
     enable_content_guard_llm: bool = Field(default=False, description="是否启用LLM内容审查")
     default_model: str = Field(
-        default="siliconflow-cn:Pro/MiniMaxAI/MiniMax-M2.5",
+        default="modelscope:Qwen/Qwen3-VL-8B-Thinking",
         description="默认对话模型",
     )
     fast_model: str = Field(
-        default="siliconflow-cn:Pro/MiniMaxAI/MiniMax-M2.5",
+        default="modelscope:Qwen/Qwen3-VL-8B-Thinking",
         description="快速响应模型",
     )
     embed_model: str = Field(

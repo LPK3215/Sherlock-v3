@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from yuxi.agents.toolkits.registry import tool
 from yuxi.repositories.learning_repository import LearningRepository
 from yuxi.storage.postgres.manager import pg_manager
-from yuxi.agents.toolkits.runtime import get_runtime_uid
+from yuxi.agents.toolkits.runtime import get_runtime_uid, get_current_tool_runtime
 
 
 class SaveWrongQuestionInput(BaseModel):
@@ -166,7 +166,10 @@ class DeleteWrongQuestionInput(BaseModel):
     description="删除当前用户自己的错题记录。必须在用户明确确认删除后调用。",
     args_schema=DeleteWrongQuestionInput,
 )
-async def delete_wrong_question(question_id: int, runtime: ToolRuntime) -> dict:
+async def delete_wrong_question(
+    question_id: int,
+    runtime: ToolRuntime,
+) -> dict:
     confirmation = interrupt(
         {
             "source": "learning_record_confirmation",

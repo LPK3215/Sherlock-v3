@@ -1,5 +1,6 @@
 """内置模型供应商定义。"""
 
+import os
 from typing import Any
 
 
@@ -10,10 +11,12 @@ QWEN3_VL_REALTIME_MODEL = {
     "input_modalities": ["text", "image"],
 }
 
+_MINICPM_MODEL_ID = os.getenv("MINICPM_CLOUD_MODEL", "MiniCPM-O-4.5-9B")
+
 MINICPM_O45_REALTIME_MODEL = {
-    "id": "MiniCPM-O-4.5-9B",
+    "id": _MINICPM_MODEL_ID,
     "type": "chat",
-    "display_name": "MiniCPM-O-4.5-9B",
+    "display_name": _MINICPM_MODEL_ID,
     "input_modalities": ["text", "image"],
 }
 
@@ -186,12 +189,12 @@ BUILTIN_PROVIDERS: list[dict[str, Any]] = [
     {
         "provider_id": "minicpm",
         "display_name": "MiniCPM Cloud",
-        "base_url": "https://api.modelbest.cn/v1",
+        "base_url": os.getenv("MINICPM_CLOUD_BASE_URL", "https://api.modelbest.cn/v1"),
         "api_key_env": "MINICPM_CLOUD_API_KEY",
         "capabilities": ["chat"],
-        "models_endpoint": "https://api.modelbest.cn/v1/models",
+        "models_endpoint": f"{os.getenv('MINICPM_CLOUD_BASE_URL', 'https://api.modelbest.cn/v1')}/models",
         "enabled_models": [MINICPM_O45_REALTIME_MODEL],
-        "is_enabled": True,
+        "is_enabled": False,
     },
     {
         "provider_id": "opencode",

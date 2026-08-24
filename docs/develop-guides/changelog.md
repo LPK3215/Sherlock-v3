@@ -9,6 +9,8 @@
 ### 模型与适配
 
 - 新增 MiniCPM Cloud 内置模型供应商（OpenAI 兼容协议，`api.modelbest.cn/v1`），注册 `MiniCPM-O-4.5-9B` 视觉模型；实时助手默认模型从 `modelscope:Qwen/Qwen3-VL-8B-Thinking` 切换为 `minicpm:MiniCPM-O-4.5-9B`，旧模型自动迁移。
+- 全局默认对话模型和快速响应模型从 `siliconflow-cn:Pro/MiniMaxAI/MiniMax-M2.5`（余额不足）切换为 `minicpm:MiniCPM-O-4.5-9B`，确保开箱即用。
+- MiniCPM 模型 ID、base_url 和实时助手模型规格改为从环境变量 `MINICPM_CLOUD_MODEL`、`MINICPM_CLOUD_BASE_URL` 读取（有默认值兜底），不再硬编码。
 
 ### 品牌清理
 
@@ -19,6 +21,10 @@
 - 重命名 JWT audience/issuer 前缀（`yuxi-know` → `sherlock-know`）、上下文压缩事件类型（`yuxi.context_compression` → `sherlock.context_compression`）、内部变量名（`DEFAULT_YUXI_SUMMARY_PROMPT` → `DEFAULT_SHERLOCK_SUMMARY_PROMPT`）、URL 白名单环境变量（`YUXI_URL_WHITELIST` → `SHERLOCK_URL_WHITELIST`）。
 - Sandbox provisioner 容器标签（`yuxi-sandbox` → `sherlock-sandbox`）、K8s namespace/PVC 默认值（`yuxi-know` → `sherlock-know`）、FastAPI title 均同步更新。
 - 二次深度清理残留引用：重命名中间件类（`YuxiSummarizationMiddleware` → `SherlockSummarizationMiddleware`、`YuxiSubAgentMiddleware` → `SherlockSubAgentMiddleware`）、SSE 事件名（`yuxi.agent_state` → `sherlock.agent_state`）、RTVI 高级事件前缀（`yuxi.{event_type}` → `sherlock.{event_type}`）、Redis 配置快照 key（`yuxi:runtime_config` → `sherlock:runtime_config`）、初始化脚本环境变量（`YUXI_INSTANCE_ID`/`YUXI_REALTIME_INTERNAL_TOKEN` → `SHERLOCK_*`）、版本脚本模板引用（`YUXI_VERSION`/`YuxiHome.vue` → `SHERLOCK_VERSION`/`SherlockHome.vue`）、CLI 文档命令（`yuxi` → `sherlock`）、LICENSE/AUTHORS 版权归属、eval 脚本数据集名和默认密码。
+
+### 文档
+
+- 快速开始指南补充本地开发默认账户凭证、角色体系说明和用户端访问地址；同步更新故障排除中的容器名称为当前 Compose 命名规范。
 
 ### 修复与安全
 

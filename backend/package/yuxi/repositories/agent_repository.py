@@ -21,8 +21,12 @@ DEFAULT_SHARE_CONFIG = {"access_level": "global", "department_ids": [], "user_ui
 REALTIME_AGENT_SLUG = "sherlock-realtime"
 REALTIME_AGENT_NAME = "Sherlock 实时助手"
 REALTIME_AGENT_DESCRIPTION = "支持语音、文字、摄像头和屏幕理解的实时多模态助手。"
-REALTIME_AGENT_MODEL = "minicpm:MiniCPM-O-4.5-9B"
-LEGACY_REALTIME_AGENT_MODELS = {"siliconflow-cn:Qwen/Qwen3-VL-8B-Instruct", "modelscope:Qwen/Qwen3-VL-8B-Thinking"}
+REALTIME_AGENT_MODEL = "modelscope:Qwen/Qwen3-VL-8B-Thinking"
+LEGACY_REALTIME_AGENT_MODELS = {
+    "siliconflow-cn:Qwen/Qwen3-VL-8B-Instruct",
+    "modelscope:Qwen/Qwen3-VL-8B-Thinking",
+    "minicpm:MiniCPM-O-4.5-9B",
+}
 REALTIME_AGENT_SYSTEM_PROMPT = """你是 Sherlock 实时多模态助手，可以在实时通话中处理语音、文字、摄像头和共享屏幕。
 
 当用户的问题需要查看现实环境时，先调用 capture_live_camera 获取最新摄像头画面。

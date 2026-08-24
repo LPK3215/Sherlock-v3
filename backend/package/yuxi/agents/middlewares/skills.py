@@ -370,7 +370,7 @@ class SkillsMiddleware(AgentMiddleware):
         return selected_tools
 
     def _process_tool_call_result(self, result: Any, request: ToolCallRequest) -> Any:
-        """处理工具调用结果，检查并处理 skill 动态激活"""
+        """处理工具调用结果，检查并处理 skill 动态激活。"""
         if request.tool_call.get("name") != "read_file":
             return result
 
@@ -393,8 +393,14 @@ class SkillsMiddleware(AgentMiddleware):
         request: ToolCallRequest,
         handler: Callable[[ToolCallRequest], Any],
     ):
-        """包装工具调用，处理 skill 动态激活"""
-        result = await handler(request)
+        """包装工具调用，处理 skill 动态激活，并在执行期间提供当前 tool runtime 上下文。"""
+        from yuxi.agents.toolkits.runtime import set_current_tool_runtime, reset_current_tool_runtime
+
+        token = set_current_tool_runtime(getattr(request, "runtime", None))
+        try:
+            result = await handler(request)
+        finally:
+            reset_current_tool_runtime(token)
         return self._process_tool_call_result(result, request)
 
     def wrap_tool_call(
@@ -403,7 +409,13 @@ class SkillsMiddleware(AgentMiddleware):
         handler: Callable[[ToolCallRequest], Any],
     ):
         """同步版本的工具调用包装"""
-        result = handler(request)
+        from yuxi.agents.toolkits.runtime import set_current_tool_runtime, reset_current_tool_runtime
+
+        token = set_current_tool_runtime(getattr(request, "runtime", None))
+        try:
+            result = handler(request)
+        finally:
+            reset_current_tool_runtime(token)
         return self._process_tool_call_result(result, request)
 
     def _extract_skill_slug_from_skill_md_path(self, file_path: Any) -> str | None:

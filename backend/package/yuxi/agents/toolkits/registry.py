@@ -1,5 +1,41 @@
+from __future__ import annotations
+
+import inspect as py_inspect
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import get_args, get_origin
+
+
+def _resolve_injected_arg_keys(func: Callable) -> frozenset[str]:
+    """解析函数签名中的运行时注入参数名。
+
+    langchain 在构建 StructuredTool 时用 `signature(fn)`（默认不 eval 字符串注解）
+    识别注入参数；工具文件一旦使用 `from __future__ import annotations`，注解会变成
+    字符串，导致 `ToolRuntime` 等注入类型识别失败，真实调用时出现
+    `missing required positional argument: 'runtime'`。这里用 `eval_str=True` 重新解析。
+    """
+    try:
+        sig = py_inspect.signature(func, eval_str=True)
+    except (TypeError, ValueError):
+        return frozenset()
+
+    from langchain_core.tools import InjectedToolArg
+    from langchain_core.tools.base import _DirectlyInjectedToolArg
+
+    keys: set[str] = set()
+    for name, param in sig.parameters.items():
+        annotation = param.annotation
+        if isinstance(annotation, type) and issubclass(annotation, _DirectlyInjectedToolArg):
+            keys.add(name)
+            continue
+        args = get_args(annotation)
+        if args and any(
+            isinstance(arg, InjectedToolArg)
+            or (isinstance(arg, type) and issubclass(arg, InjectedToolArg))
+            for arg in args[1:]
+        ):
+            keys.add(name)
+    return frozenset(keys)
 
 
 @dataclass
@@ -82,6 +118,12 @@ def tool(
 
         # 自动收集工具实例
         tool_obj.handle_tool_error = True
+        # 修复 langchain 对字符串注解的注入参数识别（见 _resolve_injected_arg_keys）
+        fn = getattr(tool_obj, "coroutine", None) or getattr(tool_obj, "func", None)
+        if fn is not None:
+            injected_keys = _resolve_injected_arg_keys(fn)
+            if injected_keys:
+                tool_obj._injected_args_keys = injected_keys
         _all_tool_instances.append(tool_obj)
 
         return tool_obj

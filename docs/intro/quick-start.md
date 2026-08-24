@@ -85,10 +85,35 @@ make up-lite  # macOS or Linux
 
 | 服务 | 地址 |
 |------|------|
-| Web 界面 | http://localhost:5173 |
+| Web 管理端 | http://localhost:5173 |
+| 用户端（视频通话） | http://localhost:3000 |
 | API 文档 | http://localhost:5050/docs |
 
-首次访问时，系统会要求你设置超级管理员账号和密码，请妥善保存。
+#### 首次初始化
+
+全新部署（数据库为空）时，首次访问 Web 管理端会进入初始化页面，要求设置超级管理员账户。本地开发环境可使用以下默认凭证：
+
+| 字段 | 值 |
+|------|------|
+| 用户 ID | `admin` |
+| 密码 | `admin123456` |
+| 手机号 | `13800000001` |
+
+::: warning 安全提示
+以上凭证仅供本地开发测试使用。生产环境务必使用强密码，并通过 `.env.prod` 配置独立的 `JWT_SECRET_KEY`。详见 [生产部署指南](../advanced/deployment.md)。
+:::
+
+#### 角色体系
+
+系统包含三种角色，权限从高到低：
+
+| 角色 | 说明 | 关键权限 |
+|------|------|----------|
+| `superadmin` | 超级管理员 | 系统初始化时自动创建；拥有全部权限，可管理所有用户、模型、智能体和知识库 |
+| `admin` | 管理员 | 由超级管理员创建；可管理用户、配置模型和智能体，不可修改系统级设置 |
+| `user` | 普通用户 | 由管理员创建；可使用对话、知识库检索等业务功能，无管理权限 |
+
+初始化完成后，超级管理员可在 Web 管理端的「用户管理」页面创建管理员和普通用户账户。
 
 ## 故障排除
 
@@ -99,10 +124,10 @@ make up-lite  # macOS or Linux
 docker ps
 
 # 实时查看后端日志
-docker logs api-dev -f
+docker logs sherlock-v3-api-1 -f
 
 # 实时查看前端日志
-docker logs web-dev -f
+docker logs sherlock-v3-web-1 -f
 ```
 
 ### 部署故障排查
@@ -155,7 +180,7 @@ $env:HTTPS_PROXY="http://IP:PORT"
 ```bash
 # 重启 Milvus 服务
 docker compose up milvus -d
-docker restart api-dev
+docker restart sherlock-v3-api-1
 ```
 </details>
 
