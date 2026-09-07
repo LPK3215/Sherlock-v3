@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherlock-v3 — 项目全景观览</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="scroll-progress"></div>
+  <nav class="navbar">
+    <div class="nav-brand">Sherlock-v3</div>
+    <div class="nav-links">
+      <a href="#hero" class="nav-link active">概览</a>
+      <a href="#intro" class="nav-link">简介</a>
+      <a href="#architecture" class="nav-link">架构</a>
+      <a href="#tech-stack" class="nav-link">技术栈</a>
+      <a href="#structure" class="nav-link">目录结构</a>
+      <a href="#quickstart" class="nav-link">快速开始</a>
+      <a href="#docs" class="nav-link">文档索引</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="切换主题">🌙</button>
+  </nav>
+
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <div class="hero-badges">
+        <span class="badge">AI 语音对话</span>
+        <span class="badge">Pipecat</span>
+        <span class="badge">WebRTC</span>
+        <span class="badge">实时语音</span>
+      </div>
+      <h1 class="hero-title">Sherlock-v3</h1>
+      <p class="hero-subtitle">基于 Pipecat 的 AI 实时语音对话系统，支持摄像头、屏幕共享和可拖拽布局</p>
+      <div class="hero-meta">
+        <span class="meta-item">v1.0.0</span>
+        <span class="meta-divider">·</span>
+        <span class="meta-item">SmallWebRTC</span>
+        <span class="meta-divider">·</span>
+        <span class="meta-item">Cascade 管线</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="intro" class="section">
+    <h2 class="section-title">项目简介</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3>核心价值</h3>
+        <p>基于 Pipecat 框架构建的 AI 实时语音对话系统，采用 SmallWebRTC 传输方式，无需 Daily API Key，使用 Cascade 管线模式实现低延迟语音对话。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💡</div>
+        <h3>核心能力</h3>
+        <ul class="feature-list">
+          <li>实时语音对话（STT → VLM → TTS）</li>
+          <li>摄像头视频输入</li>
+          <li>屏幕共享</li>
+          <li>可拖拽界面布局</li>
+          <li>事件日志面板</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture" class="section">
+    <h2 class="section-title">架构全景</h2>
+    <div class="arch-container">
+      <svg viewBox="0 0 1000 380" class="arch-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#059669"/><stop offset="100%" style="stop-color:#0d9488"/></linearGradient>
+          <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4f46e5"/><stop offset="100%" style="stop-color:#7c3aed"/></linearGradient>
+          <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d97706"/><stop offset="100%" style="stop-color:#ea580c"/></linearGradient>
+        </defs>
+
+        <!-- 前端 -->
+        <rect x="50" y="20" width="900" height="80" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text x="70" y="42" fill="#94a3b8" font-size="13" font-family="Inter">前端 — Next.js 15 + Tailwind CSS v4</text>
+        <rect x="70" y="50" width="860" height="40" rx="8" fill="url(#g1)" opacity="0.9"/>
+        <text x="500" y="75" fill="#fff" font-size="13" font-weight="600" text-anchor="middle">web-bot-official/src — Voice UI Kit + 摄像头/屏幕共享/拖拽布局/事件日志</text>
+
+        <line x1="500" y1="100" x2="500" y2="130" stroke="#475569" stroke-width="2" stroke-dasharray="5,3"/>
+        <text x="520" y="118" fill="#64748b" font-size="10" font-family="Inter">WebRTC / POST /start</text>
+
+        <!-- Cascade 管线 -->
+        <rect x="50" y="130" width="900" height="100" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text x="70" y="152" fill="#94a3b8" font-size="13" font-family="Inter">Cascade 管线 — Pipecat</text>
+        <rect x="70" y="160" width="250" height="55" rx="8" fill="url(#g2)" opacity="0.85"/>
+        <text x="195" y="183" fill="#fff" font-size="13" font-weight="600" text-anchor="middle">STT — Whisper (本地)</text>
+        <text x="195" y="200" fill="#e0e0e0" font-size="10" text-anchor="middle">语音转文字</text>
+        <rect x="380" y="160" width="250" height="55" rx="8" fill="url(#g2)" opacity="0.85"/>
+        <text x="505" y="183" fill="#fff" font-size="13" font-weight="600" text-anchor="middle">VLM — OpenAI 兼容</text>
+        <text x="505" y="200" fill="#e0e0e0" font-size="10" text-anchor="middle">视觉语言模型</text>
+        <rect x="690" y="160" width="200" height="55" rx="8" fill="url(#g2)" opacity="0.85"/>
+        <text x="790" y="183" fill="#fff" font-size="13" font-weight="600" text-anchor="middle">TTS — Piper (本地)</text>
+        <text x="790" y="200" fill="#e0e0e0" font-size="10" text-anchor="middle">文字转语音（中文）</text>
+
+        <line x1="325" y1="190" x2="375" y2="190" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+        <line x1="635" y1="190" x2="685" y2="190" stroke="#7c3aed" stroke-width="2"/>
+
+        <!-- 传输层 -->
+        <rect x="50" y="260" width="900" height="80" rx="12" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <text x="70" y="282" fill="#94a3b8" font-size="13" font-family="Inter">传输层</text>
+        <rect x="70" y="290" width="860" height="40" rx="8" fill="url(#g3)" opacity="0.9"/>
+        <text x="500" y="315" fill="#fff" font-size="13" font-weight="600" text-anchor="middle">SmallWebRTC — 无需 Daily API Key</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="tech-stack" class="section">
+    <h2 class="section-title">技术栈</h2>
+    <div class="tech-grid">
+      <div class="tech-category">
+        <h3>后端</h3>
+        <div class="tech-tags">
+          <span class="tech-tag">Python</span>
+          <span class="tech-tag">Pipecat</span>
+          <span class="tech-tag">SmallWebRTC</span>
+        </div>
+      </div>
+      <div class="tech-category">
+        <h3>AI 模型</h3>
+        <div class="tech-tags">
+          <span class="tech-tag">Whisper (STT)</span>
+          <span class="tech-tag">OpenAI 兼容 (VLM)</span>
+          <span class="tech-tag">Piper (TTS)</span>
+        </div>
+      </div>
+      <div class="tech-category">
+        <h3>前端</h3>
+        <div class="tech-tags">
+          <span class="tech-tag">Next.js 15</span>
+          <span class="tech-tag">Tailwind CSS v4</span>
+          <span class="tech-tag">Voice UI Kit</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="structure" class="section">
+    <h2 class="section-title">目录结构</h2>
+    <div class="tree-container">
+      <details open class="tree-node">
+        <summary>📁 Sherlock-v3/</summary>
+        <div class="tree-children">
+          <div class="tree-leaf">📁 web-bot-official/ — ★ 核心项目（唯一操作目标）</div>
+          <div class="tree-sub">├ bot.py — 后端管线（Python Pipecat，172 行）</div>
+          <div class="tree-sub">├ src/ — Next.js 15 前端</div>
+          <div class="tree-sub">└ POST /start — API 入口</div>
+          <div class="tree-leaf">📁 ai-video-call-core/ — ☆ 参考项目 1</div>
+          <div class="tree-leaf">📁 my-video-ai/ — ☆ 参考项目 2</div>
+          <div class="tree-leaf">📄 PROJECT_STRUCTURE.md — 项目结构说明</div>
+          <div class="tree-leaf">📄 AI对话开发技术方案.md</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="quickstart" class="section">
+    <h2 class="section-title">快速开始</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div>
+          <h3>安装依赖</h3>
+          <div class="code-block"><span class="code-lang">bash</span><pre><code>cd web-bot-official
+pip install -r requirements.txt
+cd src &amp;&amp; npm install</code></pre></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div>
+          <h3>启动开发服务器</h3>
+          <div class="code-block"><span class="code-lang">bash</span><pre><code>npm run dev</code></pre></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="docs" class="section">
+    <h2 class="section-title">文档索引</h2>
+    <div class="doc-list">
+      <a href="./README.md" class="doc-link">📄 README.md — 项目说明</a>
+      <a href="./PROJECT_STRUCTURE.md" class="doc-link">📄 PROJECT_STRUCTURE.md — 项目结构说明</a>
+      <a href="./AI对话开发技术方案.md" class="doc-link">📄 AI对话开发技术方案.md — 技术方案</a>
+      <a href="./CONTRIBUTING.md" class="doc-link">📄 CONTRIBUTING.md — 贡献指南</a>
+      <a href="./CHANGELOG.md" class="doc-link">📄 CHANGELOG.md — 更新日志</a>
+      <a href="./LICENSE" class="doc-link">📄 LICENSE — MIT 许可证</a>
+    </div>
+  </section>
+
+  <section class="section license-section">
+    <h2 class="section-title">许可证</h2>
+    <p>本项目基于 <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a> 开源。© 2026 LPK3215</p>
+    <p class="ack">基于 <a href="https://github.com/pipecat-ai/pipecat" target="_blank">Pipecat</a> 开源框架。</p>
+  </section>
+
+  <button id="backToTop" class="back-to-top" title="返回顶部">↑</button>
+  <footer class="footer"><p>Generated on 2026-09-08 · Sherlock-v3 v1.0.0</p></footer>
+  <script src="./script.js"></script>
+</body>
+</html>
